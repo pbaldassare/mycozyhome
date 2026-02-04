@@ -10,6 +10,7 @@ import Clients from "@/pages/admin/Clients";
 import Services from "@/pages/admin/Services";
 import Bookings from "@/pages/admin/Bookings";
 import Disputes from "@/pages/admin/Disputes";
+import SupportCenter from "@/pages/admin/SupportCenter";
 import Payments from "@/pages/admin/Payments";
 import Settings from "@/pages/admin/Settings";
 import ProfessionalAuth from "@/pages/professional/Auth";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="services" element={<Services />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="disputes" element={<Disputes />} />
+            <Route path="support" element={<SupportCenter />} />
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<Settings />} />
           </Route>

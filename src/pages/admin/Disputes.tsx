@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertTriangle,
   MessageSquare,
@@ -7,129 +7,173 @@ import {
   Eye,
   CheckCircle,
   XCircle,
-  Clock,
+  Search,
+  Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { it } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
+import { DisputeDetail } from "@/components/admin/DisputeDetail";
 
 interface Dispute {
   id: string;
-  type: "complaint" | "refund" | "behavior" | "fraud";
-  subject: string;
+  reason: string;
   description: string;
-  reporter: {
-    name: string;
-    type: "client" | "professional";
-  };
-  reported: {
-    name: string;
-    type: "client" | "professional";
-  };
-  bookingId: string;
-  status: "open" | "in_review" | "resolved" | "dismissed";
-  priority: "low" | "medium" | "high" | "urgent";
-  createdAt: string;
+  status: string;
+  reporter_id: string;
+  reporter_type: string;
+  reported_id: string;
+  reported_type: string;
+  booking_id?: string;
+  conversation_id?: string;
+  admin_notes?: string;
+  created_at: string;
 }
 
-const disputes: Dispute[] = [
-  {
-    id: "DIS-001",
-    type: "complaint",
-    subject: "Servizio non completato",
-    description: "Il professionista ha lasciato il lavoro a metà senza avvisare",
-    reporter: { name: "Paolo Colombo", type: "client" },
-    reported: { name: "Mario Rossi", type: "professional" },
-    bookingId: "BK-045",
-    status: "open",
-    priority: "high",
-    createdAt: "4 Feb 2026",
-  },
-  {
-    id: "DIS-002",
-    type: "refund",
-    subject: "Richiesta rimborso",
-    description: "Richiedo rimborso per servizio non soddisfacente",
-    reporter: { name: "Giulia Romano", type: "client" },
-    reported: { name: "Anna Bianchi", type: "professional" },
-    bookingId: "BK-089",
-    status: "in_review",
-    priority: "medium",
-    createdAt: "3 Feb 2026",
-  },
-  {
-    id: "DIS-003",
-    type: "behavior",
-    subject: "Comportamento inappropriato",
-    description: "Il cliente ha avuto un comportamento poco rispettoso",
-    reporter: { name: "Francesca Neri", type: "professional" },
-    reported: { name: "Alessandro Ferrari", type: "client" },
-    bookingId: "BK-112",
-    status: "open",
-    priority: "urgent",
-    createdAt: "4 Feb 2026",
-  },
-  {
-    id: "DIS-004",
-    type: "fraud",
-    subject: "Sospetta frode",
-    description: "Profilo potenzialmente falso con documenti sospetti",
-    reporter: { name: "Sistema", type: "client" },
-    reported: { name: "Giovanni Bianchi", type: "professional" },
-    bookingId: "-",
-    status: "in_review",
-    priority: "urgent",
-    createdAt: "2 Feb 2026",
-  },
-  {
-    id: "DIS-005",
-    type: "complaint",
-    subject: "Ritardo eccessivo",
-    description: "Professionista arrivato con 2 ore di ritardo",
-    reporter: { name: "Chiara Ricci", type: "client" },
-    reported: { name: "Luca Marino", type: "professional" },
-    bookingId: "BK-156",
-    status: "resolved",
-    priority: "low",
-    createdAt: "1 Feb 2026",
-  },
-];
+interface DisputeEvidence {
+  id: string;
+  file_type: string;
+  file_url: string;
+  file_name: string;
+  description?: string;
+  created_at: string;
+}
 
-const typeConfig = {
-  complaint: { label: "Reclamo", icon: MessageSquare },
-  refund: { label: "Rimborso", icon: AlertTriangle },
-  behavior: { label: "Comportamento", icon: User },
-  fraud: { label: "Frode", icon: AlertTriangle },
+const reasonLabels: Record<string, string> = {
+  no_show: "Mancata presentazione",
+  poor_quality: "Qualità scadente",
+  inappropriate_behavior: "Comportamento inappropriato",
+  payment_issue: "Problema pagamento",
+  damage: "Danni causati",
+  other: "Altro",
 };
 
-const statusConfig = {
-  open: { label: "Aperto", className: "bg-warning/10 text-warning" },
-  in_review: { label: "In Revisione", className: "bg-primary/10 text-primary" },
-  resolved: { label: "Risolto", className: "bg-success/10 text-success" },
-  dismissed: { label: "Archiviato", className: "bg-muted text-muted-foreground" },
-};
-
-const priorityConfig = {
-  low: { label: "Bassa", className: "bg-muted text-muted-foreground" },
-  medium: { label: "Media", className: "bg-primary/10 text-primary" },
-  high: { label: "Alta", className: "bg-warning/10 text-warning" },
-  urgent: { label: "Urgente", className: "bg-destructive/10 text-destructive" },
+const statusConfig: Record<string, { label: string; className: string }> = {
+  open: { label: "Aperta", className: "bg-warning/10 text-warning" },
+  investigating: { label: "In indagine", className: "bg-primary/10 text-primary" },
+  resolved_reporter: { label: "Risolta (segnalante)", className: "bg-success/10 text-success" },
+  resolved_reported: { label: "Risolta (segnalato)", className: "bg-success/10 text-success" },
+  rejected: { label: "Respinta", className: "bg-muted text-muted-foreground" },
+  escalated: { label: "Escalata", className: "bg-destructive/10 text-destructive" },
 };
 
 export default function Disputes() {
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [evidence, setEvidence] = useState<Record<string, DisputeEvidence[]>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
 
-  const filteredDisputes = disputes.filter((d) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "active") return d.status === "open" || d.status === "in_review";
-    return d.status === activeTab;
+  useEffect(() => {
+    loadDisputes();
+  }, []);
+
+  async function loadDisputes() {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("disputes")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setDisputes(data);
+      
+      // Load evidence for all disputes
+      const evidencePromises = data.map(async (dispute) => {
+        const { data: evidenceData } = await supabase
+          .from("dispute_evidence")
+          .select("*")
+          .eq("dispute_id", dispute.id);
+        return { disputeId: dispute.id, evidence: evidenceData || [] };
+      });
+      
+      const evidenceResults = await Promise.all(evidencePromises);
+      const evidenceMap: Record<string, DisputeEvidence[]> = {};
+      evidenceResults.forEach(({ disputeId, evidence }) => {
+        evidenceMap[disputeId] = evidence;
+      });
+      setEvidence(evidenceMap);
+    }
+    setIsLoading(false);
+  }
+
+  async function handleResolve(disputeId: string, resolution: "reporter" | "reported", notes: string) {
+    const { error } = await supabase
+      .from("disputes")
+      .update({
+        status: resolution === "reporter" ? "resolved_reporter" : "resolved_reported",
+        admin_notes: notes,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", disputeId);
+
+    if (!error) {
+      toast({ title: "Disputa risolta" });
+      loadDisputes();
+      setSelectedDispute(null);
+    }
+  }
+
+  async function handleReject(disputeId: string, notes: string) {
+    const { error } = await supabase
+      .from("disputes")
+      .update({
+        status: "rejected",
+        admin_notes: notes,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq("id", disputeId);
+
+    if (!error) {
+      toast({ title: "Disputa respinta" });
+      loadDisputes();
+      setSelectedDispute(null);
+    }
+  }
+
+  async function handleEscalate(disputeId: string, notes: string) {
+    const { error } = await supabase
+      .from("disputes")
+      .update({
+        status: "escalated",
+        admin_notes: notes,
+      })
+      .eq("id", disputeId);
+
+    if (!error) {
+      toast({ title: "Disputa escalata", variant: "destructive" });
+      loadDisputes();
+      setSelectedDispute(null);
+    }
+  }
+
+  const filteredDisputes = disputes.filter((dispute) => {
+    const matchesSearch = dispute.description.toLowerCase().includes(searchQuery.toLowerCase());
+    if (activeTab === "all") return matchesSearch;
+    if (activeTab === "active") return matchesSearch && (dispute.status === "open" || dispute.status === "investigating");
+    if (activeTab === "resolved") return matchesSearch && (dispute.status.startsWith("resolved") || dispute.status === "rejected");
+    if (activeTab === "escalated") return matchesSearch && dispute.status === "escalated";
+    return matchesSearch;
   });
 
   const counts = {
     all: disputes.length,
-    active: disputes.filter((d) => d.status === "open" || d.status === "in_review").length,
-    resolved: disputes.filter((d) => d.status === "resolved").length,
+    active: disputes.filter((d) => d.status === "open" || d.status === "investigating").length,
+    resolved: disputes.filter((d) => d.status.startsWith("resolved") || d.status === "rejected").length,
+    escalated: disputes.filter((d) => d.status === "escalated").length,
   };
 
   return (
@@ -138,25 +182,33 @@ export default function Disputes() {
       <div>
         <h1 className="text-3xl font-bold">Segnalazioni e Dispute</h1>
         <p className="text-muted-foreground mt-1">
-          Gestisci reclami, richieste rimborso e segnalazioni
+          Gestisci reclami, segnalazioni e richieste di intervento
         </p>
       </div>
 
       {/* Urgent Alert */}
-      {disputes.some((d) => d.priority === "urgent" && d.status !== "resolved") && (
+      {disputes.some((d) => d.status === "escalated") && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
           <div>
-            <p className="font-medium text-destructive">
-              Ci sono segnalazioni urgenti da gestire
-            </p>
+            <p className="font-medium text-destructive">Dispute escalate</p>
             <p className="text-sm text-muted-foreground">
-              {disputes.filter((d) => d.priority === "urgent" && d.status !== "resolved").length}{" "}
-              casi richiedono attenzione immediata
+              {counts.escalated} casi richiedono intervento urgente
             </p>
           </div>
         </div>
       )}
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Cerca dispute..."
+          className="pl-9"
+        />
+      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -164,113 +216,165 @@ export default function Disputes() {
           <TabsTrigger value="all">Tutte ({counts.all})</TabsTrigger>
           <TabsTrigger value="active" className="gap-2">
             Attive
-            <span className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+            <span className="bg-warning text-warning-foreground text-xs px-1.5 py-0.5 rounded-full">
               {counts.active}
             </span>
+          </TabsTrigger>
+          <TabsTrigger value="escalated" className="gap-2">
+            Escalate
+            {counts.escalated > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+                {counts.escalated}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="resolved">Risolte ({counts.resolved})</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          <div className="space-y-4">
-            {filteredDisputes.map((dispute) => {
-              const type = typeConfig[dispute.type];
-              const status = statusConfig[dispute.status];
-              const priority = priorityConfig[dispute.priority];
-              const TypeIcon = type.icon;
+          {isLoading ? (
+            <div className="text-center py-12 text-muted-foreground">Caricamento...</div>
+          ) : filteredDisputes.length === 0 ? (
+            <div className="text-center py-12">
+              <AlertTriangle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="font-medium">Nessuna disputa</p>
+              <p className="text-sm text-muted-foreground">Non ci sono dispute in questa categoria</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredDisputes.map((dispute) => {
+                const status = statusConfig[dispute.status] || statusConfig.open;
+                const disputeEvidence = evidence[dispute.id] || [];
 
-              return (
-                <div
-                  key={dispute.id}
-                  className={cn(
-                    "bg-card rounded-xl border p-5 transition-all",
-                    dispute.priority === "urgent" && dispute.status !== "resolved"
-                      ? "border-destructive/50"
-                      : "border-border"
-                  )}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div
-                        className={cn(
-                          "p-2.5 rounded-xl",
-                          dispute.priority === "urgent"
-                            ? "bg-destructive/10 text-destructive"
-                            : "bg-primary/10 text-primary"
-                        )}
-                      >
-                        <TypeIcon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {dispute.id}
-                          </span>
-                          <Badge variant="outline">{type.label}</Badge>
-                          <span className={cn("status-badge", priority.className)}>
-                            {priority.label}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold">{dispute.subject}</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {dispute.description}
-                        </p>
-
-                        {/* Reporter / Reported */}
-                        <div className="flex items-center gap-4 mt-3 text-sm">
-                          <span className="text-muted-foreground">
-                            <strong>Segnalato da:</strong>{" "}
-                            {dispute.reporter.name}{" "}
-                            <Badge variant="secondary" className="ml-1 text-xs">
-                              {dispute.reporter.type === "client"
-                                ? "Cliente"
-                                : "Professionista"}
-                            </Badge>
-                          </span>
-                          <span className="text-muted-foreground">
-                            <strong>Contro:</strong> {dispute.reported.name}
-                          </span>
-                        </div>
-
-                        {/* Meta */}
-                        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {dispute.createdAt}
-                          </span>
-                          {dispute.bookingId !== "-" && (
-                            <span>Prenotazione: {dispute.bookingId}</span>
+                return (
+                  <div
+                    key={dispute.id}
+                    className={cn(
+                      "bg-card rounded-xl border p-5 transition-all cursor-pointer hover:border-primary/50",
+                      dispute.status === "escalated" ? "border-destructive/50" : "border-border"
+                    )}
+                    onClick={() => setSelectedDispute(dispute)}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={cn(
+                            "p-2.5 rounded-xl",
+                            dispute.status === "escalated"
+                              ? "bg-destructive/10 text-destructive"
+                              : "bg-primary/10 text-primary"
                           )}
+                        >
+                          <AlertTriangle className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-mono text-muted-foreground">
+                              {dispute.id.slice(0, 8).toUpperCase()}
+                            </span>
+                            <Badge variant="outline">
+                              {reasonLabels[dispute.reason] || dispute.reason}
+                            </Badge>
+                            {disputeEvidence.length > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {disputeEvidence.length} prove
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {dispute.description}
+                          </p>
+
+                          <div className="flex items-center gap-4 mt-3 text-sm">
+                            <span className="text-muted-foreground">
+                              <strong>Da:</strong>{" "}
+                              <Badge variant="secondary" className="ml-1 text-xs">
+                                {dispute.reporter_type === "client" ? "Cliente" : "Professionista"}
+                              </Badge>
+                            </span>
+                            <span className="text-muted-foreground">
+                              <strong>Contro:</strong>{" "}
+                              <Badge variant="secondary" className="ml-1 text-xs">
+                                {dispute.reported_type === "client" ? "Cliente" : "Professionista"}
+                              </Badge>
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {formatDistanceToNow(new Date(dispute.created_at), {
+                                addSuffix: true,
+                                locale: it,
+                              })}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex flex-col items-end gap-2">
-                      <span className={cn("status-badge", status.className)}>
-                        {status.label}
-                      </span>
-                      {dispute.status !== "resolved" && dispute.status !== "dismissed" && (
-                        <div className="flex gap-2 mt-2">
-                          <Button variant="outline" size="sm">
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={cn("status-badge", status.className)}>{status.label}</span>
+                        {(dispute.status === "open" || dispute.status === "investigating") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDispute(dispute);
+                            }}
+                          >
                             <Eye className="w-4 h-4 mr-1" />
-                            Dettagli
+                            Gestisci
                           </Button>
-                          <Button size="sm" className="bg-success hover:bg-success/90">
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive">
-                            <XCircle className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
+
+      {/* Dispute Detail Dialog */}
+      <Dialog open={!!selectedDispute} onOpenChange={(open) => !open && setSelectedDispute(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedDispute && (
+            <DisputeDetail
+              dispute={{
+                id: selectedDispute.id,
+                reason: selectedDispute.reason,
+                description: selectedDispute.description,
+                status: selectedDispute.status,
+                reporter: {
+                  id: selectedDispute.reporter_id,
+                  name: "Utente Segnalante",
+                  type: selectedDispute.reporter_type as "professional" | "client",
+                },
+                reported: {
+                  id: selectedDispute.reported_id,
+                  name: "Utente Segnalato",
+                  type: selectedDispute.reported_type as "professional" | "client",
+                },
+                evidence: (evidence[selectedDispute.id] || []).map((e) => ({
+                  ...e,
+                  file_type: e.file_type as "image" | "document" | "chat_export",
+                })),
+                createdAt: formatDistanceToNow(new Date(selectedDispute.created_at), {
+                  addSuffix: true,
+                  locale: it,
+                }),
+                bookingId: selectedDispute.booking_id,
+                adminNotes: selectedDispute.admin_notes,
+              }}
+              onResolve={(resolution, notes) => handleResolve(selectedDispute.id, resolution, notes)}
+              onReject={(notes) => handleReject(selectedDispute.id, notes)}
+              onEscalate={(notes) => handleEscalate(selectedDispute.id, notes)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
