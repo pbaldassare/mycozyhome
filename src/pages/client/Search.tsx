@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog } from "lucide-react";
+import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2 } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { cn } from "@/lib/utils";
+import { useSearchProfessionals } from "@/hooks/useProfessionals";
 
 const serviceFilters = [
   { id: "all", label: "Tutti", icon: null },
@@ -18,55 +18,17 @@ const serviceFilters = [
   { id: "dog_sitter", label: "Dog sitter", icon: Dog },
 ];
 
-const mockProfessionals = [
-  {
-    id: "1",
-    name: "Maria Rossi",
-    rating: 4.9,
-    reviewCount: 127,
-    distance: "1.2 km",
-    services: ["Pulizie casa", "Stiro"],
-    hourlyRate: 15,
-    isVerified: true,
-  },
-  {
-    id: "2",
-    name: "Giuseppe Bianchi",
-    rating: 4.8,
-    reviewCount: 89,
-    distance: "2.5 km",
-    services: ["Pulizie ufficio", "Sanificazione"],
-    hourlyRate: 18,
-    isVerified: true,
-  },
-  {
-    id: "3",
-    name: "Anna Verdi",
-    rating: 4.7,
-    reviewCount: 56,
-    distance: "3.1 km",
-    services: ["Babysitter"],
-    hourlyRate: 12,
-    isVerified: true,
-  },
-  {
-    id: "4",
-    name: "Luca Neri",
-    rating: 4.6,
-    reviewCount: 34,
-    distance: "4.0 km",
-    services: ["Dog sitter", "Pulizie casa"],
-    hourlyRate: 14,
-    isVerified: false,
-  },
-];
-
 export default function ClientSearch() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedService, setSelectedService] = useState(
     searchParams.get("service") || "all"
+  );
+
+  const { data: professionals, isLoading } = useSearchProfessionals(
+    selectedService,
+    searchQuery
   );
 
   return (
@@ -115,20 +77,44 @@ export default function ClientSearch() {
 
         {/* Results */}
         <div>
-          <p className="text-sm text-muted-foreground mb-4">
-            {mockProfessionals.length} professionisti trovati
-          </p>
-          <div className="space-y-3">
-            {mockProfessionals.map((pro) => (
-              <ProfessionalCard
-                key={pro.id}
-                id={pro.id}
-                {...pro}
-                showFavorite
-                onClick={() => navigate(`/client/professional/${pro.id}`)}
-              />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                {professionals?.length || 0} professionisti trovati
+              </p>
+              {professionals && professionals.length > 0 ? (
+                <div className="space-y-3">
+                  {professionals.map((pro) => (
+                    <ProfessionalCard
+                      key={pro.id}
+                      id={pro.id}
+                      name={pro.name}
+                      rating={pro.rating}
+                      reviewCount={pro.reviewCount}
+                      distance={pro.distance}
+                      services={pro.services}
+                      hourlyRate={pro.hourlyRate}
+                      isVerified={pro.isVerified}
+                      showFavorite
+                      onClick={() => navigate(`/client/professional/${pro.id}`)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-semibold">Nessun risultato</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Prova a modificare i filtri di ricerca
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ClientLayout } from "@/components/client/ClientLayout";
 import { ProfessionalLayout } from "@/components/professional/ProfessionalLayout";
@@ -37,6 +38,7 @@ import ClientProfessionalDetail from "@/pages/client/ProfessionalDetail";
 import ClientBookingNew from "@/pages/client/BookingNew";
 import ClientBookingConfirm from "@/pages/client/BookingConfirm";
 import ClientPersonalData from "@/pages/client/profile/PersonalData";
+import ClientBookingDetail from "@/pages/client/BookingDetail";
 import ClientPaymentMethods from "@/pages/client/profile/PaymentMethods";
 import ClientNotifications from "@/pages/client/profile/Notifications";
 import ClientPaymentHistory from "@/pages/client/profile/PaymentHistory";
@@ -56,10 +58,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           {/* Welcome/Landing Page */}
           <Route path="/" element={<Welcome />} />
@@ -78,6 +81,7 @@ const App = () => (
           <Route path="/client/auth" element={<ClientAuth />} />
           <Route path="/client/professional/:id" element={<ClientProfessionalDetail />} />
           <Route path="/client/booking/new" element={<ClientBookingNew />} />
+          <Route path="/client/booking/:id" element={<ClientBookingDetail />} />
           <Route path="/client/booking/confirm" element={<ClientBookingConfirm />} />
           <Route path="/client/profile/personal" element={<ClientPersonalData />} />
           <Route path="/client/profile/payments" element={<ClientPaymentMethods />} />
@@ -126,6 +130,7 @@ const App = () => (
         <InstallBanner />
       </BrowserRouter>
     </TooltipProvider>
+  </AuthProvider>
   </QueryClientProvider>
 );
 
