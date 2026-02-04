@@ -27,6 +27,8 @@ import ProfessionalAvailability from "@/pages/professional/Availability";
 import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
 import ServicesSetup from "@/pages/professional/onboarding/Services";
 import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
+import ProfessionalMessages from "@/pages/professional/Messages";
+import ProfessionalChat from "@/pages/professional/Chat";
 import DocumentsUpload from "@/pages/professional/onboarding/Documents";
 import ClientHome from "@/pages/client/Home";
 import ClientSearch from "@/pages/client/Search";
@@ -115,12 +117,14 @@ const App = () => (
           <Route path="/professional" element={<ProfessionalLayout />}>
             <Route index element={<ProfessionalHome />} />
             <Route path="bookings" element={<ProfessionalBookings />} />
+            <Route path="messages" element={<ProfessionalMessages />} />
             <Route path="availability" element={<ProfessionalAvailability />} />
             <Route path="services" element={<ProfessionalServices />} />
             <Route path="reviews" element={<ProfessionalReviews />} />
             <Route path="profile" element={<ProfessionalProfile />} />
           </Route>
-          {/* Professional routes outside layout */}
+          {/* Professional routes outside layout (full screen) */}
+          <Route path="/professional/chat/:conversationId" element={<ProfessionalChat />} />
           <Route path="/professional/auth" element={<ProfessionalAuth />} />
           <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
           <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />

@@ -1,12 +1,12 @@
-import { Home, Calendar, Clock, Briefcase, User } from "lucide-react";
+import { Home, Calendar, Clock, MessageSquare, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/professional" },
   { icon: Calendar, label: "Prenotazioni", path: "/professional/bookings" },
-  { icon: Clock, label: "Disponibilità", path: "/professional/availability" },
-  { icon: Briefcase, label: "Servizi", path: "/professional/services" },
+  { icon: MessageSquare, label: "Messaggi", path: "/professional/messages" },
+  { icon: Clock, label: "Orari", path: "/professional/availability" },
   { icon: User, label: "Profilo", path: "/professional/profile" },
 ];
 
