@@ -2,45 +2,58 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  ArrowLeft,
-  Home,
-  Building2,
-  Shirt,
-  ShieldCheck,
-  Baby,
-  Dog,
-  Euro,
-} from "lucide-react";
+import { ArrowLeft, ChevronRight, Pencil, PlusCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type ServiceType = Database["public"]["Enums"]["service_type"];
 
-const servicesList = [
-  { id: "cleaning", name: "Pulizia Casa", icon: Home, description: "Pulizia domestica completa" },
-  { id: "office_cleaning", name: "Pulizia Uffici", icon: Building2, description: "Pulizia spazi lavorativi" },
-  { id: "ironing", name: "Stiratura", icon: Shirt, description: "Servizio stiratura a domicilio" },
-  { id: "sanitization", name: "Sanificazione", icon: ShieldCheck, description: "Sanificazione ambienti" },
-  { id: "babysitter", name: "Babysitter", icon: Baby, description: "Assistenza bambini" },
-  { id: "dog_sitter", name: "Dog Sitter", icon: Dog, description: "Custodia animali" },
+interface ServiceItem {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+}
+
+const serviceCategories = [
+  {
+    id: "pulizia",
+    name: "Pulizia",
+    services: [
+      { id: "cleaning", name: "Pulizia Profonda", description: "Pulizia approfondita della casa" },
+      { id: "office_cleaning", name: "Pulizia Regolare", description: "Pulizia periodica di mantenimento" },
+      { id: "sanitization", name: "Sanificazione", description: "Pulizia con sanificazione ambienti" },
+    ],
+  },
+  {
+    id: "lavanderia",
+    name: "Lavanderia",
+    services: [
+      { id: "ironing", name: "Stiratura", description: "Stiratura e piegatura indumenti" },
+    ],
+  },
+  {
+    id: "assistenza",
+    name: "Assistenza",
+    services: [
+      { id: "babysitter", name: "Babysitter", description: "Assistenza bambini a domicilio" },
+      { id: "dog_sitter", name: "Dog Sitter", description: "Custodia e passeggiate animali" },
+    ],
+  },
 ];
 
-interface ServiceConfig {
-  enabled: boolean;
-  hourlyRate: string;
-  minHours: string;
+interface SelectedService {
+  id: string;
+  hourlyRate: number;
+  minHours: number;
 }
 
 export default function ServicesSetup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
-  const [services, setServices] = useState<Record<string, ServiceConfig>>({});
+  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -72,38 +85,32 @@ export default function ServicesSetup() {
         .eq("professional_id", prof.id);
 
       if (existingServices) {
-        const servicesMap: Record<string, ServiceConfig> = {};
-        existingServices.forEach((s) => {
-          servicesMap[s.service_type] = {
-            enabled: s.is_active,
-            hourlyRate: s.hourly_rate.toString(),
-            minHours: s.min_hours.toString(),
-          };
-        });
-        setServices(servicesMap);
+        setSelectedServices(
+          existingServices.map((s) => ({
+            id: s.service_type,
+            hourlyRate: Number(s.hourly_rate),
+            minHours: s.min_hours || 1,
+          }))
+        );
       }
     };
 
     loadData();
   }, [navigate]);
 
-  const toggleService = (serviceId: string) => {
-    setServices((prev) => ({
-      ...prev,
-      [serviceId]: prev[serviceId]
-        ? { ...prev[serviceId], enabled: !prev[serviceId].enabled }
-        : { enabled: true, hourlyRate: "15", minHours: "1" },
-    }));
+  const isServiceSelected = (serviceId: string) => {
+    return selectedServices.some((s) => s.id === serviceId);
   };
 
-  const updateServiceRate = (serviceId: string, field: "hourlyRate" | "minHours", value: string) => {
-    setServices((prev) => ({
-      ...prev,
-      [serviceId]: {
-        ...prev[serviceId],
-        [field]: value,
-      },
-    }));
+  const toggleService = (serviceId: string) => {
+    if (isServiceSelected(serviceId)) {
+      setSelectedServices((prev) => prev.filter((s) => s.id !== serviceId));
+    } else {
+      setSelectedServices((prev) => [
+        ...prev,
+        { id: serviceId, hourlyRate: 15, minHours: 1 },
+      ]);
+    }
   };
 
   const handleSubmit = async () => {
@@ -112,22 +119,19 @@ export default function ServicesSetup() {
     try {
       if (!professionalId) throw new Error("Professional ID not found");
 
-      // Get enabled services
-      const enabledServices = Object.entries(services)
-        .filter(([_, config]) => config.enabled)
-        .map(([serviceType, config]) => ({
-          professional_id: professionalId,
-          service_type: serviceType as ServiceType,
-          hourly_rate: parseFloat(config.hourlyRate) || 15,
-          min_hours: parseInt(config.minHours) || 1,
-          is_active: true,
-        }));
-
-      if (enabledServices.length === 0) {
+      if (selectedServices.length === 0) {
         toast.error("Seleziona almeno un servizio");
         setLoading(false);
         return;
       }
+
+      const servicesToInsert = selectedServices.map((s) => ({
+        professional_id: professionalId,
+        service_type: s.id as ServiceType,
+        hourly_rate: s.hourlyRate,
+        min_hours: s.minHours,
+        is_active: true,
+      }));
 
       // Delete existing and insert new
       await supabase
@@ -137,7 +141,7 @@ export default function ServicesSetup() {
 
       const { error } = await supabase
         .from("professional_services")
-        .insert(enabledServices);
+        .insert(servicesToInsert);
 
       if (error) throw error;
 
@@ -152,104 +156,80 @@ export default function ServicesSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-[#f8f9fa] flex flex-col">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground p-4">
-        <div className="flex items-center gap-3">
+      <header className="bg-background border-b border-border/30 p-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/professional/onboarding/personal")}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div>
-            <h1 className="font-semibold">Servizi e Prezzi</h1>
-            <p className="text-sm text-white/70">Step 2 di 4</p>
-          </div>
+          <h1 className="font-semibold text-lg">Servizi</h1>
+          <div className="w-9" />
         </div>
       </header>
 
-      {/* Progress */}
-      <div className="h-1 bg-muted">
-        <div className="h-full bg-primary w-2/4" />
-      </div>
-
       {/* Content */}
-      <div className="flex-1 p-4 space-y-4 overflow-auto pb-24">
-        <p className="text-muted-foreground">
-          Seleziona i servizi che offri e imposta le tue tariffe orarie
-        </p>
+      <div className="flex-1 overflow-auto pb-24">
+        {serviceCategories.map((category) => (
+          <div key={category.id} className="mb-2">
+            {/* Category Header */}
+            <div className="flex items-center justify-between px-4 py-4">
+              <h2 className="text-xl font-bold text-foreground">{category.name}</h2>
+              <button className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                <Pencil className="w-4 h-4" />
+              </button>
+            </div>
 
-        {servicesList.map((service) => {
-          const Icon = service.icon;
-          const config = services[service.id];
-          const isEnabled = config?.enabled ?? false;
-
-          return (
-            <div
-              key={service.id}
-              className={cn(
-                "bg-card rounded-xl border p-4 transition-all",
-                isEnabled ? "border-primary shadow-sm" : "border-border"
-              )}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div
+            {/* Services List */}
+            <div className="bg-background mx-4 rounded-2xl overflow-hidden border border-border/30">
+              {category.services.map((service, index) => {
+                const isSelected = isServiceSelected(service.id);
+                return (
+                  <button
+                    key={service.id}
+                    onClick={() => toggleService(service.id)}
                     className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center",
-                      isEnabled ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      "w-full flex items-center justify-between p-4 text-left transition-colors",
+                      index < category.services.length - 1 && "border-b border-border/30",
+                      isSelected && "bg-primary/5"
                     )}
                   >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{service.name}</p>
-                    <p className="text-sm text-muted-foreground">{service.description}</p>
-                  </div>
-                </div>
-                <Switch checked={isEnabled} onCheckedChange={() => toggleService(service.id)} />
-              </div>
-
-              {isEnabled && (
-                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Tariffa Oraria</Label>
-                    <div className="relative">
-                      <Euro className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        min="1"
-                        value={config?.hourlyRate || "15"}
-                        onChange={(e) => updateServiceRate(service.id, "hourlyRate", e.target.value)}
-                        className="pl-8 h-9"
-                        placeholder="15"
-                      />
+                    <div className="flex-1">
+                      <p className={cn(
+                        "font-medium",
+                        isSelected ? "text-primary" : "text-foreground"
+                      )}>
+                        {service.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        {service.description}
+                      </p>
                     </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Min. Ore</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="8"
-                      value={config?.minHours || "1"}
-                      onChange={(e) => updateServiceRate(service.id, "minHours", e.target.value)}
-                      className="h-9"
-                      placeholder="1"
-                    />
-                  </div>
-                </div>
-              )}
+                    <ChevronRight className={cn(
+                      "w-5 h-5 ml-3 flex-shrink-0",
+                      isSelected ? "text-primary" : "text-muted-foreground"
+                    )} />
+                  </button>
+                );
+              })}
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
 
       {/* Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 border-t border-border">
-        <Button onClick={handleSubmit} className="w-full" size="lg" disabled={loading}>
-          {loading ? "Salvataggio..." : "Continua"}
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 border-t border-border/30">
+        <Button 
+          onClick={handleSubmit} 
+          className="w-full h-14 text-base rounded-2xl gap-2" 
+          size="lg" 
+          disabled={loading}
+        >
+          <PlusCircle className="w-5 h-5" />
+          {loading ? "Salvataggio..." : "Aggiungi Nuovo Servizio"}
         </Button>
       </div>
     </div>
