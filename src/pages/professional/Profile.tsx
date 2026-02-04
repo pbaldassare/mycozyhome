@@ -1,54 +1,42 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Star,
   Camera,
   Settings,
   LogOut,
-  ChevronRight,
-  Edit2,
   ImagePlus,
-  Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useProfessionalProfile, useProfessionalServices } from "@/hooks/useProfessionalData";
 import serviceCleaningImg from "@/assets/service-cleaning.png";
 import serviceIroningImg from "@/assets/service-ironing.png";
 import servicePetsitterImg from "@/assets/service-petsitter.png";
 import promoCleaningImg from "@/assets/promo-cleaning.png";
 
-interface Professional {
-  id: string;
-  first_name: string;
-  last_name: string;
-  city: string;
-  status: string;
-  avatar_url: string | null;
-  average_rating: number | null;
-  review_count: number | null;
-  created_at: string;
-  bio: string | null;
-}
+const serviceImages: Record<string, string> = {
+  cleaning: serviceCleaningImg,
+  office_cleaning: serviceCleaningImg,
+  ironing: serviceIroningImg,
+  sanitization: serviceCleaningImg,
+  babysitter: servicePetsitterImg,
+  dog_sitter: servicePetsitterImg,
+};
 
-const ratingBreakdown = [
-  { stars: 5, percentage: 70 },
-  { stars: 4, percentage: 20 },
-  { stars: 3, percentage: 5 },
-  { stars: 2, percentage: 3 },
-  { stars: 1, percentage: 2 },
-];
-
-const mockServices = [
-  { id: "1", name: "Pulizia Casa", price: 18, image: serviceCleaningImg },
-  { id: "2", name: "Stiratura", price: 15, image: serviceIroningImg },
-  { id: "3", name: "Dog Sitter", price: 20, image: servicePetsitterImg },
-];
+const serviceTypeLabels: Record<string, string> = {
+  cleaning: "Pulizie casa",
+  office_cleaning: "Pulizie ufficio",
+  ironing: "Stiro",
+  sanitization: "Sanificazione",
+  babysitter: "Babysitter",
+  dog_sitter: "Dog sitter",
+};
 
 const portfolioImages = [
   { id: "1", label: "Prima", image: "" },
@@ -57,32 +45,8 @@ const portfolioImages = [
 
 export default function ProfessionalProfile() {
   const navigate = useNavigate();
-  const [professional, setProfessional] = useState<Professional | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/professional/auth");
-        return;
-      }
-
-      const { data: prof } = await supabase
-        .from("professionals")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (prof) {
-        setProfessional(prof as Professional);
-      }
-      setLoading(false);
-    };
-
-    fetchProfile();
-  }, [navigate]);
+  const { data: professional, isLoading: loadingProfile } = useProfessionalProfile();
+  const { data: services, isLoading: loadingServices } = useProfessionalServices(professional?.id);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -90,7 +54,7 @@ export default function ProfessionalProfile() {
     navigate("/");
   };
 
-  if (loading) {
+  if (loadingProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -102,8 +66,19 @@ export default function ProfessionalProfile() {
 
   const initials = `${professional.first_name[0]}${professional.last_name[0]}`;
   const joinYear = new Date(professional.created_at).getFullYear();
-  const averageRating = professional.average_rating ?? 4.8;
-  const reviewCount = professional.review_count ?? 125;
+  const averageRating = professional.average_rating ?? 0;
+  const reviewCount = professional.review_count ?? 0;
+
+  // Calculate rating breakdown (simplified when we have real data)
+  const ratingBreakdown = [
+    { stars: 5, percentage: reviewCount > 0 ? 70 : 0 },
+    { stars: 4, percentage: reviewCount > 0 ? 20 : 0 },
+    { stars: 3, percentage: reviewCount > 0 ? 5 : 0 },
+    { stars: 2, percentage: reviewCount > 0 ? 3 : 0 },
+    { stars: 1, percentage: reviewCount > 0 ? 2 : 0 },
+  ];
+
+  const activeServices = services?.filter((s) => s.is_active) || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -138,7 +113,7 @@ export default function ProfessionalProfile() {
           <h2 className="text-xl font-bold">
             {professional.first_name} {professional.last_name}
           </h2>
-          <p className="text-muted-foreground">Professionista delle Pulizie</p>
+          <p className="text-muted-foreground">{professional.city}</p>
           <p className="text-sm text-muted-foreground">Iscritto dal {joinYear}</p>
         </div>
 
@@ -147,7 +122,7 @@ export default function ProfessionalProfile() {
           <CardContent className="p-6">
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <p className="text-5xl font-bold">{averageRating}</p>
+                <p className="text-5xl font-bold">{Number(averageRating).toFixed(1)}</p>
                 <div className="flex items-center justify-center gap-0.5 my-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
@@ -209,43 +184,55 @@ export default function ProfessionalProfile() {
         </section>
 
         {/* Top Services */}
-        <section>
-          <h2 className="text-base font-semibold mb-3">Servizi Principali</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {mockServices.map((service) => (
-              <div
-                key={service.id}
-                className="rounded-xl overflow-hidden bg-card border"
-              >
-                <div className="aspect-square relative">
-                  <img
-                    src={service.image}
-                    alt={service.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2 text-center">
-                  <p className="text-xs font-medium truncate">{service.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* All Services */}
-        <section>
-          <h2 className="text-base font-semibold mb-3">Tutti i Servizi</h2>
-          <Card>
-            <CardContent className="p-0 divide-y">
-              {mockServices.map((service) => (
-                <div key={service.id} className="flex items-center justify-between p-4">
-                  <span className="font-medium">{service.name}</span>
-                  <span className="text-primary font-semibold">€{service.price}/ora</span>
+        {loadingServices ? (
+          <Skeleton className="h-32 w-full" />
+        ) : activeServices.length > 0 && (
+          <section>
+            <h2 className="text-base font-semibold mb-3">Servizi Principali</h2>
+            <div className="grid grid-cols-3 gap-3">
+              {activeServices.slice(0, 3).map((service) => (
+                <div
+                  key={service.id}
+                  className="rounded-xl overflow-hidden bg-card border"
+                >
+                  <div className="aspect-square relative">
+                    <img
+                      src={serviceImages[service.service_type] || serviceCleaningImg}
+                      alt={serviceTypeLabels[service.service_type]}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-2 text-center">
+                    <p className="text-xs font-medium truncate">
+                      {serviceTypeLabels[service.service_type]}
+                    </p>
+                  </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </section>
+            </div>
+          </section>
+        )}
+
+        {/* All Services */}
+        {services && services.length > 0 && (
+          <section>
+            <h2 className="text-base font-semibold mb-3">Tutti i Servizi</h2>
+            <Card>
+              <CardContent className="p-0 divide-y">
+                {services.map((service) => (
+                  <div key={service.id} className="flex items-center justify-between p-4">
+                    <span className="font-medium">
+                      {serviceTypeLabels[service.service_type]}
+                    </span>
+                    <span className="text-primary font-semibold">
+                      €{Number(service.hourly_rate).toFixed(0)}/ora
+                    </span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+        )}
 
         {/* Promotion */}
         <section>
