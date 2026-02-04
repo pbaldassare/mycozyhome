@@ -31,6 +31,7 @@ import ClientAuth from "@/pages/client/Auth";
 import ClientPersonalData from "@/pages/client/profile/PersonalData";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import Welcome from "@/pages/Welcome";
+import Login from "@/pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
         <Routes>
           {/* Welcome/Landing Page */}
           <Route path="/" element={<Welcome />} />
+          <Route path="/login" element={<Login />} />
           
           {/* Client Routes */}
           <Route path="/client" element={<ClientLayout />}>
