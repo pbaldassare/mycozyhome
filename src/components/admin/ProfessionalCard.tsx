@@ -25,10 +25,10 @@ interface ProfessionalCardProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
-  pending: { label: "In attesa", className: "status-pending" },
-  in_review: { label: "In revisione", className: "bg-info/10 text-info" },
-  approved: { label: "Approvato", className: "status-approved" },
-  rejected: { label: "Rifiutato", className: "status-rejected" },
+  pending: { label: "In attesa", className: "bg-straw/30 text-straw-dark border border-straw/50" },
+  in_review: { label: "In revisione", className: "bg-primary/15 text-primary border border-primary/30" },
+  approved: { label: "Approvato", className: "bg-sage/20 text-sage-dark border border-sage/50" },
+  rejected: { label: "Rifiutato", className: "bg-blush/20 text-blush-dark border border-blush/50" },
   suspended: { label: "Sospeso", className: "bg-muted text-muted-foreground" },
 };
 

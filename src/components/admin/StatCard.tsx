@@ -15,10 +15,10 @@ interface StatCardProps {
 
 const variantStyles = {
   default: "bg-muted text-muted-foreground",
-  primary: "bg-primary/10 text-primary",
-  success: "bg-success/10 text-success",
-  warning: "bg-warning/10 text-warning",
-  destructive: "bg-destructive/10 text-destructive",
+  primary: "bg-primary/15 text-primary",
+  success: "bg-sage/20 text-sage-dark",
+  warning: "bg-straw/30 text-straw-dark",
+  destructive: "bg-blush/20 text-blush-dark",
 };
 
 export function StatCard({
