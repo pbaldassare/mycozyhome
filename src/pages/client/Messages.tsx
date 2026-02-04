@@ -1,42 +1,19 @@
 import { useState } from "react";
-import { Search, Plus, Lock } from "lucide-react";
+import { Search, Lock, MessageSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AppHeader } from "@/components/client/AppHeader";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { it } from "date-fns/locale";
+import { useConversations } from "@/hooks/useConversations";
+import { useAuth } from "@/hooks/useAuth";
 
-const mockConversations = [
-  {
-    id: "conv-1",
-    professional: { name: "Maria Rossi", avatar: "", isOnline: true },
-    lastMessage: "Perfetto, ci vediamo domani alle 9!",
-    timestamp: new Date(),
-    unreadCount: 2,
-    hasBooking: true,
-  },
-  {
-    id: "conv-2",
-    professional: { name: "Giuseppe Bianchi", avatar: "", isOnline: false },
-    lastMessage: "Ho ricevuto la conferma del pagamento",
-    timestamp: new Date(Date.now() - 3600000),
-    unreadCount: 0,
-    hasBooking: true,
-  },
-  {
-    id: "conv-3",
-    professional: { name: "Anna Verdi", avatar: "", isOnline: true },
-    lastMessage: "Posso essere disponibile giovedì pomeriggio",
-    timestamp: new Date(Date.now() - 86400000),
-    unreadCount: 0,
-    hasBooking: true,
-  },
-];
-
-function formatTimestamp(date: Date) {
+function formatTimestamp(dateStr: string | null) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
   if (isToday(date)) {
     return format(date, "HH:mm");
   }
@@ -48,18 +25,20 @@ function formatTimestamp(date: Date) {
 
 export default function ClientMessages() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const { conversations, isLoading } = useConversations("client");
 
-  const filteredConversations = mockConversations.filter((conv) =>
-    conv.professional.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredConversations = conversations.filter((conv) => {
+    const name = conv.professional
+      ? `${conv.professional.first_name} ${conv.professional.last_name}`
+      : "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader
-        title="Messaggi"
-        showNotifications
-      />
+      <AppHeader title="Messaggi" showNotifications />
 
       <div className="px-4 py-4 space-y-4">
         {/* Security Notice */}
@@ -81,10 +60,22 @@ export default function ClientMessages() {
 
         {/* Conversations List */}
         <div className="space-y-1">
-          {filteredConversations.length === 0 ? (
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredConversations.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="h-8 w-8 text-muted-foreground" />
+                <MessageSquare className="h-8 w-8 text-muted-foreground" />
               </div>
               <h3 className="font-semibold">Nessuna conversazione</h3>
               <p className="text-sm text-muted-foreground mt-1">
@@ -93,10 +84,15 @@ export default function ClientMessages() {
             </div>
           ) : (
             filteredConversations.map((conv) => {
-              const initials = conv.professional.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("");
+              const professional = conv.professional;
+              const name = professional
+                ? `${professional.first_name} ${professional.last_name}`
+                : "Professionista";
+              const initials = professional
+                ? `${professional.first_name?.[0] || ""}${professional.last_name?.[0] || ""}`
+                : "??";
+
+              const unreadCount = conv.unread_count_client || 0;
 
               return (
                 <button
@@ -106,40 +102,33 @@ export default function ClientMessages() {
                 >
                   <div className="relative flex-shrink-0">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={conv.professional.avatar} />
+                      <AvatarImage src={professional?.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    {conv.professional.isOnline && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-background" />
-                    )}
                   </div>
 
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="font-semibold truncate">
-                        {conv.professional.name}
-                      </h3>
+                      <h3 className="font-semibold truncate">{name}</h3>
                       <span className="text-xs text-muted-foreground flex-shrink-0">
-                        {formatTimestamp(conv.timestamp)}
+                        {formatTimestamp(conv.lastMessage?.created_at || conv.last_message_at)}
                       </span>
                     </div>
                     <p
                       className={cn(
                         "text-sm truncate",
-                        conv.unreadCount > 0
-                          ? "text-foreground font-medium"
-                          : "text-muted-foreground"
+                        unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
                       )}
                     >
-                      {conv.lastMessage}
+                      {conv.lastMessage?.content || "Nessun messaggio"}
                     </p>
                   </div>
 
-                  {conv.unreadCount > 0 && (
+                  {unreadCount > 0 && (
                     <span className="flex-shrink-0 w-5 h-5 bg-primary rounded-full text-xs text-primary-foreground font-medium flex items-center justify-center">
-                      {conv.unreadCount}
+                      {unreadCount}
                     </span>
                   )}
                 </button>
