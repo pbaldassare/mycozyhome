@@ -1,115 +1,111 @@
 
+# Piano: Correggere il Redirect Login per Professionisti
 
-# Piano: Avatar Professionisti, Mappa Google e Pagine Professionista Distinte
+## Problema Identificato
 
-## Panoramica
+Quando un professionista fa login, viene reindirizzato alle schermate del **cliente** invece che a quelle del **professionista**.
 
-Ci sono tre problemi da risolvere:
+### Causa Tecnica
 
-1. **I professionisti non hanno immagini avatar** - tutti hanno `avatar_url: null`
-2. **Manca la mappa Google Maps** per geolocalizzare i professionisti  
-3. **Le pagine del professionista sono identiche a quelle del cliente** - il login reindirizza alla home sbagliata
+Il file `Login.tsx` (riga 58) controlla il ruolo dell'utente così:
 
-## Cosa Faremo
-
-### 1. Aggiungere immagini avatar ai professionisti
-
-Aggiorneremo il database con URL di immagini realistiche da servizi come Unsplash/UI Avatars per ogni professionista fake:
-
-- Maria Rossi, Giuseppe Bianchi, Francesca Verdi...
-- Coordinate geografiche (latitudine/longitudine) per ogni professionista
-- Coordinate per le aree di copertura
-
-### 2. Integrare Google Maps per visualizzare i professionisti
-
-Creeremo un nuovo componente **ProfessionalsMap** che:
-
-- Mostra una mappa centrata sulla posizione dell'utente (o Italia se non disponibile)
-- Visualizza i marker dei professionisti con le loro foto
-- Cliccando su un marker si apre il dettaglio del professionista
-- Calcolerà le distanze reali tra cliente e professionisti
-
-La mappa verrà integrata nella pagina **Search** del cliente con un toggle Lista/Mappa.
-
-```text
-┌─────────────────────────────────────────┐
-│  [Cerca...]                    [Filtri] │
-├─────────────────────────────────────────┤
-│  Pulizie | Stiro | Baby... | Dog...     │
-├─────────────────────────────────────────┤
-│     [Lista]      |      [Mappa]         │ ← Toggle nuovo
-├─────────────────────────────────────────┤
-│                                         │
-│      🗺️ Mappa con marker               │
-│      dei professionisti                 │
-│                                         │
-│         📍 Maria    📍 Giuseppe         │
-│                                         │
-│              📍 Anna                    │
-│                                         │
-└─────────────────────────────────────────┘
+```typescript
+const role = data.user?.user_metadata?.role;
 ```
 
-### 3. Differenziare le pagine del professionista
+Ma `user_metadata` contiene solo `{ email_verified: true }` - **il campo `role` non esiste**.
 
-Attualmente quando un professionista fa login:
-- Viene reindirizzato a `/professional/dashboard` 
-- Ma la home vera è `/professional` 
+I ruoli sono salvati correttamente nella tabella `user_roles`:
 
-Correggeremo:
-- Il redirect nel login per mandare a `/professional`
-- Verificheremo che la bottom nav del professionista sia completamente diversa da quella del cliente
-- La home del professionista mostrerà dashboard con statistiche, guadagni e prenotazioni
+| email | role |
+|-------|------|
+| admin@domesticdelight.app | admin |
+| professionista@domesticdelight.app | professional |
+| cliente@domesticdelight.app | client |
 
----
+Ma il login non consulta questa tabella, quindi tutti finiscono nel caso default → `/client`.
 
-## Dettaglio Tecnico
+## Soluzione
 
-### File da Creare
+Modificare `Login.tsx` per consultare la tabella `user_roles` invece di `user_metadata`:
 
-| File | Descrizione |
-|------|-------------|
-| `src/components/maps/ProfessionalsMap.tsx` | Componente mappa con marker professionisti |
-| `src/hooks/useGeolocation.ts` | Hook per ottenere posizione utente |
+```text
+Prima:
+  const role = data.user?.user_metadata?.role;
 
-### File da Modificare
+Dopo:
+  const { data: roleData } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", data.user.id)
+    .single();
+  
+  const role = roleData?.role;
+```
+
+## File da Modificare
 
 | File | Modifica |
 |------|----------|
-| `src/pages/client/Search.tsx` | Aggiungere toggle Lista/Mappa e integrare ProfessionalsMap |
-| `src/pages/Login.tsx` | Correggere redirect professionista da `/professional/dashboard` a `/professional` |
-| `src/hooks/useProfessionals.ts` | Passare avatarUrl correttamente ai componenti |
-| `src/components/client/ProfessionalCard.tsx` | Assicurarsi che l'avatar venga mostrato |
+| `src/pages/Login.tsx` | Cambiare la logica per leggere il ruolo dalla tabella `user_roles` |
 
-### Migrazione Database
+## Flusso Corretto dopo la Modifica
 
-Aggiorneremo i dati fake con:
-- **Avatar URL** per ogni professionista (usando UI Avatars con nome/cognome)
-- **Coordinate geografiche** reali per Milano, Roma, Torino, Napoli, Bologna
-- **Coordinate per professional_areas** per abilitare il matching geografico
+```text
+┌─────────────────────────────────────────────────────────┐
+│                    LOGIN                                │
+│                                                         │
+│  1. Utente inserisce email + password                   │
+│  2. Supabase autentica l'utente                        │
+│  3. Query a user_roles per ottenere il ruolo           │
+│                                                         │
+│     ┌──────────────┬──────────────┬───────────────┐    │
+│     │    admin     │ professional │    client     │    │
+│     └──────┬───────┴──────┬───────┴───────┬───────┘    │
+│            │              │               │            │
+│            ▼              ▼               ▼            │
+│        /admin      /professional      /client          │
+└─────────────────────────────────────────────────────────┘
+```
 
-Esempio coordinate:
-- Milano: 45.4642, 9.1900
-- Roma: 41.9028, 12.4964
-- Torino: 45.0703, 7.6869
+## Codice Completo della Modifica
 
-### Google Maps Integration
+Sostituiremo le righe 57-77 di `Login.tsx` con:
 
-L'API key `GOOGLE_MAPS_API_KEY` è già configurata. Useremo:
-- **Maps JavaScript API** per la mappa interattiva
-- **Geocoding API** già integrata in `geo-service` per le coordinate
-- **Distance Matrix** per calcolare distanze reali
+```typescript
+// Check user role from user_roles table
+const { data: roleData } = await supabase
+  .from("user_roles")
+  .select("role")
+  .eq("user_id", data.user.id)
+  .single();
 
-### Flusso Utente Finale
+const role = roleData?.role;
 
-**Come Cliente:**
-1. Vai su Cerca
-2. Clicca su "Mappa" 
-3. Vedi tutti i professionisti sulla mappa con le loro foto
-4. Clicca su un marker → vai al dettaglio
+if (role === "professional") {
+  // Check if professional has completed onboarding
+  const { data: prof } = await supabase
+    .from("professionals")
+    .select("status, profile_completed")
+    .eq("user_id", data.user.id)
+    .single();
 
-**Come Professionista:**
-1. Fai login con `professionista@domesticdelight.app`
-2. Vieni reindirizzato a `/professional` (dashboard con statistiche)
-3. La bottom nav mostra: Home, Prenotazioni, Messaggi, Disponibilità, Profilo
+  if (prof?.profile_completed) {
+    navigate("/professional");
+  } else {
+    navigate("/professional/onboarding/personal");
+  }
+} else if (role === "admin") {
+  navigate("/admin");
+} else {
+  navigate("/client");
+}
+```
 
+## Risultato Atteso
+
+| Account | Redirect |
+|---------|----------|
+| `admin@domesticdelight.app` | `/admin` |
+| `professionista@domesticdelight.app` | `/professional` |
+| `cliente@domesticdelight.app` | `/client` |
