@@ -47,18 +47,18 @@ export function ProfessionalCard({
   onReject,
   onView,
 }: ProfessionalCardProps) {
-  const status = statusConfig[professional.status];
+  const status = statusConfig[professional.status] || statusConfig.pending;
 
   return (
-    <div className="bg-card rounded-xl border border-border p-5 transition-all duration-200 hover:shadow-md animate-fade-in">
+    <div className="bg-card rounded-2xl border border-border/30 p-5 transition-all duration-200 hover:shadow-lg hover:border-border/50 animate-fade-in">
       <div className="flex items-start gap-4">
         {/* Avatar */}
-        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-xl flex-shrink-0">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-primary font-bold text-xl flex-shrink-0 border border-primary/10">
           {professional.avatar ? (
             <img
               src={professional.avatar}
               alt={professional.name}
-              className="w-full h-full object-cover rounded-xl"
+              className="w-full h-full object-cover rounded-2xl"
             />
           ) : (
             professional.name.charAt(0).toUpperCase()
@@ -69,14 +69,14 @@ export function ProfessionalCard({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="font-semibold text-foreground truncate">
+              <h3 className="font-semibold text-foreground truncate text-base">
                 {professional.name}
               </h3>
               <p className="text-sm text-muted-foreground truncate">
                 {professional.email}
               </p>
             </div>
-            <span className={cn("status-badge flex-shrink-0", status.className)}>
+            <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-medium flex-shrink-0", status.className)}>
               {status.label}
             </span>
           </div>
@@ -84,7 +84,7 @@ export function ProfessionalCard({
           {/* Services */}
           <div className="flex flex-wrap gap-1.5 mt-3">
             {professional.services.map((service) => (
-              <Badge key={service} variant="secondary" className="text-xs">
+              <Badge key={service} variant="secondary" className="text-xs rounded-lg bg-muted/50">
                 {serviceLabels[service] || service}
               </Badge>
             ))}
@@ -92,24 +92,25 @@ export function ProfessionalCard({
 
           {/* Meta */}
           <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" />
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-4 h-4" />
               {professional.city}
             </span>
-            <span className="flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5" />
-              {professional.documentsCount} documenti
+            <span className="flex items-center gap-1.5">
+              <FileText className="w-4 h-4" />
+              {professional.documentsCount} doc
             </span>
             {professional.rating && (
               <span className="flex items-center gap-1">
-                <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-                {professional.rating} ({professional.reviewsCount})
+                <Star className="w-4 h-4 fill-warning text-warning" />
+                <span className="font-medium text-foreground">{professional.rating}</span>
+                <span className="text-muted-foreground">({professional.reviewsCount})</span>
               </span>
             )}
           </div>
 
           {/* Submitted date */}
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2.5">
             Inviato il {professional.submittedAt}
           </p>
         </div>
@@ -117,26 +118,27 @@ export function ProfessionalCard({
 
       {/* Actions */}
       {(professional.status === "pending" || professional.status === "in_review") && (
-        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+        <div className="flex items-center gap-2 mt-5 pt-4 border-t border-border/30">
           <Button
             variant="outline"
             size="sm"
-            className="flex-1"
+            className="flex-1 rounded-xl border-border/50"
             onClick={() => onView?.(professional.id)}
           >
-            <Eye className="w-4 h-4 mr-1.5" />
+            <Eye className="w-4 h-4 mr-2" />
             Visualizza
           </Button>
           <Button
-            variant="destructive"
+            variant="outline"
             size="sm"
+            className="rounded-xl border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
             onClick={() => onReject?.(professional.id)}
           >
             <X className="w-4 h-4" />
           </Button>
           <Button
             size="sm"
-            className="bg-success hover:bg-success/90"
+            className="rounded-xl bg-success hover:bg-success/90"
             onClick={() => onApprove?.(professional.id)}
           >
             <Check className="w-4 h-4" />
@@ -145,14 +147,14 @@ export function ProfessionalCard({
       )}
 
       {professional.status !== "pending" && professional.status !== "in_review" && (
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-5 pt-4 border-t border-border/30">
           <Button
             variant="outline"
             size="sm"
-            className="w-full"
+            className="w-full rounded-xl border-border/50"
             onClick={() => onView?.(professional.id)}
           >
-            <Eye className="w-4 h-4 mr-1.5" />
+            <Eye className="w-4 h-4 mr-2" />
             Visualizza Dettagli
           </Button>
         </div>

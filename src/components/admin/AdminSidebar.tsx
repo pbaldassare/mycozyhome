@@ -9,10 +9,10 @@ import {
   CreditCard,
   Settings,
   LogOut,
-  Home,
   Menu,
   X,
   HelpCircle,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,7 @@ export function AdminSidebar() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-sidebar rounded-lg text-sidebar-foreground"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-primary rounded-xl text-primary-foreground shadow-lg"
       >
         <Menu className="w-5 h-5" />
       </button>
@@ -54,31 +54,32 @@ export function AdminSidebar() {
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Blue Dark Style like screenshots */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 h-screen bg-sidebar flex flex-col transition-all duration-300 z-50",
-          collapsed ? "w-20" : "w-64",
+          "fixed lg:sticky top-0 left-0 h-screen flex flex-col transition-all duration-300 z-50",
+          "bg-[hsl(222,47%,11%)]", // Dark blue like screenshot
+          collapsed ? "w-20" : "w-72",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Header */}
-        <div className="p-4 flex items-center justify-between border-b border-sidebar-border">
+        <div className="p-5 flex items-center justify-between border-b border-white/10">
           <div className={cn("flex items-center gap-3", collapsed && "justify-center w-full")}>
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Home className="w-5 h-5 text-primary-foreground" />
+            <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center shadow-lg">
+              <Shield className="w-6 h-6 text-primary-foreground" />
             </div>
             {!collapsed && (
               <div>
-                <h1 className="font-display font-bold text-lg text-sidebar-foreground">
+                <h1 className="font-bold text-lg text-white">
                   HomeServ
                 </h1>
-                <p className="text-xs text-sidebar-muted">Admin Panel</p>
+                <p className="text-xs text-white/50">Admin Panel</p>
               </div>
             )}
           </div>
@@ -87,7 +88,7 @@ export function AdminSidebar() {
               setCollapsed(!collapsed);
               setMobileOpen(false);
             }}
-            className="p-1.5 rounded-lg hover:bg-sidebar-accent text-sidebar-muted hover:text-sidebar-foreground transition-colors lg:block"
+            className="p-2 rounded-xl hover:bg-white/10 text-white/50 hover:text-white transition-colors"
           >
             {mobileOpen ? (
               <X className="w-5 h-5 lg:hidden" />
@@ -100,34 +101,34 @@ export function AdminSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "nav-link",
-                isActive(item.path) && "nav-link-active",
-                collapsed && "justify-center px-2"
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all duration-200",
+                isActive(item.path) && "bg-primary text-white hover:bg-primary",
+                collapsed && "justify-center px-3"
               )}
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span className="font-medium">{item.label}</span>}
+              {!collapsed && <span className="font-medium text-sm">{item.label}</span>}
             </NavLink>
           ))}
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-sidebar-border">
+        <div className="p-4 border-t border-white/10">
           <button
             className={cn(
-              "nav-link w-full text-destructive hover:text-destructive hover:bg-destructive/10",
-              collapsed && "justify-center px-2"
+              "flex items-center gap-3 px-4 py-3 rounded-xl w-full text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all",
+              collapsed && "justify-center px-3"
             )}
           >
             <LogOut className="w-5 h-5 flex-shrink-0" />
-            {!collapsed && <span className="font-medium">Esci</span>}
+            {!collapsed && <span className="font-medium text-sm">Esci</span>}
           </button>
         </div>
       </aside>

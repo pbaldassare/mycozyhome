@@ -219,54 +219,60 @@ export default function Professionals() {
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             placeholder="Cerca per nome, email o città..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
+            className="pl-12 h-12 rounded-xl border-border/30"
           />
         </div>
-        <Button variant="outline" className="gap-2">
-          <Filter className="w-4 h-4" />
+        <Button variant="outline" className="gap-2 h-12 px-6 rounded-xl border-border/30">
+          <Filter className="w-5 h-5" />
           Filtri
         </Button>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-          <TabsTrigger value="pending" className="gap-2">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid bg-muted/50 p-1 rounded-xl">
+          <TabsTrigger value="pending" className="gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <Clock className="w-4 h-4" />
             <span className="hidden sm:inline">In Attesa</span>
-            <span className="bg-warning/20 text-warning text-xs px-1.5 py-0.5 rounded-full">
+            <span className="bg-warning/20 text-warning text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.pending}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="approved" className="gap-2">
+          <TabsTrigger value="approved" className="gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <UserCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Approvati</span>
-            <span className="bg-success/20 text-success text-xs px-1.5 py-0.5 rounded-full">
+            <span className="bg-success/20 text-success text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.approved}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="rejected" className="gap-2">
+          <TabsTrigger value="rejected" className="gap-2 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             <XCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Rifiutati</span>
-            <span className="bg-destructive/20 text-destructive text-xs px-1.5 py-0.5 rounded-full">
+            <span className="bg-destructive/20 text-destructive text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.rejected}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="all">
+          <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm">
             Tutti ({counts.all})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
           {filteredProfessionals.length === 0 ? (
-            <div className="text-center py-12 bg-card rounded-xl border border-border">
-              <p className="text-muted-foreground">
+            <div className="text-center py-16 bg-card rounded-2xl border border-border/30">
+              <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <UserCheck className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <p className="text-muted-foreground font-medium">
                 Nessun professionista trovato
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Prova a modificare i filtri di ricerca
               </p>
             </div>
           ) : (
