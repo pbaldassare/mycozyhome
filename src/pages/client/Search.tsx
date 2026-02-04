@@ -122,7 +122,9 @@ export default function ClientSearch() {
             {mockProfessionals.map((pro) => (
               <ProfessionalCard
                 key={pro.id}
+                id={pro.id}
                 {...pro}
+                showFavorite
                 onClick={() => navigate(`/client/professional/${pro.id}`)}
               />
             ))}

@@ -9,6 +9,7 @@ import {
   User,
   Bell,
   FileText,
+  Heart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -153,6 +154,12 @@ export default function ClientProfile() {
             Storico
           </h3>
           <div className="trust-card p-0 overflow-hidden">
+            <MenuItem
+              icon={Heart}
+              label="I miei preferiti"
+              onClick={() => navigate("/client/profile/favorites")}
+            />
+            <Separator />
             <MenuItem
               icon={FileText}
               label="Storico pagamenti"

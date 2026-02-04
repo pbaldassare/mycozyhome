@@ -43,6 +43,7 @@ import ClientPaymentHistory from "@/pages/client/profile/PaymentHistory";
 import ClientMyReviews from "@/pages/client/profile/MyReviews";
 import ClientPrivacy from "@/pages/client/profile/Privacy";
 import ClientSettings from "@/pages/client/profile/Settings";
+import ClientFavorites from "@/pages/client/profile/Favorites";
 import ClientPromotions from "@/pages/client/Promotions";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import Welcome from "@/pages/Welcome";
@@ -85,6 +86,7 @@ const App = () => (
           <Route path="/client/profile/reviews" element={<ClientMyReviews />} />
           <Route path="/client/profile/privacy" element={<ClientPrivacy />} />
           <Route path="/client/profile/settings" element={<ClientSettings />} />
+          <Route path="/client/profile/favorites" element={<ClientFavorites />} />
           <Route path="/client/chat/:conversationId" element={<ClientChat />} />
           <Route path="/client/dispute" element={<ClientDispute />} />
           <Route path="/client/promotions" element={<ClientPromotions />} />
