@@ -715,6 +715,7 @@ export type Database = {
           review_count: number
         }[]
       }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       document_status: "pending" | "approved" | "rejected"
