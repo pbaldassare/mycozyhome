@@ -8,8 +8,6 @@ import {
   Baby,
   Dog,
   Edit,
-  Euro,
-  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -20,7 +18,6 @@ interface Service {
   name: string;
   icon: React.ElementType;
   description: string;
-  priceType: "hourly" | "fixed";
   isActive: boolean;
   professionalsCount: number;
   bookingsThisMonth: number;
@@ -33,7 +30,6 @@ const services: Service[] = [
     name: "Pulizia Casa",
     icon: Home,
     description: "Pulizia domestica completa, inclusi vetri",
-    priceType: "hourly",
     isActive: true,
     professionalsCount: 45,
     bookingsThisMonth: 156,
@@ -43,7 +39,6 @@ const services: Service[] = [
     name: "Pulizia Uffici",
     icon: Building2,
     description: "Pulizia professionale di spazi lavorativi",
-    priceType: "hourly",
     isActive: true,
     professionalsCount: 23,
     bookingsThisMonth: 67,
@@ -53,7 +48,6 @@ const services: Service[] = [
     name: "Stiratura",
     icon: Shirt,
     description: "Servizio di stiratura a domicilio",
-    priceType: "hourly",
     isActive: true,
     professionalsCount: 34,
     bookingsThisMonth: 89,
@@ -63,7 +57,6 @@ const services: Service[] = [
     name: "Sanificazione",
     icon: ShieldCheck,
     description: "Sanificazione professionale ambienti",
-    priceType: "fixed",
     isActive: true,
     professionalsCount: 12,
     bookingsThisMonth: 23,
@@ -73,7 +66,6 @@ const services: Service[] = [
     name: "Babysitter",
     icon: Baby,
     description: "Assistenza bambini a domicilio",
-    priceType: "hourly",
     isActive: true,
     professionalsCount: 28,
     bookingsThisMonth: 134,
@@ -84,7 +76,6 @@ const services: Service[] = [
     name: "Dog Sitter",
     icon: Dog,
     description: "Custodia e passeggiate per cani",
-    priceType: "hourly",
     isActive: true,
     professionalsCount: 19,
     bookingsThisMonth: 78,
@@ -149,14 +140,6 @@ export default function Services() {
                 </div>
               </div>
 
-              {/* Price Type Info */}
-              <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
-                <Euro className="w-4 h-4" />
-                <span className="font-medium text-foreground">
-                  {service.priceType === "hourly" ? "Prezzo orario" : "Prezzo fisso"}
-                </span>
-                <span className="text-xs">• Impostato dal professionista</span>
-              </div>
 
               {/* Stats */}
               <div className="grid grid-cols-2 gap-3 mb-4">
