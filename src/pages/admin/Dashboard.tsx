@@ -85,7 +85,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="Professionisti Attivi"
           value={156}
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Pending Validations */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-5">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold">In Attesa di Validazione</h2>
@@ -149,48 +149,52 @@ export default function AdminDashboard() {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Quick Stats */}
-          <div className="bg-card rounded-xl border border-border p-5">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
+          <div className="bg-card rounded-2xl border border-border/30 p-6">
+            <h3 className="font-semibold mb-5 flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <TrendingUp className="w-5 h-5 text-primary" />
+              </div>
               Statistiche Rapide
             </h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                 <span className="text-sm text-muted-foreground">Entrate mensili</span>
-                <span className="font-semibold">€12,450</span>
+                <span className="font-bold text-lg">€12,450</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                 <span className="text-sm text-muted-foreground">Rating medio</span>
-                <span className="font-semibold">4.8 ⭐</span>
+                <span className="font-bold text-lg">4.8 ⭐</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors">
                 <span className="text-sm text-muted-foreground">Tasso completamento</span>
-                <span className="font-semibold text-success">94%</span>
+                <span className="font-bold text-lg text-success">94%</span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
                 <span className="text-sm text-muted-foreground">Tempo risposta medio</span>
-                <span className="font-semibold">2.5h</span>
+                <span className="font-bold text-lg">2.5h</span>
               </div>
             </div>
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-card rounded-xl border border-border p-5">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
+          <div className="bg-card rounded-2xl border border-border/30 p-6">
+            <h3 className="font-semibold mb-5 flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-primary/10">
+                <Clock className="w-5 h-5 text-primary" />
+              </div>
               Attività Recente
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {recentActivity.map((activity) => {
                 const Icon = activityIcons[activity.type as keyof typeof activityIcons];
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
