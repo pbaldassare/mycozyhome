@@ -66,10 +66,12 @@ export default function Login() {
           .single();
 
         if (prof?.profile_completed) {
-          navigate("/professional/dashboard");
+          navigate("/professional");
         } else {
           navigate("/professional/onboarding/personal");
         }
+      } else if (role === "admin") {
+        navigate("/admin");
       } else {
         navigate("/client");
       }
