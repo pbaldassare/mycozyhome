@@ -74,7 +74,7 @@ export default function ProfessionalAuth() {
       } else {
         const validated = signupSchema.parse(formData);
 
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: validated.email,
           password: validated.password,
           options: {
@@ -96,8 +96,27 @@ export default function ProfessionalAuth() {
           return;
         }
 
-        toast.success("Registrazione completata! Controlla la tua email per confermare.");
-        setIsLogin(true);
+        // Create professional profile in database
+        if (signUpData.user) {
+          const { error: profileError } = await supabase
+            .from("professionals")
+            .insert({
+              user_id: signUpData.user.id,
+              first_name: validated.firstName,
+              last_name: validated.lastName,
+              email: validated.email,
+              phone: "",
+              city: "",
+              status: "pending",
+            });
+
+          if (profileError) {
+            console.error("Error creating professional profile:", profileError);
+          }
+        }
+
+        toast.success("Registrazione completata!");
+        navigate("/professional/onboarding/personal-info");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
