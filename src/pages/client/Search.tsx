@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2, List, Map } from "lucide-react";
+import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2, List, Map, MapPin } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { ProfessionalsMap } from "@/components/maps/ProfessionalsMap";
+import { SearchFilters, SearchFiltersState } from "@/components/client/SearchFilters";
 import { cn } from "@/lib/utils";
 import { useSearchProfessionals } from "@/hooks/useProfessionals";
+import { useGeolocation } from "@/hooks/useGeolocation";
 
 const serviceFilters = [
   { id: "all", label: "Tutti", icon: null },
@@ -19,6 +22,13 @@ const serviceFilters = [
   { id: "dog_sitter", label: "Dog sitter", icon: Dog },
 ];
 
+const defaultFilters: SearchFiltersState = {
+  maxDistance: null,
+  minPrice: 0,
+  maxPrice: 100,
+  minRating: 0,
+};
+
 export default function ClientSearch() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -27,11 +37,27 @@ export default function ClientSearch() {
     searchParams.get("service") || "all"
   );
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<SearchFiltersState>(defaultFilters);
+  
+  const { latitude: userLat, longitude: userLon, loading: geoLoading } = useGeolocation();
 
   const { data: professionals, isLoading } = useSearchProfessionals(
     selectedService,
-    searchQuery
+    searchQuery,
+    {
+      userLatitude: userLat || undefined,
+      userLongitude: userLon || undefined,
+      filters,
+    }
   );
+
+  const activeFiltersCount = [
+    filters.maxDistance !== null,
+    filters.minPrice > 0,
+    filters.maxPrice < 100,
+    filters.minRating > 0,
+  ].filter(Boolean).length;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -52,11 +78,39 @@ export default function ClientSearch() {
           <Button
             variant="outline"
             size="icon"
-            className="h-12 w-12 rounded-xl border-border/30"
+            className="h-12 w-12 rounded-xl border-border/30 relative"
+            onClick={() => setFiltersOpen(true)}
           >
             <SlidersHorizontal className="h-5 w-5" />
+            {activeFiltersCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                {activeFiltersCount}
+              </Badge>
+            )}
           </Button>
         </div>
+
+        {/* Active Filters Summary */}
+        {activeFiltersCount > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {filters.maxDistance !== null && (
+              <Badge variant="secondary" className="text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                Max {filters.maxDistance} km
+              </Badge>
+            )}
+            {(filters.minPrice > 0 || filters.maxPrice < 100) && (
+              <Badge variant="secondary" className="text-xs">
+                €{filters.minPrice}-{filters.maxPrice}/h
+              </Badge>
+            )}
+            {filters.minRating > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {filters.minRating}+ ⭐
+              </Badge>
+            )}
+          </div>
+        )}
 
         {/* Service Filters */}
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
@@ -155,6 +209,14 @@ export default function ClientSearch() {
           </>
         )}
       </div>
+
+      {/* Filters Sheet */}
+      <SearchFilters
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
     </div>
   );
 }
