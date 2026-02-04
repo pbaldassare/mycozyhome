@@ -8,6 +8,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { StatCard } from "@/components/admin/StatCard";
 import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
 
@@ -153,27 +154,27 @@ export default function AdminDashboard() {
           {/* Quick Stats */}
           <div className="bg-card rounded-2xl border border-border/30 p-6">
             <h3 className="font-semibold mb-5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10">
+              <div className="p-2 rounded-xl bg-primary/15">
                 <TrendingUp className="w-5 h-5 text-primary" />
               </div>
               Statistiche Rapide
             </h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
                 <span className="text-sm text-muted-foreground">Entrate mensili</span>
-                <span className="font-bold text-lg">€12,450</span>
+                <span className="font-bold text-lg text-primary">€12,450</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-straw/10 hover:bg-straw/20 transition-colors">
                 <span className="text-sm text-muted-foreground">Rating medio</span>
-                <span className="font-bold text-lg">4.8 ⭐</span>
+                <span className="font-bold text-lg text-straw-dark">4.8 ⭐</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-success/5 hover:bg-success/10 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-sage/10 hover:bg-sage/20 transition-colors">
                 <span className="text-sm text-muted-foreground">Tasso completamento</span>
-                <span className="font-bold text-lg text-success">94%</span>
+                <span className="font-bold text-lg text-sage-dark">94%</span>
               </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+              <div className="flex justify-between items-center p-3 rounded-xl bg-blush/10 hover:bg-blush/15 transition-colors">
                 <span className="text-sm text-muted-foreground">Tempo risposta medio</span>
-                <span className="font-bold text-lg">2.5h</span>
+                <span className="font-bold text-lg text-blush-dark">2.5h</span>
               </div>
             </div>
           </div>
@@ -181,20 +182,26 @@ export default function AdminDashboard() {
           {/* Recent Activity */}
           <div className="bg-card rounded-2xl border border-border/30 p-6">
             <h3 className="font-semibold mb-5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/10">
-                <Clock className="w-5 h-5 text-primary" />
+              <div className="p-2 rounded-xl bg-sage/20">
+                <Clock className="w-5 h-5 text-sage-dark" />
               </div>
               Attività Recente
             </h3>
             <div className="space-y-2">
               {recentActivity.map((activity) => {
                 const Icon = activityIcons[activity.type as keyof typeof activityIcons];
+                const activityColors = {
+                  booking: "bg-primary/15 text-primary",
+                  professional: "bg-sage/20 text-sage-dark",
+                  dispute: "bg-blush/20 text-blush-dark",
+                  payment: "bg-straw/25 text-straw-dark",
+                };
                 return (
                   <div
                     key={activity.id}
                     className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
                   >
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <div className={cn("p-2 rounded-xl", activityColors[activity.type as keyof typeof activityColors])}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
