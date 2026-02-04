@@ -445,30 +445,36 @@ export type Database = {
       professional_services: {
         Row: {
           created_at: string
+          description: string | null
           hourly_rate: number
           id: string
           is_active: boolean | null
           min_hours: number | null
           professional_id: string
           service_type: Database["public"]["Enums"]["service_type"]
+          years_experience: number | null
         }
         Insert: {
           created_at?: string
+          description?: string | null
           hourly_rate: number
           id?: string
           is_active?: boolean | null
           min_hours?: number | null
           professional_id: string
           service_type: Database["public"]["Enums"]["service_type"]
+          years_experience?: number | null
         }
         Update: {
           created_at?: string
+          description?: string | null
           hourly_rate?: number
           id?: string
           is_active?: boolean | null
           min_hours?: number | null
           professional_id?: string
           service_type?: Database["public"]["Enums"]["service_type"]
+          years_experience?: number | null
         }
         Relationships: [
           {
