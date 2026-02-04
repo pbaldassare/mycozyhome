@@ -247,6 +247,123 @@ export function useToggleServiceActive() {
   });
 }
 
+export function useUpdateService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({
+      serviceId,
+      data,
+    }: {
+      serviceId: string;
+      data: {
+        hourly_rate: number;
+        description: string | null;
+        min_hours: number;
+        years_experience: number;
+      };
+    }) => {
+      const { error } = await supabase
+        .from("professional_services")
+        .update(data)
+        .eq("id", serviceId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["professional-own-services"] });
+      toast({
+        title: "Servizio aggiornato",
+        description: "Le modifiche sono state salvate",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare il servizio",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useAddService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({
+      professionalId,
+      data,
+    }: {
+      professionalId: string;
+      data: {
+        service_type: string;
+        hourly_rate: number;
+        description: string | null;
+        min_hours: number;
+        years_experience: number;
+      };
+    }) => {
+      const { error } = await supabase.from("professional_services").insert({
+        professional_id: professionalId,
+        service_type: data.service_type as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "babysitter" | "dog_sitter",
+        hourly_rate: data.hourly_rate,
+        description: data.description,
+        min_hours: data.min_hours,
+        years_experience: data.years_experience,
+        is_active: true,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["professional-own-services"] });
+      toast({
+        title: "Servizio aggiunto",
+        description: "Il nuovo servizio è stato creato",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiungere il servizio",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
+export function useDeleteService() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (serviceId: string) => {
+      const { error } = await supabase
+        .from("professional_services")
+        .delete()
+        .eq("id", serviceId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["professional-own-services"] });
+      toast({
+        title: "Servizio eliminato",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare il servizio",
+        variant: "destructive",
+      });
+    },
+  });
+}
+
 export function useProfessionalReviews(professionalId: string | undefined) {
   return useQuery({
     queryKey: ["professional-own-reviews", professionalId],
