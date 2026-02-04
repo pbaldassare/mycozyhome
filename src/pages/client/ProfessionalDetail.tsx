@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Star, MapPin, CheckCircle2, Clock, Calendar, MessageCircle, 
-  ChevronRight, Shield, Award, Briefcase 
+  Shield, Award, Briefcase 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -13,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCreateConversation } from "@/hooks/useConversations";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -26,6 +26,15 @@ const serviceTypeLabels: Record<string, string> = {
 export default function ProfessionalDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { createConversation } = useCreateConversation();
+
+  const handleStartChat = async () => {
+    if (!id) return;
+    const conversationId = await createConversation(id);
+    if (conversationId) {
+      navigate(`/client/chat/${conversationId}`);
+    }
+  };
 
   const { data: professional, isLoading: loadingProfessional } = useQuery({
     queryKey: ["professional", id],
@@ -284,12 +293,12 @@ export default function ProfessionalDetail() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => navigate(`/client/chat/new?professional=${id}`)}
+            onClick={handleStartChat}
           >
             <MessageCircle className="h-5 w-5" />
           </Button>
         </div>
-        <Button 
+        <Button
           className="btn-trust-primary"
           onClick={() => navigate(`/client/booking/new?professional=${id}`)}
         >

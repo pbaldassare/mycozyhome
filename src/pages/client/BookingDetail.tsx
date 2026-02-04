@@ -8,12 +8,10 @@ import {
   MapPin, 
   MessageCircle, 
   Star, 
-  Phone, 
   X, 
   AlertTriangle,
   CheckCircle,
   Loader2,
-  ChevronLeft
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -32,6 +30,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCancelBooking } from "@/hooks/useBookings";
+import { useCreateReview, useCanReview } from "@/hooks/useReviews";
+import { ReviewForm } from "@/components/client/ReviewForm";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -55,8 +55,11 @@ export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const cancelBooking = useCancelBooking();
+  const createReview = useCreateReview();
+  const { data: canReviewBooking } = useCanReview(id);
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking-detail", id],
@@ -125,8 +128,19 @@ export default function BookingDetail() {
   const isUpcoming = !isPast(parseISO(booking.scheduled_date)) && 
     booking.status !== "completed" && 
     booking.status !== "cancelled";
-  const canReview = booking.status === "completed";
+  const showReviewButton = booking.status === "completed" && canReviewBooking;
   const canCancel = booking.status === "pending" || booking.status === "confirmed";
+
+  const handleReviewSubmit = async (rating: number, comment: string) => {
+    if (!booking) return;
+    await createReview.mutateAsync({
+      bookingId: booking.id,
+      professionalId: booking.professional_id,
+      rating,
+      comment,
+    });
+    setShowReviewDialog(false);
+  };
 
   return (
     <div className="min-h-screen bg-background pb-safe">
@@ -239,15 +253,22 @@ export default function BookingDetail() {
             </Button>
           )}
 
-          {canReview && (
+          {showReviewButton && (
             <Button 
               className="w-full" 
               size="lg"
-              onClick={() => navigate(`/client/review/${booking.id}`)}
+              onClick={() => setShowReviewDialog(true)}
             >
               <Star className="h-5 w-5 mr-2" />
               Lascia una recensione
             </Button>
+          )}
+
+          {booking.status === "completed" && !canReviewBooking && (
+            <div className="text-center text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+              <CheckCircle className="h-5 w-5 mx-auto mb-1 text-success" />
+              Hai già lasciato una recensione
+            </div>
           )}
 
           {canCancel && (
@@ -307,6 +328,15 @@ export default function BookingDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Review Dialog */}
+      <ReviewForm
+        isOpen={showReviewDialog}
+        onClose={() => setShowReviewDialog(false)}
+        onSubmit={handleReviewSubmit}
+        professionalName={professionalName}
+        serviceName={serviceTypeLabels[booking.service_type] || booking.service_type}
+      />
     </div>
   );
 }
