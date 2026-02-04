@@ -27,6 +27,7 @@ import ClientMessages from "@/pages/client/Messages";
 import ClientProfile from "@/pages/client/Profile";
 import ClientChat from "@/pages/client/Chat";
 import ClientDispute from "@/pages/client/Dispute";
+import ClientAuth from "@/pages/client/Auth";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import Welcome from "@/pages/Welcome";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="profile" element={<ClientProfile />} />
           </Route>
           {/* Client routes outside layout (full screen) */}
+          <Route path="/client/auth" element={<ClientAuth />} />
           <Route path="/client/chat/:conversationId" element={<ClientChat />} />
           <Route path="/client/dispute" element={<ClientDispute />} />
           <Route path="/client/safety" element={<SafetyCenter />} />
