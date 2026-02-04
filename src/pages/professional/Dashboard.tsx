@@ -30,6 +30,11 @@ interface Professional {
   avatar_url: string | null;
 }
 
+interface CompletionData {
+  hasServices: boolean;
+  hasAvailability: boolean;
+}
+
 const statusConfig = {
   pending: { label: "In attesa", color: "text-warning", bgColor: "bg-warning/10", icon: Clock },
   in_review: { label: "In verifica", color: "text-primary", bgColor: "bg-primary/10", icon: Clock },
@@ -42,6 +47,10 @@ export default function ProfessionalDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [professional, setProfessional] = useState<Professional | null>(null);
+  const [completionData, setCompletionData] = useState<CompletionData>({
+    hasServices: false,
+    hasAvailability: false,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,6 +73,25 @@ export default function ProfessionalDashboard() {
 
       if (prof) {
         setProfessional(prof as Professional);
+
+        // Check if services are configured
+        const { data: services } = await supabase
+          .from("professional_services")
+          .select("id")
+          .eq("professional_id", prof.id)
+          .limit(1);
+
+        // Check if availability is configured
+        const { data: availability } = await supabase
+          .from("professional_availability")
+          .select("id")
+          .eq("professional_id", prof.id)
+          .limit(1);
+
+        setCompletionData({
+          hasServices: (services && services.length > 0) ?? false,
+          hasAvailability: (availability && availability.length > 0) ?? false,
+        });
       }
 
       setLoading(false);
@@ -99,14 +127,14 @@ export default function ProfessionalDashboard() {
       id: "services",
       label: "Servizi e Prezzi",
       description: "Configura servizi e tariffe",
-      completed: false, // TODO: check from services table
+      completed: completionData.hasServices,
       path: "/professional/onboarding/services",
     },
     {
       id: "availability",
       label: "Disponibilità",
       description: "Imposta i tuoi orari",
-      completed: false, // TODO: check from availability table
+      completed: completionData.hasAvailability,
       path: "/professional/onboarding/availability",
     },
     {
