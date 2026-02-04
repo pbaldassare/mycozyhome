@@ -1,9 +1,10 @@
-import { Home, Briefcase, Star, User } from "lucide-react";
+import { Home, Calendar, Briefcase, Star, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { icon: Home, label: "Dashboard", path: "/professional" },
+  { icon: Home, label: "Home", path: "/professional" },
+  { icon: Calendar, label: "Prenotazioni", path: "/professional/bookings" },
   { icon: Briefcase, label: "Servizi", path: "/professional/services" },
   { icon: Star, label: "Recensioni", path: "/professional/reviews" },
   { icon: User, label: "Profilo", path: "/professional/profile" },
