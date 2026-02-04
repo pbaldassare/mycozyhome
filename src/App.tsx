@@ -23,6 +23,7 @@ import ProfessionalServices from "@/pages/professional/Services";
 import ProfessionalReviews from "@/pages/professional/Reviews";
 import ProfessionalProfile from "@/pages/professional/Profile";
 import ProfessionalBookings from "@/pages/professional/Bookings";
+import ProfessionalAvailability from "@/pages/professional/Availability";
 import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
 import ServicesSetup from "@/pages/professional/onboarding/Services";
 import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
@@ -114,6 +115,7 @@ const App = () => (
           <Route path="/professional" element={<ProfessionalLayout />}>
             <Route index element={<ProfessionalHome />} />
             <Route path="bookings" element={<ProfessionalBookings />} />
+            <Route path="availability" element={<ProfessionalAvailability />} />
             <Route path="services" element={<ProfessionalServices />} />
             <Route path="reviews" element={<ProfessionalReviews />} />
             <Route path="profile" element={<ProfessionalProfile />} />
