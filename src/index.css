@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 0 0% 98%;
     --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
@@ -15,7 +15,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 217 91% 60%;
+    --primary: 213 94% 50%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -24,7 +24,7 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 172 66% 50%;
+    --accent: 24 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -36,21 +36,30 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 213 94% 50%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 213 94% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 96%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 213 94% 50%;
     --sidebar-muted: 215 16% 47%;
+
+    /* Trust-oriented colors */
+    --trust-primary: 213 94% 50%;
+    --trust-secondary: 24 95% 53%;
+    --trust-success: 142 71% 45%;
+    --trust-safe: 158 64% 52%;
   }
 
   .dark {
@@ -63,7 +72,7 @@
     --popover: 222 47% 9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217 91% 60%;
+    --primary: 213 94% 55%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 217 33% 17%;
@@ -72,7 +81,7 @@
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 172 66% 50%;
+    --accent: 24 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 63% 31%;
@@ -84,18 +93,21 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+
     --border: 217 33% 17%;
     --input: 217 33% 17%;
-    --ring: 217 91% 60%;
+    --ring: 213 94% 55%;
 
     --sidebar-background: 222 47% 6%;
     --sidebar-foreground: 210 40% 96%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 213 94% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 17%;
     --sidebar-accent-foreground: 210 40% 96%;
     --sidebar-border: 217 33% 17%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-ring: 213 94% 55%;
     --sidebar-muted: 215 20% 65%;
   }
 }
@@ -116,15 +128,19 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-lg;
+    @apply bg-card/95 backdrop-blur-md border border-border/30 shadow-lg rounded-2xl;
   }
 
   .stat-card {
-    @apply bg-card rounded-xl p-6 shadow-sm border border-border/50 transition-all duration-200 hover:shadow-md;
+    @apply bg-card rounded-2xl p-5 shadow-sm border border-border/30 transition-all duration-200 hover:shadow-md;
+  }
+
+  .trust-card {
+    @apply bg-card rounded-2xl p-4 shadow-sm border border-border/20 transition-all duration-200;
   }
 
   .status-badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
   }
 
   .status-pending {
@@ -140,10 +156,69 @@
   }
 
   .nav-link {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200;
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-200;
   }
 
   .nav-link-active {
     @apply bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground;
+  }
+
+  /* Mobile-first bottom navigation */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 bg-card border-t border-border/30 px-2 py-2 flex justify-around items-center z-50 safe-area-pb;
+  }
+
+  .bottom-nav-item {
+    @apply flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-muted-foreground transition-colors duration-200;
+  }
+
+  .bottom-nav-item-active {
+    @apply text-primary bg-primary/10;
+  }
+
+  /* Safe area for mobile devices */
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-pt {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+  }
+
+  /* App header style */
+  .app-header {
+    @apply sticky top-0 bg-card/95 backdrop-blur-md border-b border-border/30 z-40 safe-area-pt;
+  }
+
+  /* Trust indicator card like in security settings screenshot */
+  .trust-indicator {
+    @apply flex items-center gap-3 p-4 rounded-2xl bg-success/5 border border-success/20;
+  }
+
+  /* Service card style */
+  .service-card {
+    @apply bg-card rounded-2xl p-4 border border-border/20 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* Chat bubble styles */
+  .chat-bubble {
+    @apply max-w-[80%] rounded-2xl px-4 py-3;
+  }
+
+  .chat-bubble-sent {
+    @apply bg-primary text-primary-foreground rounded-br-md;
+  }
+
+  .chat-bubble-received {
+    @apply bg-muted text-foreground rounded-bl-md;
+  }
+
+  /* Primary action button like in login screenshot */
+  .btn-trust-primary {
+    @apply w-full py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-base shadow-md hover:shadow-lg transition-all duration-200;
+  }
+
+  .btn-trust-secondary {
+    @apply w-full py-4 rounded-xl bg-accent text-accent-foreground font-semibold text-base shadow-md hover:shadow-lg transition-all duration-200;
   }
 }
