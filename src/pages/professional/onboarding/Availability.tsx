@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Clock, MapPin, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 const daysOfWeek = [
   { id: 0, name: "Domenica", short: "Dom" },
@@ -28,6 +29,9 @@ interface DayAvailability {
 interface CoverageArea {
   city: string;
   maxDistance: string;
+  latitude?: number;
+  longitude?: number;
+  formatted_address?: string;
 }
 
 export default function AvailabilitySetup() {
@@ -136,9 +140,28 @@ export default function AvailabilitySetup() {
     setAreas((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const updateArea = (index: number, field: "city" | "maxDistance", value: string) => {
+  const updateArea = (index: number, field: keyof CoverageArea, value: string | number) => {
     setAreas((prev) =>
       prev.map((area, i) => (i === index ? { ...area, [field]: value } : area))
+    );
+  };
+
+  const updateAreaWithGeo = (
+    index: number,
+    data: { latitude: number; longitude: number; formatted_address: string }
+  ) => {
+    setAreas((prev) =>
+      prev.map((area, i) =>
+        i === index
+          ? {
+              ...area,
+              city: data.formatted_address,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              formatted_address: data.formatted_address,
+            }
+          : area
+      )
     );
   };
 
@@ -181,11 +204,14 @@ export default function AvailabilitySetup() {
         if (availError) throw availError;
       }
 
-      // Save areas
+      // Save areas with geo data
       const areasData = validAreas.map((area) => ({
         professional_id: professionalId,
-        city: area.city.trim(),
+        city: area.formatted_address || area.city.trim(),
         max_distance_km: parseInt(area.maxDistance) || 10,
+        latitude: area.latitude || null,
+        longitude: area.longitude || null,
+        formatted_address: area.formatted_address || null,
       }));
 
       await supabase
@@ -305,35 +331,44 @@ export default function AvailabilitySetup() {
           <div className="space-y-3">
             {areas.map((area, index) => (
               <div key={index} className="bg-card rounded-xl border border-border p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 space-y-1.5">
-                    <Label className="text-xs">Città</Label>
-                    <Input
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Indirizzo di Partenza</Label>
+                    <AddressAutocomplete
                       value={area.city}
-                      onChange={(e) => updateArea(index, "city", e.target.value)}
-                      placeholder="Milano"
-                      className="h-9"
+                      onSelect={(result) => updateAreaWithGeo(index, result)}
+                      placeholder="Cerca indirizzo..."
                     />
+                    {area.latitude && (
+                      <p className="text-xs text-success flex items-center gap-1">
+                        ✓ Posizione salvata
+                      </p>
+                    )}
                   </div>
-                  <div className="w-24 space-y-1.5">
-                    <Label className="text-xs">Raggio (km)</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={area.maxDistance}
-                      onChange={(e) => updateArea(index, "maxDistance", e.target.value)}
-                      className="h-9"
-                    />
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 space-y-1.5">
+                      <Label className="text-xs">Raggio Operativo</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="50"
+                          value={area.maxDistance}
+                          onChange={(e) => updateArea(index, "maxDistance", e.target.value)}
+                          className="h-9 w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">km</span>
+                      </div>
+                    </div>
+                    {areas.length > 1 && (
+                      <button
+                        onClick={() => removeArea(index)}
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded-lg"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  {areas.length > 1 && (
-                    <button
-                      onClick={() => removeArea(index)}
-                      className="p-2 text-destructive hover:bg-destructive/10 rounded-lg mt-5"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
                 </div>
               </div>
             ))}
