@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ClientLayout } from "@/components/client/ClientLayout";
+import { ProfessionalLayout } from "@/components/professional/ProfessionalLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import Professionals from "@/pages/admin/Professionals";
 import Clients from "@/pages/admin/Clients";
@@ -16,6 +17,10 @@ import Payments from "@/pages/admin/Payments";
 import Settings from "@/pages/admin/Settings";
 import ProfessionalAuth from "@/pages/professional/Auth";
 import ProfessionalDashboard from "@/pages/professional/Dashboard";
+import ProfessionalHome from "@/pages/professional/Home";
+import ProfessionalServices from "@/pages/professional/Services";
+import ProfessionalReviews from "@/pages/professional/Reviews";
+import ProfessionalProfile from "@/pages/professional/Profile";
 import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
 import ServicesSetup from "@/pages/professional/onboarding/Services";
 import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
@@ -89,7 +94,14 @@ const App = () => (
             <Route path="settings" element={<Settings />} />
           </Route>
           
-          {/* Professional Routes */}
+          {/* Professional Routes with Layout */}
+          <Route path="/professional" element={<ProfessionalLayout />}>
+            <Route index element={<ProfessionalHome />} />
+            <Route path="services" element={<ProfessionalServices />} />
+            <Route path="reviews" element={<ProfessionalReviews />} />
+            <Route path="profile" element={<ProfessionalProfile />} />
+          </Route>
+          {/* Professional routes outside layout */}
           <Route path="/professional/auth" element={<ProfessionalAuth />} />
           <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
           <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />
