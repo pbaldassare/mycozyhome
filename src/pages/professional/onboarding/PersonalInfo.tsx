@@ -294,7 +294,7 @@ export default function PersonalInfo() {
       </form>
 
       {/* Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3 border-t">
         <Button
           onClick={handleSubmit}
           className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
