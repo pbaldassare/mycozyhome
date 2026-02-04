@@ -47,7 +47,7 @@ const requiredDocuments = [
 
 const statusConfig = {
   pending: { label: "In attesa", color: "text-warning", icon: Clock },
-  approved: { label: "Approvato", color: "text-success", icon: CheckCircle },
+  approved: { label: "Approvato", color: "text-[hsl(var(--sage-dark))]", icon: CheckCircle },
   rejected: { label: "Rifiutato", color: "text-destructive", icon: XCircle },
 };
 
@@ -74,7 +74,6 @@ export default function DocumentsUpload() {
 
     setUserId(session.user.id);
 
-    // Get professional profile
     const { data: prof } = await supabase
       .from("professionals")
       .select("id")
@@ -88,7 +87,6 @@ export default function DocumentsUpload() {
 
     setProfessionalId(prof.id);
 
-    // Load existing documents
     const { data: docs } = await supabase
       .from("professional_documents")
       .select("*")
@@ -103,8 +101,7 @@ export default function DocumentsUpload() {
   const handleFileSelect = async (docType: string, file: File) => {
     if (!professionalId || !userId) return;
 
-    // Validate file
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error("Il file non può superare i 5MB");
       return;
@@ -119,7 +116,6 @@ export default function DocumentsUpload() {
     setUploading(docType);
 
     try {
-      // Upload to storage
       const fileExt = file.name.split(".").pop();
       const fileName = `${docType}_${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
@@ -130,12 +126,10 @@ export default function DocumentsUpload() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: urlData } = supabase.storage
         .from("professional-documents")
         .getPublicUrl(filePath);
 
-      // Save document record
       const { error: dbError } = await supabase
         .from("professional_documents")
         .insert({
@@ -163,14 +157,10 @@ export default function DocumentsUpload() {
     if (!confirm("Sei sicuro di voler eliminare questo documento?")) return;
 
     try {
-      // Extract file path from URL
       const urlParts = fileUrl.split("/");
       const filePath = urlParts.slice(-2).join("/");
 
-      // Delete from storage
       await supabase.storage.from("professional-documents").remove([filePath]);
-
-      // Delete from database
       await supabase.from("professional_documents").delete().eq("id", docId);
 
       toast.success("Documento eliminato");
@@ -184,7 +174,6 @@ export default function DocumentsUpload() {
   const handleSubmitForReview = async () => {
     if (!professionalId) return;
 
-    // Check required documents
     const hasIdCard = documents.some((d) => d.document_type === "id_card");
     if (!hasIdCard) {
       toast.error("Devi caricare la carta d'identità");
@@ -194,7 +183,6 @@ export default function DocumentsUpload() {
     setLoading(true);
 
     try {
-      // Update professional status
       const { error } = await supabase
         .from("professionals")
         .update({
@@ -219,36 +207,39 @@ export default function DocumentsUpload() {
     return documents.filter((d) => d.document_type === type);
   };
 
+  const progress = 100;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground p-4">
-        <div className="flex items-center gap-3">
+      <header className="bg-background p-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/professional/onboarding/availability")}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div>
-            <h1 className="font-semibold">Documenti</h1>
-            <p className="text-sm text-white/70">Step 4 di 4</p>
-          </div>
+          <h1 className="font-semibold text-lg">Documenti</h1>
+          <div className="w-9" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-4 h-2 bg-[hsl(var(--sage-light))] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[hsl(var(--sage))] transition-all duration-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </header>
 
-      {/* Progress */}
-      <div className="h-1 bg-muted">
-        <div className="h-full bg-primary w-full" />
-      </div>
-
       {/* Content */}
-      <div className="flex-1 p-4 space-y-4 overflow-auto pb-32">
-        <div className="bg-warning/10 border border-warning/20 rounded-xl p-4">
+      <div className="flex-1 px-4 py-6 space-y-6 pb-40">
+        <div className="bg-[hsl(var(--sage-light))] border border-[hsl(var(--sage))]/30 rounded-xl p-4">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-[hsl(var(--sage-dark))] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium text-warning">Verifica Manuale</p>
+              <p className="font-medium text-[hsl(var(--sage-dark))]">Verifica Manuale</p>
               <p className="text-sm text-muted-foreground">
                 I documenti saranno verificati manualmente dal nostro team prima dell'approvazione del profilo.
               </p>
@@ -266,8 +257,8 @@ export default function DocumentsUpload() {
               className="bg-card rounded-xl border border-border p-4"
             >
               <div className="flex items-start gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-xl bg-[hsl(var(--sage-light))] flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[hsl(var(--sage-dark))]" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -282,7 +273,6 @@ export default function DocumentsUpload() {
                 </div>
               </div>
 
-              {/* Uploaded documents */}
               {uploadedDocs.length > 0 && (
                 <div className="space-y-2 mb-3">
                   {uploadedDocs.map((doc) => {
@@ -292,7 +282,7 @@ export default function DocumentsUpload() {
                     return (
                       <div
                         key={doc.id}
-                        className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
+                        className="flex items-center justify-between p-2 bg-[hsl(var(--sage-light))]/50 rounded-lg"
                       >
                         <div className="flex items-center gap-2 min-w-0">
                           <StatusIcon className={cn("w-4 h-4 flex-shrink-0", status?.color)} />
@@ -317,7 +307,6 @@ export default function DocumentsUpload() {
                 </div>
               )}
 
-              {/* Upload button */}
               <input
                 type="file"
                 ref={(el) => (fileInputRefs.current[docConfig.type] = el)}
@@ -331,13 +320,13 @@ export default function DocumentsUpload() {
               />
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border-[hsl(var(--sage))] text-[hsl(var(--sage-dark))] hover:bg-[hsl(var(--sage-light))]"
                 disabled={isUploading}
                 onClick={() => fileInputRefs.current[docConfig.type]?.click()}
               >
                 {isUploading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                    <div className="w-4 h-4 border-2 border-[hsl(var(--sage))] border-t-transparent rounded-full animate-spin mr-2" />
                     Caricamento...
                   </>
                 ) : (
@@ -353,15 +342,21 @@ export default function DocumentsUpload() {
       </div>
 
       {/* Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 border-t border-border space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
         <Button
           onClick={handleSubmitForReview}
-          className="w-full"
+          className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
           size="lg"
           disabled={loading || !documents.some((d) => d.document_type === "id_card")}
         >
           {loading ? "Invio in corso..." : "Invia per Verifica"}
         </Button>
+        <button
+          onClick={() => navigate("/professional/onboarding/availability")}
+          className="w-full text-center text-[hsl(var(--sage-dark))] font-medium py-2"
+        >
+          Indietro
+        </button>
         <p className="text-xs text-center text-muted-foreground">
           Dopo l'invio, il tuo profilo sarà verificato dal nostro team
         </p>

@@ -3,21 +3,20 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Clock, MapPin, Plus, X } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 
 const daysOfWeek = [
-  { id: 0, name: "Domenica", short: "Dom" },
-  { id: 1, name: "Lunedì", short: "Lun" },
-  { id: 2, name: "Martedì", short: "Mar" },
-  { id: 3, name: "Mercoledì", short: "Mer" },
-  { id: 4, name: "Giovedì", short: "Gio" },
-  { id: 5, name: "Venerdì", short: "Ven" },
-  { id: 6, name: "Sabato", short: "Sab" },
+  { id: 1, name: "Lunedì" },
+  { id: 2, name: "Martedì" },
+  { id: 3, name: "Mercoledì" },
+  { id: 4, name: "Giovedì" },
+  { id: 5, name: "Venerdì" },
+  { id: 6, name: "Sabato" },
+  { id: 0, name: "Domenica" },
 ];
 
 interface DayAvailability {
@@ -50,7 +49,6 @@ export default function AvailabilitySetup() {
         return;
       }
 
-      // Get professional profile
       const { data: prof } = await supabase
         .from("professionals")
         .select("id, city")
@@ -64,12 +62,10 @@ export default function AvailabilitySetup() {
 
       setProfessionalId(prof.id);
 
-      // Set default city from profile
       if (prof.city) {
         setAreas([{ city: prof.city, maxDistance: "10" }]);
       }
 
-      // Load existing availability
       const { data: existingAvail } = await supabase
         .from("professional_availability")
         .select("*")
@@ -79,14 +75,13 @@ export default function AvailabilitySetup() {
         const availMap: Record<number, DayAvailability> = {};
         existingAvail.forEach((a) => {
           availMap[a.day_of_week] = {
-            isAvailable: a.is_available,
+            isAvailable: a.is_available ?? true,
             startTime: a.start_time.slice(0, 5),
             endTime: a.end_time.slice(0, 5),
           };
         });
         setAvailability(availMap);
       } else {
-        // Set default availability (Mon-Fri, 9-18)
         const defaultAvail: Record<number, DayAvailability> = {};
         [1, 2, 3, 4, 5].forEach((day) => {
           defaultAvail[day] = { isAvailable: true, startTime: "09:00", endTime: "18:00" };
@@ -94,7 +89,6 @@ export default function AvailabilitySetup() {
         setAvailability(defaultAvail);
       }
 
-      // Load existing areas
       const { data: existingAreas } = await supabase
         .from("professional_areas")
         .select("*")
@@ -104,7 +98,7 @@ export default function AvailabilitySetup() {
         setAreas(
           existingAreas.map((a) => ({
             city: a.city,
-            maxDistance: a.max_distance_km.toString(),
+            maxDistance: String(a.max_distance_km ?? 10),
           }))
         );
       }
@@ -132,20 +126,6 @@ export default function AvailabilitySetup() {
     }));
   };
 
-  const addArea = () => {
-    setAreas((prev) => [...prev, { city: "", maxDistance: "10" }]);
-  };
-
-  const removeArea = (index: number) => {
-    setAreas((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateArea = (index: number, field: keyof CoverageArea, value: string | number) => {
-    setAreas((prev) =>
-      prev.map((area, i) => (i === index ? { ...area, [field]: value } : area))
-    );
-  };
-
   const updateAreaWithGeo = (
     index: number,
     data: { latitude: number; longitude: number; formatted_address: string }
@@ -171,7 +151,6 @@ export default function AvailabilitySetup() {
     try {
       if (!professionalId) throw new Error("Professional ID not found");
 
-      // Validate at least one area
       const validAreas = areas.filter((a) => a.city.trim());
       if (validAreas.length === 0) {
         toast.error("Inserisci almeno un'area di copertura");
@@ -179,7 +158,6 @@ export default function AvailabilitySetup() {
         return;
       }
 
-      // Save availability
       const availabilityData = Object.entries(availability)
         .filter(([_, config]) => config.isAvailable)
         .map(([dayId, config]) => ({
@@ -190,7 +168,6 @@ export default function AvailabilitySetup() {
           is_available: true,
         }));
 
-      // Delete existing and insert new availability
       await supabase
         .from("professional_availability")
         .delete()
@@ -204,7 +181,6 @@ export default function AvailabilitySetup() {
         if (availError) throw availError;
       }
 
-      // Save areas with geo data
       const areasData = validAreas.map((area) => ({
         professional_id: professionalId,
         city: area.formatted_address || area.city.trim(),
@@ -235,152 +211,138 @@ export default function AvailabilitySetup() {
     }
   };
 
+  const progress = 75;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground p-4">
-        <div className="flex items-center gap-3">
+      <header className="bg-background p-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/professional/onboarding/services")}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div>
-            <h1 className="font-semibold">Disponibilità</h1>
-            <p className="text-sm text-white/70">Step 3 di 4</p>
-          </div>
+          <h1 className="font-semibold text-lg">Disponibilità</h1>
+          <div className="w-9" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-4 h-2 bg-[hsl(var(--sage-light))] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[hsl(var(--sage))] transition-all duration-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </header>
 
-      {/* Progress */}
-      <div className="h-1 bg-muted">
-        <div className="h-full bg-primary w-3/4" />
-      </div>
-
       {/* Content */}
-      <div className="flex-1 p-4 space-y-6 overflow-auto pb-24">
-        {/* Availability Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <Clock className="w-4 h-4" />
-            <span>Orari di Lavoro</span>
-          </div>
-
-          <div className="space-y-2">
+      <div className="flex-1 px-4 py-6 space-y-8 pb-32">
+        {/* Days Selection */}
+        <section>
+          <h2 className="text-base font-semibold mb-4">Giorni lavorativi</h2>
+          <div className="space-y-3">
             {daysOfWeek.map((day) => {
               const config = availability[day.id];
               const isAvailable = config?.isAvailable ?? false;
 
               return (
-                <div
-                  key={day.id}
-                  className={cn(
-                    "bg-card rounded-xl border p-3 transition-all",
-                    isAvailable ? "border-primary/30" : "border-border"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Switch
-                        checked={isAvailable}
-                        onCheckedChange={() => toggleDay(day.id)}
-                      />
-                      <span className={cn("font-medium", !isAvailable && "text-muted-foreground")}>
-                        {day.name}
-                      </span>
+                <div key={day.id} className="space-y-2">
+                  <button
+                    onClick={() => toggleDay(day.id)}
+                    className="w-full flex items-center gap-3 text-left"
+                  >
+                    <div
+                      className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                        isAvailable
+                          ? "bg-[hsl(var(--sage))] border-[hsl(var(--sage))]"
+                          : "border-muted-foreground/30 bg-background"
+                      )}
+                    >
+                      {isAvailable && <Check className="w-4 h-4 text-white" />}
                     </div>
+                    <span className="text-foreground">{day.name}</span>
+                  </button>
 
-                    {isAvailable && (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="time"
-                          value={config?.startTime || "09:00"}
-                          onChange={(e) => updateDayTime(day.id, "startTime", e.target.value)}
-                          className="w-24 h-8 text-sm"
-                        />
-                        <span className="text-muted-foreground">-</span>
-                        <Input
-                          type="time"
-                          value={config?.endTime || "18:00"}
-                          onChange={(e) => updateDayTime(day.id, "endTime", e.target.value)}
-                          className="w-24 h-8 text-sm"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {isAvailable && (
+                    <div className="flex items-center gap-2 ml-9">
+                      <Input
+                        type="time"
+                        value={config?.startTime || "09:00"}
+                        onChange={(e) => updateDayTime(day.id, "startTime", e.target.value)}
+                        className="h-10 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-sm w-28"
+                      />
+                      <span className="text-muted-foreground">-</span>
+                      <Input
+                        type="time"
+                        value={config?.endTime || "18:00"}
+                        onChange={(e) => updateDayTime(day.id, "endTime", e.target.value)}
+                        className="h-10 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-sm w-28"
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
 
-        {/* Coverage Areas Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <MapPin className="w-4 h-4" />
-              <span>Zone di Copertura</span>
-            </div>
-            <Button variant="outline" size="sm" onClick={addArea}>
-              <Plus className="w-4 h-4 mr-1" />
-              Aggiungi
-            </Button>
-          </div>
-
+        {/* Coverage Area */}
+        <section>
+          <h2 className="text-base font-semibold mb-4">Zona di copertura</h2>
           <div className="space-y-3">
-            {areas.map((area, index) => (
-              <div key={index} className="bg-card rounded-xl border border-border p-3">
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Indirizzo di Partenza</Label>
-                    <AddressAutocomplete
-                      value={area.city}
-                      onSelect={(result) => updateAreaWithGeo(index, result)}
-                      placeholder="Cerca indirizzo..."
-                    />
-                    {area.latitude && (
-                      <p className="text-xs text-success flex items-center gap-1">
-                        ✓ Posizione salvata
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 space-y-1.5">
-                      <Label className="text-xs">Raggio Operativo</Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="1"
-                          max="50"
-                          value={area.maxDistance}
-                          onChange={(e) => updateArea(index, "maxDistance", e.target.value)}
-                          className="h-9 w-20"
-                        />
-                        <span className="text-sm text-muted-foreground">km</span>
-                      </div>
-                    </div>
-                    {areas.length > 1 && (
-                      <button
-                        onClick={() => removeArea(index)}
-                        className="p-2 text-destructive hover:bg-destructive/10 rounded-lg"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+            <AddressAutocomplete
+              value={areas[0]?.city || ""}
+              onSelect={(result) => updateAreaWithGeo(0, result)}
+              placeholder="Cerca indirizzo..."
+              className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0"
+            />
+            {areas[0]?.latitude && (
+              <p className="text-xs text-[hsl(var(--sage-dark))] flex items-center gap-1">
+                <Check className="w-3 h-3" /> Posizione salvata
+              </p>
+            )}
           </div>
-        </div>
+        </section>
+
+        {/* Radius */}
+        <section>
+          <label className="block text-base font-semibold mb-2">
+            Raggio operativo (km)
+          </label>
+          <Input
+            type="number"
+            min="1"
+            max="50"
+            value={areas[0]?.maxDistance || "10"}
+            onChange={(e) =>
+              setAreas((prev) =>
+                prev.map((a, i) => (i === 0 ? { ...a, maxDistance: e.target.value } : a))
+              )
+            }
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base w-32"
+          />
+        </section>
       </div>
 
       {/* Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 border-t border-border">
-        <Button onClick={handleSubmit} className="w-full" size="lg" disabled={loading}>
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
+        <Button
+          onClick={handleSubmit}
+          className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
+          size="lg"
+          disabled={loading}
+        >
           {loading ? "Salvataggio..." : "Continua"}
         </Button>
+        <button
+          onClick={() => navigate("/professional/onboarding/services")}
+          className="w-full text-center text-[hsl(var(--sage-dark))] font-medium py-2"
+        >
+          Indietro
+        </button>
       </div>
     </div>
   );

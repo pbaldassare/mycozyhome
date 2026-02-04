@@ -60,6 +60,11 @@
     --trust-secondary: 24 95% 53%;
     --trust-success: 142 71% 45%;
     --trust-safe: 158 64% 52%;
+
+    /* Sage green for onboarding */
+    --sage: 143 24% 65%;
+    --sage-light: 143 30% 92%;
+    --sage-dark: 143 24% 45%;
   }
 
   .dark {
