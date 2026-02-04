@@ -10,6 +10,7 @@ import {
   Bell,
   FileText,
   Heart,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -17,15 +18,8 @@ import { AppHeader } from "@/components/client/AppHeader";
 import { TrustIndicator } from "@/components/client/TrustIndicator";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-
-const mockUser = {
-  name: "Marco Belli",
-  email: "marco.belli@email.com",
-  avatar: "",
-  isVerified: true,
-};
 
 interface MenuItemProps {
   icon: React.ElementType;
@@ -82,20 +76,38 @@ function MenuItem({
 
 export default function ClientProfile() {
   const navigate = useNavigate();
-  const initials = mockUser.name
+  const { user, profile, loading, signOut } = useAuth();
+
+  const displayName = profile?.first_name && profile?.last_name
+    ? `${profile.first_name} ${profile.last_name}`
+    : profile?.first_name || user?.email?.split("@")[0] || "Utente";
+
+  const displayEmail = profile?.email || user?.email || "";
+
+  const initials = displayName
     .split(" ")
     .map((n) => n[0])
-    .join("");
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      await signOut();
+      toast.success("Logout effettuato");
+      navigate("/");
+    } catch {
       toast.error("Errore durante il logout");
-      return;
     }
-    toast.success("Logout effettuato");
-    navigate("/");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,14 +117,14 @@ export default function ClientProfile() {
         {/* User Info */}
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20 border-2 border-border/30">
-            <AvatarImage src={mockUser.avatar} />
+            <AvatarImage src={profile?.avatar_url || ""} />
             <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h2 className="text-xl font-bold">{mockUser.name}</h2>
-            <p className="text-muted-foreground">{mockUser.email}</p>
+            <h2 className="text-xl font-bold">{displayName}</h2>
+            <p className="text-muted-foreground">{displayEmail}</p>
           </div>
         </div>
 

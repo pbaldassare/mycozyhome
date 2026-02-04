@@ -1,10 +1,11 @@
-import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog } from "lucide-react";
+import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/client/AppHeader";
 import { TrustIndicator } from "@/components/client/TrustIndicator";
-import { ServiceCard } from "@/components/client/ServiceCard";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
+import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
+import { useAuth } from "@/hooks/useAuth";
 
 const services = [
   { id: "cleaning", icon: HomeIcon, title: "Pulizie casa", description: "Pulizia professionale domestica" },
@@ -15,31 +16,12 @@ const services = [
   { id: "dog_sitter", icon: Dog, title: "Dog sitter", description: "Cura animali domestici" },
 ];
 
-const featuredProfessionals = [
-  {
-    id: "1",
-    name: "Maria Rossi",
-    rating: 4.9,
-    reviewCount: 127,
-    distance: "1.2 km",
-    services: ["Pulizie casa", "Stiro"],
-    hourlyRate: 15,
-    isVerified: true,
-  },
-  {
-    id: "2",
-    name: "Giuseppe Bianchi",
-    rating: 4.8,
-    reviewCount: 89,
-    distance: "2.5 km",
-    services: ["Pulizie ufficio", "Sanificazione"],
-    hourlyRate: 18,
-    isVerified: true,
-  },
-];
-
 export default function ClientHome() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const { data: professionals, isLoading } = useFeaturedProfessionals(5);
+
+  const userName = profile?.first_name || "Utente";
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,7 +30,7 @@ export default function ClientHome() {
       <div className="px-4 py-6 space-y-6">
         {/* Welcome Section */}
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Ciao! 👋</h1>
+          <h1 className="text-2xl font-bold text-foreground">Ciao {userName}! 👋</h1>
           <p className="text-muted-foreground mt-1">
             Di cosa hai bisogno oggi?
           </p>
@@ -79,7 +61,10 @@ export default function ClientHome() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Servizi</h2>
-            <button className="text-sm text-primary font-medium">
+            <button 
+              className="text-sm text-primary font-medium"
+              onClick={() => navigate("/client/search")}
+            >
               Vedi tutti
             </button>
           </div>
@@ -106,21 +91,41 @@ export default function ClientHome() {
               <Sparkles className="h-5 w-5 text-warning" />
               <h2 className="text-lg font-semibold">Consigliati per te</h2>
             </div>
-            <button className="text-sm text-primary font-medium">
+            <button 
+              className="text-sm text-primary font-medium"
+              onClick={() => navigate("/client/search")}
+            >
               Vedi tutti
             </button>
           </div>
-          <div className="space-y-3">
-            {featuredProfessionals.map((pro) => (
-              <ProfessionalCard
-                key={pro.id}
-                id={pro.id}
-                {...pro}
-                showFavorite
-                onClick={() => navigate(`/client/professional/${pro.id}`)}
-              />
-            ))}
-          </div>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : professionals && professionals.length > 0 ? (
+            <div className="space-y-3">
+              {professionals.map((pro) => (
+                <ProfessionalCard
+                  key={pro.id}
+                  id={pro.id}
+                  name={pro.name}
+                  rating={pro.rating}
+                  reviewCount={pro.reviewCount}
+                  distance={pro.distance}
+                  services={pro.services}
+                  hourlyRate={pro.hourlyRate}
+                  isVerified={pro.isVerified}
+                  showFavorite
+                  onClick={() => navigate(`/client/professional/${pro.id}`)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Nessun professionista disponibile al momento</p>
+            </div>
+          )}
         </section>
       </div>
     </div>

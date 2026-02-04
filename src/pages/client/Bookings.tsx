@@ -1,47 +1,13 @@
-import { Calendar, Clock, MapPin, ChevronRight } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-
-const mockBookings = {
-  upcoming: [
-    {
-      id: "1",
-      professional: { name: "Maria Rossi", avatar: "" },
-      service: "Pulizie casa",
-      date: "2026-02-06",
-      time: "09:00 - 12:00",
-      address: "Via Roma 123, Milano",
-      status: "confirmed",
-      price: 45,
-    },
-    {
-      id: "2",
-      professional: { name: "Giuseppe Bianchi", avatar: "" },
-      service: "Sanificazione",
-      date: "2026-02-10",
-      time: "14:00 - 16:00",
-      address: "Via Garibaldi 45, Milano",
-      status: "pending",
-      price: 36,
-    },
-  ],
-  past: [
-    {
-      id: "3",
-      professional: { name: "Anna Verdi", avatar: "" },
-      service: "Babysitter",
-      date: "2026-01-28",
-      time: "18:00 - 22:00",
-      address: "Via Dante 78, Milano",
-      status: "completed",
-      price: 48,
-    },
-  ],
-};
+import { useClientBookings, BookingWithProfessional } from "@/hooks/useBookings";
+import { format, isPast, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
 
 const statusConfig = {
   pending: { label: "In attesa", className: "bg-warning/10 text-warning" },
@@ -50,17 +16,32 @@ const statusConfig = {
   cancelled: { label: "Annullato", className: "bg-destructive/10 text-destructive" },
 };
 
+const serviceTypeLabels: Record<string, string> = {
+  cleaning: "Pulizie casa",
+  office_cleaning: "Pulizie ufficio",
+  ironing: "Stiro",
+  sanitization: "Sanificazione",
+  babysitter: "Babysitter",
+  dog_sitter: "Dog sitter",
+};
+
 interface BookingCardProps {
-  booking: (typeof mockBookings.upcoming)[0];
+  booking: BookingWithProfessional;
   onClick?: () => void;
 }
 
 function BookingCard({ booking, onClick }: BookingCardProps) {
-  const status = statusConfig[booking.status as keyof typeof statusConfig];
-  const initials = booking.professional.name
+  const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.pending;
+  const professionalName = booking.professional 
+    ? `${booking.professional.first_name} ${booking.professional.last_name}`
+    : "Professionista";
+  const initials = professionalName
     .split(" ")
     .map((n) => n[0])
     .join("");
+
+  const formattedDate = format(parseISO(booking.scheduled_date), "d MMM", { locale: it });
+  const timeRange = `${booking.scheduled_time_start.slice(0, 5)} - ${booking.scheduled_time_end.slice(0, 5)}`;
 
   return (
     <button
@@ -69,7 +50,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
     >
       <div className="flex items-start gap-4">
         <Avatar className="h-12 w-12">
-          <AvatarImage src={booking.professional.avatar} />
+          <AvatarImage src={booking.professional?.avatar_url || ""} />
           <AvatarFallback className="bg-primary/10 text-primary font-semibold">
             {initials}
           </AvatarFallback>
@@ -77,24 +58,26 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-semibold truncate">{booking.service}</h3>
+            <h3 className="font-semibold truncate">
+              {serviceTypeLabels[booking.service_type] || booking.service_type}
+            </h3>
             <Badge className={cn("text-xs", status.className)}>
               {status.label}
             </Badge>
           </div>
 
           <p className="text-sm text-muted-foreground mt-0.5">
-            {booking.professional.name}
+            {professionalName}
           </p>
 
           <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              <span>{new Date(booking.date).toLocaleDateString("it-IT", { day: "numeric", month: "short" })}</span>
+              <span>{formattedDate}</span>
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              <span>{booking.time}</span>
+              <span>{timeRange}</span>
             </div>
           </div>
 
@@ -105,7 +88,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="font-bold text-primary">€{booking.price}</span>
+          <span className="font-bold text-primary">€{Number(booking.total_amount).toFixed(0)}</span>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
@@ -115,6 +98,30 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
 
 export default function ClientBookings() {
   const navigate = useNavigate();
+  const { data: bookings, isLoading } = useClientBookings();
+
+  const upcomingBookings = bookings?.filter(b => 
+    !isPast(parseISO(b.scheduled_date)) && 
+    b.status !== "completed" && 
+    b.status !== "cancelled"
+  ) || [];
+
+  const pastBookings = bookings?.filter(b => 
+    isPast(parseISO(b.scheduled_date)) || 
+    b.status === "completed" || 
+    b.status === "cancelled"
+  ) || [];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader title="Prenotazioni" showNotifications />
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,16 +131,16 @@ export default function ClientBookings() {
         <Tabs defaultValue="upcoming" className="w-full">
           <TabsList className="w-full rounded-xl bg-muted/50 p-1">
             <TabsTrigger value="upcoming" className="flex-1 rounded-lg">
-              In arrivo
+              In arrivo ({upcomingBookings.length})
             </TabsTrigger>
             <TabsTrigger value="past" className="flex-1 rounded-lg">
-              Passate
+              Passate ({pastBookings.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="mt-4 space-y-3">
-            {mockBookings.upcoming.length > 0 ? (
-              mockBookings.upcoming.map((booking) => (
+            {upcomingBookings.length > 0 ? (
+              upcomingBookings.map((booking) => (
                 <BookingCard
                   key={booking.id}
                   booking={booking}
@@ -152,13 +159,23 @@ export default function ClientBookings() {
           </TabsContent>
 
           <TabsContent value="past" className="mt-4 space-y-3">
-            {mockBookings.past.map((booking) => (
-              <BookingCard
-                key={booking.id}
-                booking={booking}
-                onClick={() => navigate(`/client/booking/${booking.id}`)}
-              />
-            ))}
+            {pastBookings.length > 0 ? (
+              pastBookings.map((booking) => (
+                <BookingCard
+                  key={booking.id}
+                  booking={booking}
+                  onClick={() => navigate(`/client/booking/${booking.id}`)}
+                />
+              ))
+            ) : (
+              <div className="text-center py-12">
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold">Nessuna prenotazione passata</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Lo storico delle tue prenotazioni apparirà qui
+                </p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
