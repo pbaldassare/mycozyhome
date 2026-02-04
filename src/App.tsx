@@ -33,6 +33,9 @@ import ClientProfile from "@/pages/client/Profile";
 import ClientChat from "@/pages/client/Chat";
 import ClientDispute from "@/pages/client/Dispute";
 import ClientAuth from "@/pages/client/Auth";
+import ClientProfessionalDetail from "@/pages/client/ProfessionalDetail";
+import ClientBookingNew from "@/pages/client/BookingNew";
+import ClientBookingConfirm from "@/pages/client/BookingConfirm";
 import ClientPersonalData from "@/pages/client/profile/PersonalData";
 import ClientPaymentMethods from "@/pages/client/profile/PaymentMethods";
 import ClientNotifications from "@/pages/client/profile/Notifications";
@@ -72,6 +75,9 @@ const App = () => (
           </Route>
           {/* Client routes outside layout (full screen) */}
           <Route path="/client/auth" element={<ClientAuth />} />
+          <Route path="/client/professional/:id" element={<ClientProfessionalDetail />} />
+          <Route path="/client/booking/new" element={<ClientBookingNew />} />
+          <Route path="/client/booking/confirm" element={<ClientBookingConfirm />} />
           <Route path="/client/profile/personal" element={<ClientPersonalData />} />
           <Route path="/client/profile/payments" element={<ClientPaymentMethods />} />
           <Route path="/client/profile/notifications" element={<ClientNotifications />} />
