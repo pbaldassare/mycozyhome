@@ -37,7 +37,7 @@ interface CompletionData {
 
 const statusConfig = {
   pending: { label: "In attesa", color: "text-warning", bgColor: "bg-warning/10", icon: Clock },
-  in_review: { label: "In verifica", color: "text-primary", bgColor: "bg-primary/10", icon: Clock },
+  in_review: { label: "In verifica", color: "text-[hsl(var(--sage-dark))]", bgColor: "bg-[hsl(var(--sage-light))]", icon: Clock },
   approved: { label: "Approvato", color: "text-success", bgColor: "bg-success/10", icon: CheckCircle },
   rejected: { label: "Rifiutato", color: "text-destructive", bgColor: "bg-destructive/10", icon: AlertCircle },
   suspended: { label: "Sospeso", color: "text-destructive", bgColor: "bg-destructive/10", icon: AlertCircle },
@@ -261,11 +261,11 @@ export default function ProfessionalDashboard() {
         )}
 
         {professional.status === "in_review" && (
-          <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+          <div className="bg-[hsl(var(--sage-light))] border border-[hsl(var(--sage))]/30 rounded-xl p-4">
             <div className="flex items-start gap-3">
-              <Clock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <Clock className="w-5 h-5 text-[hsl(var(--sage-dark))] flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-primary">In verifica</p>
+                <p className="font-medium text-[hsl(var(--sage-dark))]">In verifica</p>
                 <p className="text-sm text-muted-foreground">
                   Il tuo profilo è in fase di revisione. Ti contatteremo presto!
                 </p>
@@ -292,11 +292,11 @@ export default function ProfessionalDashboard() {
         <div className="bg-card rounded-xl border border-border p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Completamento Profilo</h2>
-            <span className="text-sm font-medium text-primary">{completionPercentage}%</span>
+            <span className="text-sm font-medium text-[hsl(var(--sage-dark))]">{completionPercentage}%</span>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[hsl(var(--sage-light))] rounded-full overflow-hidden">
             <div
-              className="h-full bg-primary transition-all duration-500"
+              className="h-full bg-[hsl(var(--sage))] transition-all duration-500 rounded-full"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
@@ -313,11 +313,11 @@ export default function ProfessionalDashboard() {
               <div
                 className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center",
-                  item.completed ? "bg-success/10" : "bg-muted"
+                  item.completed ? "bg-[hsl(var(--sage-light))]" : "bg-muted"
                 )}
               >
                 {item.completed ? (
-                  <CheckCircle className="w-5 h-5 text-success" />
+                  <CheckCircle className="w-5 h-5 text-[hsl(var(--sage-dark))]" />
                 ) : (
                   <Circle className="w-5 h-5 text-muted-foreground" />
                 )}
