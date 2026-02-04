@@ -18,7 +18,10 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          formatted_address: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           max_distance_km: number | null
           professional_id: string
           province: string | null
@@ -26,7 +29,10 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
+          formatted_address?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           max_distance_km?: number | null
           professional_id: string
           province?: string | null
@@ -34,7 +40,10 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
+          formatted_address?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           max_distance_km?: number | null
           professional_id?: string
           province?: string | null
@@ -190,8 +199,12 @@ export type Database = {
           email: string
           first_name: string
           fiscal_code: string | null
+          formatted_address: string | null
           id: string
           last_name: string
+          latitude: number | null
+          longitude: number | null
+          max_radius_km: number | null
           phone: string
           postal_code: string | null
           profile_completed: boolean | null
@@ -215,8 +228,12 @@ export type Database = {
           email: string
           first_name: string
           fiscal_code?: string | null
+          formatted_address?: string | null
           id?: string
           last_name: string
+          latitude?: number | null
+          longitude?: number | null
+          max_radius_km?: number | null
           phone: string
           postal_code?: string | null
           profile_completed?: boolean | null
@@ -240,8 +257,12 @@ export type Database = {
           email?: string
           first_name?: string
           fiscal_code?: string | null
+          formatted_address?: string | null
           id?: string
           last_name?: string
+          latitude?: number | null
+          longitude?: number | null
+          max_radius_km?: number | null
           phone?: string
           postal_code?: string | null
           profile_completed?: boolean | null
