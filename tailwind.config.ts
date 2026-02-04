@@ -63,11 +63,20 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        trust: {
-          primary: "hsl(var(--trust-primary))",
-          secondary: "hsl(var(--trust-secondary))",
-          success: "hsl(var(--trust-success))",
-          safe: "hsl(var(--trust-safe))",
+        sage: {
+          DEFAULT: "hsl(var(--sage))",
+          light: "hsl(var(--sage-light))",
+          dark: "hsl(var(--sage-dark))",
+        },
+        straw: {
+          DEFAULT: "hsl(var(--straw))",
+          light: "hsl(var(--straw-light))",
+          dark: "hsl(var(--straw-dark))",
+        },
+        blush: {
+          DEFAULT: "hsl(var(--blush))",
+          light: "hsl(var(--blush-light))",
+          dark: "hsl(var(--blush-dark))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
