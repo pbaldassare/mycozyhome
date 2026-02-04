@@ -16,6 +16,8 @@ import { AppHeader } from "@/components/client/AppHeader";
 import { TrustIndicator } from "@/components/client/TrustIndicator";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const mockUser = {
   name: "Marco Belli",
@@ -83,6 +85,16 @@ export default function ClientProfile() {
     .split(" ")
     .map((n) => n[0])
     .join("");
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Errore durante il logout");
+      return;
+    }
+    toast.success("Logout effettuato");
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -185,7 +197,7 @@ export default function ClientProfile() {
             icon={LogOut}
             label="Esci"
             variant="destructive"
-            onClick={() => {}}
+            onClick={handleLogout}
           />
         </div>
       </div>
