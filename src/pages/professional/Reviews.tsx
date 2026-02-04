@@ -1,69 +1,41 @@
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Star, ThumbsUp, MessageSquare } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import { useProfessionalProfile, useProfessionalReviews } from "@/hooks/useProfessionalData";
 
-interface Review {
-  id: string;
-  clientName: string;
-  clientAvatar: string;
-  rating: number;
-  comment: string;
-  service: string;
-  date: string;
-  ratings: {
-    professionalism: number;
-    punctuality: number;
-    quality: number;
-  };
-}
-
-const mockReviews: Review[] = [
-  {
-    id: "1",
-    clientName: "Maria Rossi",
-    clientAvatar: "",
-    rating: 5,
-    comment: "Servizio eccellente! Casa pulitissima, molto professionale e puntuale. Consiglio vivamente!",
-    service: "Pulizia Casa",
-    date: "2 giorni fa",
-    ratings: { professionalism: 5, punctuality: 5, quality: 5 },
-  },
-  {
-    id: "2",
-    clientName: "Luigi Bianchi",
-    clientAvatar: "",
-    rating: 4,
-    comment: "Ottimo lavoro di stiratura, vestiti perfetti. Tornerò sicuramente.",
-    service: "Stiratura",
-    date: "1 settimana fa",
-    ratings: { professionalism: 4, punctuality: 5, quality: 4 },
-  },
-  {
-    id: "3",
-    clientName: "Anna Verdi",
-    clientAvatar: "",
-    rating: 5,
-    comment: "Il mio cane adora questa dog sitter! Molto affidabile e attenta.",
-    service: "Dog Sitter",
-    date: "2 settimane fa",
-    ratings: { professionalism: 5, punctuality: 5, quality: 5 },
-  },
-];
-
-const ratingBreakdown = [
-  { stars: 5, percentage: 70 },
-  { stars: 4, percentage: 20 },
-  { stars: 3, percentage: 5 },
-  { stars: 2, percentage: 3 },
-  { stars: 1, percentage: 2 },
-];
+const serviceTypeLabels: Record<string, string> = {
+  cleaning: "Pulizie casa",
+  office_cleaning: "Pulizie ufficio",
+  ironing: "Stiro",
+  sanitization: "Sanificazione",
+  babysitter: "Babysitter",
+  dog_sitter: "Dog sitter",
+};
 
 export default function ProfessionalReviews() {
-  const averageRating = 4.8;
-  const totalReviews = 125;
+  const { data: professional } = useProfessionalProfile();
+  const { data: reviews, isLoading } = useProfessionalReviews(professional?.id);
+
+  const averageRating = professional?.average_rating ?? 0;
+  const totalReviews = professional?.review_count ?? 0;
+
+  // Calculate rating breakdown
+  const ratingCounts = [0, 0, 0, 0, 0];
+  reviews?.forEach((review) => {
+    if (review.rating >= 1 && review.rating <= 5) {
+      ratingCounts[review.rating - 1]++;
+    }
+  });
+
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => ({
+    stars,
+    percentage: totalReviews > 0 ? Math.round((ratingCounts[stars - 1] / totalReviews) * 100) : 0,
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,7 +53,7 @@ export default function ProfessionalReviews() {
             <div className="flex items-center gap-6">
               {/* Average Rating */}
               <div className="text-center">
-                <p className="text-5xl font-bold">{averageRating}</p>
+                <p className="text-5xl font-bold">{Number(averageRating).toFixed(1)}</p>
                 <div className="flex items-center justify-center gap-0.5 my-2">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
@@ -114,73 +86,76 @@ export default function ProfessionalReviews() {
           </CardContent>
         </Card>
 
-        {/* Category Ratings */}
-        <div className="grid grid-cols-3 gap-3">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">4.9</p>
-              <p className="text-xs text-muted-foreground mt-1">Professionalità</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">4.8</p>
-              <p className="text-xs text-muted-foreground mt-1">Puntualità</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">4.7</p>
-              <p className="text-xs text-muted-foreground mt-1">Qualità</p>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Reviews List */}
         <section>
           <h2 className="text-base font-semibold mb-3">Recensioni Recenti</h2>
           <div className="space-y-4">
-            {mockReviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={review.clientAvatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {review.clientName.split(" ").map((n) => n[0]).join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{review.clientName}</h3>
-                        <span className="text-xs text-muted-foreground">{review.date}</span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex items-center gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={cn(
-                                "h-3.5 w-3.5",
-                                star <= review.rating
-                                  ? "fill-warning text-warning"
-                                  : "fill-muted text-muted"
-                              )}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          • {review.service}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {review.comment}
-                      </p>
-                    </div>
-                  </div>
+            {isLoading ? (
+              [1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <Skeleton className="h-20 w-full" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : !reviews || reviews.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Star className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nessuna recensione ancora</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Le recensioni dei clienti appariranno qui
+                  </p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              reviews.map((review: any) => (
+                <Card key={review.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          C
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold">Cliente</h3>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(review.created_at), "d MMM yyyy", { locale: it })}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={cn(
+                                  "h-3.5 w-3.5",
+                                  star <= review.rating
+                                    ? "fill-warning text-warning"
+                                    : "fill-muted text-muted"
+                                )}
+                              />
+                            ))}
+                          </div>
+                          {review.booking?.service_type && (
+                            <span className="text-xs text-muted-foreground">
+                              • {serviceTypeLabels[review.booking.service_type] || review.booking.service_type}
+                            </span>
+                          )}
+                        </div>
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            {review.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </section>
       </div>

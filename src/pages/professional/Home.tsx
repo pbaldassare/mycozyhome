@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Calendar,
   Euro,
@@ -13,86 +14,52 @@ import {
   Bell,
   CheckCircle,
   AlertCircle,
+  X,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, parseISO, isToday, isTomorrow } from "date-fns";
+import { it } from "date-fns/locale";
+import {
+  useProfessionalProfile,
+  useProfessionalStats,
+  useProfessionalBookings,
+  useUpdateBookingStatus,
+} from "@/hooks/useProfessionalData";
 
-interface Professional {
-  id: string;
-  first_name: string;
-  last_name: string;
-  city: string;
-  status: string;
-  avatar_url: string | null;
-  average_rating: number | null;
-  review_count: number | null;
-}
-
-// Mock data for dashboard
-const mockStats = {
-  todayBookings: 3,
-  weekEarnings: 485,
-  monthEarnings: 1850,
-  pendingRequests: 2,
+const serviceTypeLabels: Record<string, string> = {
+  cleaning: "Pulizie casa",
+  office_cleaning: "Pulizie ufficio",
+  ironing: "Stiro",
+  sanitization: "Sanificazione",
+  babysitter: "Babysitter",
+  dog_sitter: "Dog sitter",
 };
 
-const mockUpcomingBookings = [
-  {
-    id: "1",
-    clientName: "Maria Rossi",
-    service: "Pulizia Casa",
-    date: "Oggi",
-    time: "14:00 - 17:00",
-    address: "Via Roma 123, Milano",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    clientName: "Luigi Bianchi",
-    service: "Stiratura",
-    date: "Domani",
-    time: "09:00 - 12:00",
-    address: "Corso Vittorio 45, Milano",
-    status: "pending",
-  },
-];
+function formatBookingDate(dateStr: string): string {
+  const date = parseISO(dateStr);
+  if (isToday(date)) return "Oggi";
+  if (isTomorrow(date)) return "Domani";
+  return format(date, "EEEE d MMM", { locale: it });
+}
 
 export default function ProfessionalHome() {
   const navigate = useNavigate();
-  const [professional, setProfessional] = useState<Professional | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: professional, isLoading: loadingProfile } = useProfessionalProfile();
+  const { data: stats, isLoading: loadingStats } = useProfessionalStats(professional?.id);
+  const { data: bookings, isLoading: loadingBookings } = useProfessionalBookings(professional?.id);
+  const updateStatus = useUpdateBookingStatus();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/professional/auth");
-        return;
-      }
+    if (!loadingProfile && !professional) {
+      navigate("/professional/auth");
+    }
+  }, [loadingProfile, professional, navigate]);
 
-      const { data: prof } = await supabase
-        .from("professionals")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (prof) {
-        setProfessional(prof as Professional);
-      } else {
-        navigate("/professional/onboarding/personal");
-        return;
-      }
-
-      setLoading(false);
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  if (loading) {
+  if (loadingProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -100,6 +67,14 @@ export default function ProfessionalHome() {
   if (!professional) return null;
 
   const isApproved = professional.status === "approved";
+
+  const handleAccept = (bookingId: string) => {
+    updateStatus.mutate({ bookingId, status: "confirmed" });
+  };
+
+  const handleReject = (bookingId: string) => {
+    updateStatus.mutate({ bookingId, status: "cancelled" });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -114,9 +89,10 @@ export default function ProfessionalHome() {
             variant="ghost"
             size="icon"
             className="text-primary-foreground hover:bg-white/10 relative"
+            onClick={() => navigate("/professional/messages")}
           >
             <Bell className="h-5 w-5" />
-            {mockStats.pendingRequests > 0 && (
+            {(stats?.pendingRequests || 0) > 0 && (
               <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
             )}
           </Button>
@@ -137,7 +113,13 @@ export default function ProfessionalHome() {
               </p>
             </div>
             {professional.status === "pending" && (
-              <ChevronRight className="h-5 w-5" />
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => navigate("/professional/onboarding/personal")}
+              >
+                Completa
+              </Button>
             )}
           </div>
         )}
@@ -153,7 +135,11 @@ export default function ProfessionalHome() {
                   <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{mockStats.todayBookings}</p>
+                  {loadingStats ? (
+                    <Skeleton className="h-8 w-12" />
+                  ) : (
+                    <p className="text-2xl font-bold">{stats?.todayBookings || 0}</p>
+                  )}
                   <p className="text-xs text-muted-foreground">Oggi</p>
                 </div>
               </div>
@@ -166,7 +152,11 @@ export default function ProfessionalHome() {
                   <Euro className="h-5 w-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">€{mockStats.weekEarnings}</p>
+                  {loadingStats ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    <p className="text-2xl font-bold">€{stats?.weekEarnings || 0}</p>
+                  )}
                   <p className="text-xs text-muted-foreground">Questa settimana</p>
                 </div>
               </div>
@@ -184,12 +174,16 @@ export default function ProfessionalHome() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Guadagni del mese</p>
-                  <p className="text-2xl font-bold">€{mockStats.monthEarnings}</p>
+                  {loadingStats ? (
+                    <Skeleton className="h-8 w-24 mt-1" />
+                  ) : (
+                    <p className="text-2xl font-bold">€{stats?.monthEarnings || 0}</p>
+                  )}
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-xs text-success bg-success/10 px-2 py-1 rounded-full">
-                  +12% vs mese scorso
+                <span className="text-xs text-muted-foreground">
+                  {stats?.totalCompletedBookings || 0} servizi completati
                 </span>
               </div>
             </div>
@@ -200,66 +194,129 @@ export default function ProfessionalHome() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Prossimi Appuntamenti</h2>
-            <Button variant="ghost" size="sm" className="text-primary">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-primary"
+              onClick={() => navigate("/professional/bookings")}
+            >
               Vedi tutti
             </Button>
           </div>
           <div className="space-y-3">
-            {mockUpcomingBookings.map((booking) => (
-              <Card key={booking.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold">{booking.clientName}</h3>
-                      <p className="text-sm text-muted-foreground">{booking.service}</p>
-                    </div>
-                    <span
-                      className={cn(
-                        "text-xs px-2 py-1 rounded-full font-medium",
-                        booking.status === "confirmed"
-                          ? "bg-success/10 text-success"
-                          : "bg-warning/10 text-warning"
-                      )}
-                    >
-                      {booking.status === "confirmed" ? "Confermato" : "In attesa"}
-                    </span>
-                  </div>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span>{booking.date} • {booking.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{booking.address}</span>
-                    </div>
-                  </div>
-                  {booking.status === "pending" && (
-                    <div className="flex gap-2 mt-4">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Rifiuta
-                      </Button>
-                      <Button size="sm" className="flex-1">
-                        Accetta
-                      </Button>
-                    </div>
-                  )}
+            {loadingBookings ? (
+              [1, 2].map((i) => (
+                <Card key={i}>
+                  <CardContent className="p-4">
+                    <Skeleton className="h-24 w-full" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : !bookings || bookings.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nessun appuntamento in programma</p>
                 </CardContent>
               </Card>
-            ))}
+            ) : (
+              bookings.slice(0, 5).map((booking: any) => {
+                const clientName = booking.client
+                  ? `${booking.client.first_name || ""} ${booking.client.last_name || ""}`.trim() || "Cliente"
+                  : "Cliente";
+                const initials = clientName
+                  .split(" ")
+                  .map((n: string) => n[0])
+                  .join("")
+                  .toUpperCase();
+
+                return (
+                  <Card key={booking.id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={booking.client?.avatar_url} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <h3 className="font-semibold">{clientName}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {serviceTypeLabels[booking.service_type] || booking.service_type}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            "text-xs px-2 py-1 rounded-full font-medium",
+                            booking.status === "confirmed"
+                              ? "bg-success/10 text-success"
+                              : "bg-warning/10 text-warning"
+                          )}
+                        >
+                          {booking.status === "confirmed" ? "Confermato" : "In attesa"}
+                        </span>
+                      </div>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            {formatBookingDate(booking.scheduled_date)} •{" "}
+                            {booking.scheduled_time_start.slice(0, 5)} -{" "}
+                            {booking.scheduled_time_end.slice(0, 5)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          <span className="truncate">{booking.address}</span>
+                        </div>
+                      </div>
+                      {booking.status === "pending" && (
+                        <div className="flex gap-2 mt-4">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleReject(booking.id)}
+                            disabled={updateStatus.isPending}
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            Rifiuta
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleAccept(booking.id)}
+                            disabled={updateStatus.isPending}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Accetta
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
         </section>
 
         {/* Pending Requests Alert */}
-        {mockStats.pendingRequests > 0 && (
-          <Card className="border-primary/20 bg-primary/5">
+        {(stats?.pendingRequests || 0) > 0 && (
+          <Card
+            className="border-primary/20 bg-primary/5 cursor-pointer"
+            onClick={() => navigate("/professional/bookings")}
+          >
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                 <Bell className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
                 <p className="font-medium">
-                  {mockStats.pendingRequests} richieste in attesa
+                  {stats?.pendingRequests} richieste in attesa
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Rispondi per non perderle
