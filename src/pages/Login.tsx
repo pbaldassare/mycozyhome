@@ -54,16 +54,22 @@ export default function Login() {
 
       toast.success("Accesso effettuato!");
 
-      // Check user role and redirect accordingly
-      const role = data.user?.user_metadata?.role;
-      
+      // Check user role from user_roles table
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+
+      const role = roleData?.role;
+
       if (role === "professional") {
         // Check if professional has completed onboarding
         const { data: prof } = await supabase
           .from("professionals")
           .select("status, profile_completed")
           .eq("user_id", data.user.id)
-          .single();
+          .maybeSingle();
 
         if (prof?.profile_completed) {
           navigate("/professional");
