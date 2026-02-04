@@ -1,12 +1,12 @@
-import { Home, Calendar, Briefcase, Star, User } from "lucide-react";
+import { Home, Calendar, Clock, Briefcase, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/professional" },
   { icon: Calendar, label: "Prenotazioni", path: "/professional/bookings" },
+  { icon: Clock, label: "Disponibilità", path: "/professional/availability" },
   { icon: Briefcase, label: "Servizi", path: "/professional/services" },
-  { icon: Star, label: "Recensioni", path: "/professional/reviews" },
   { icon: User, label: "Profilo", path: "/professional/profile" },
 ];
 
