@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
@@ -14,6 +14,13 @@ type ServiceType = Database["public"]["Enums"]["service_type"];
 interface ServiceOption {
   id: ServiceType;
   label: string;
+}
+
+interface ServiceData {
+  selected: boolean;
+  hourlyRate: string;
+  yearsExperience: string;
+  description: string;
 }
 
 const serviceOptions: ServiceOption[] = [
@@ -29,10 +36,20 @@ export default function ServicesSetup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
-  const [selectedServices, setSelectedServices] = useState<ServiceType[]>([]);
-  const [yearsExperience, setYearsExperience] = useState("");
-  const [hourlyRate, setHourlyRate] = useState("");
   const [bio, setBio] = useState("");
+  const [expandedService, setExpandedService] = useState<ServiceType | null>(null);
+  const [servicesData, setServicesData] = useState<Record<ServiceType, ServiceData>>(() => {
+    const initial: Record<string, ServiceData> = {};
+    serviceOptions.forEach((s) => {
+      initial[s.id] = {
+        selected: false,
+        hourlyRate: "",
+        yearsExperience: "",
+        description: "",
+      };
+    });
+    return initial as Record<ServiceType, ServiceData>;
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,7 +62,7 @@ export default function ServicesSetup() {
 
       const { data: prof } = await supabase
         .from("professionals")
-        .select("id, years_experience, bio")
+        .select("id, bio")
         .eq("user_id", session.user.id)
         .single();
 
@@ -55,7 +72,6 @@ export default function ServicesSetup() {
       }
 
       setProfessionalId(prof.id);
-      if (prof.years_experience) setYearsExperience(String(prof.years_experience));
       if (prof.bio) setBio(prof.bio);
 
       const { data: existingServices } = await supabase
@@ -64,8 +80,16 @@ export default function ServicesSetup() {
         .eq("professional_id", prof.id);
 
       if (existingServices && existingServices.length > 0) {
-        setSelectedServices(existingServices.map((s) => s.service_type));
-        setHourlyRate(String(existingServices[0].hourly_rate));
+        const updated = { ...servicesData };
+        existingServices.forEach((s) => {
+          updated[s.service_type] = {
+            selected: true,
+            hourlyRate: String(s.hourly_rate),
+            yearsExperience: s.years_experience ? String(s.years_experience) : "",
+            description: s.description || "",
+          };
+        });
+        setServicesData(updated);
       }
     };
 
@@ -73,22 +97,53 @@ export default function ServicesSetup() {
   }, [navigate]);
 
   const toggleService = (serviceId: ServiceType) => {
-    setSelectedServices((prev) =>
-      prev.includes(serviceId)
-        ? prev.filter((s) => s !== serviceId)
-        : [...prev, serviceId]
-    );
+    setServicesData((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        selected: !prev[serviceId].selected,
+      },
+    }));
+    
+    // Auto-expand when selecting
+    if (!servicesData[serviceId].selected) {
+      setExpandedService(serviceId);
+    } else if (expandedService === serviceId) {
+      setExpandedService(null);
+    }
+  };
+
+  const updateServiceData = (
+    serviceId: ServiceType,
+    field: keyof Omit<ServiceData, "selected">,
+    value: string
+  ) => {
+    setServicesData((prev) => ({
+      ...prev,
+      [serviceId]: {
+        ...prev[serviceId],
+        [field]: value,
+      },
+    }));
   };
 
   const handleSubmit = async () => {
+    const selectedServices = Object.entries(servicesData).filter(
+      ([_, data]) => data.selected
+    );
+
     if (selectedServices.length === 0) {
       toast.error("Seleziona almeno un servizio");
       return;
     }
 
-    if (!hourlyRate || Number(hourlyRate) <= 0) {
-      toast.error("Inserisci una tariffa oraria valida");
-      return;
+    // Validate each selected service has a rate
+    for (const [serviceId, data] of selectedServices) {
+      if (!data.hourlyRate || Number(data.hourlyRate) <= 0) {
+        const serviceName = serviceOptions.find((s) => s.id === serviceId)?.label;
+        toast.error(`Inserisci una tariffa per ${serviceName}`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -96,23 +151,25 @@ export default function ServicesSetup() {
     try {
       if (!professionalId) throw new Error("Professional ID not found");
 
+      // Update bio
       await supabase
         .from("professionals")
-        .update({
-          years_experience: yearsExperience ? Number(yearsExperience) : 0,
-          bio: bio.trim() || null,
-        })
+        .update({ bio: bio.trim() || null })
         .eq("id", professionalId);
 
+      // Delete existing services
       await supabase
         .from("professional_services")
         .delete()
         .eq("professional_id", professionalId);
 
-      const servicesToInsert = selectedServices.map((serviceType) => ({
+      // Insert new services with individual data
+      const servicesToInsert = selectedServices.map(([serviceType, data]) => ({
         professional_id: professionalId,
-        service_type: serviceType,
-        hourly_rate: Number(hourlyRate),
+        service_type: serviceType as ServiceType,
+        hourly_rate: Number(data.hourlyRate),
+        years_experience: data.yearsExperience ? Number(data.yearsExperience) : 0,
+        description: data.description.trim() || null,
         min_hours: 1,
         is_active: true,
       }));
@@ -160,81 +217,148 @@ export default function ServicesSetup() {
       </header>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-6 space-y-8 pb-32">
+      <div className="flex-1 px-4 py-6 space-y-8 pb-32 overflow-y-auto">
+        {/* General Bio */}
+        <section>
+          <label className="block text-base font-semibold mb-2">
+            Descrizione generale del profilo
+          </label>
+          <Textarea
+            placeholder="Presentati ai clienti: chi sei, la tua esperienza, perché sceglierti..."
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="min-h-[100px] rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base resize-none"
+            maxLength={500}
+          />
+          <p className="text-xs text-muted-foreground mt-1">{bio.length}/500</p>
+        </section>
+
         {/* Services Selection */}
         <section>
-          <h2 className="text-base font-semibold mb-4">Tipologia di servizi offerti</h2>
+          <h2 className="text-base font-semibold mb-4">Servizi offerti</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Seleziona i servizi e personalizza tariffa, esperienza e descrizione per ognuno
+          </p>
+          
           <div className="space-y-3">
             {serviceOptions.map((service) => {
-              const isSelected = selectedServices.includes(service.id);
+              const data = servicesData[service.id];
+              const isSelected = data.selected;
+              const isExpanded = expandedService === service.id;
+
               return (
-                <button
+                <div
                   key={service.id}
-                  onClick={() => toggleService(service.id)}
-                  className="w-full flex items-center gap-3 text-left"
+                  className={cn(
+                    "rounded-xl border transition-all",
+                    isSelected
+                      ? "border-[hsl(var(--sage))] bg-[hsl(var(--sage-light))]/30"
+                      : "border-border bg-card"
+                  )}
                 >
-                  <div
-                    className={cn(
-                      "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                      isSelected
-                        ? "bg-[hsl(var(--sage))] border-[hsl(var(--sage))]"
-                        : "border-muted-foreground/30 bg-background"
+                  {/* Service Header */}
+                  <div className="flex items-center justify-between p-4">
+                    <button
+                      onClick={() => toggleService(service.id)}
+                      className="flex items-center gap-3 text-left flex-1"
+                    >
+                      <div
+                        className={cn(
+                          "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                          isSelected
+                            ? "bg-[hsl(var(--sage))] border-[hsl(var(--sage))]"
+                            : "border-muted-foreground/30 bg-background"
+                        )}
+                      >
+                        {isSelected && <Check className="w-4 h-4 text-white" />}
+                      </div>
+                      <span className="font-medium">{service.label}</span>
+                    </button>
+
+                    {isSelected && (
+                      <button
+                        onClick={() => setExpandedService(isExpanded ? null : service.id)}
+                        className="p-2 hover:bg-muted rounded-lg transition-colors"
+                      >
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </button>
                     )}
-                  >
-                    {isSelected && <Check className="w-4 h-4 text-white" />}
                   </div>
-                  <span className="text-foreground">{service.label}</span>
-                </button>
+
+                  {/* Expanded Details */}
+                  {isSelected && isExpanded && (
+                    <div className="px-4 pb-4 space-y-4 border-t border-border/50 pt-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Tariffa (€/ora) *
+                          </label>
+                          <Input
+                            type="number"
+                            placeholder="15"
+                            value={data.hourlyRate}
+                            onChange={(e) =>
+                              updateServiceData(service.id, "hourlyRate", e.target.value)
+                            }
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1">
+                            Anni esperienza
+                          </label>
+                          <Input
+                            type="number"
+                            placeholder="5"
+                            value={data.yearsExperience}
+                            onChange={(e) =>
+                              updateServiceData(service.id, "yearsExperience", e.target.value)
+                            }
+                            className="h-11 rounded-xl bg-background border-border"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Descrizione servizio
+                        </label>
+                        <Textarea
+                          placeholder={`Descrivi come offri il servizio di ${service.label.toLowerCase()}...`}
+                          value={data.description}
+                          onChange={(e) =>
+                            updateServiceData(service.id, "description", e.target.value)
+                          }
+                          className="min-h-[80px] rounded-xl bg-background border-border resize-none text-sm"
+                          maxLength={300}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {data.description.length}/300
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Collapsed Summary */}
+                  {isSelected && !isExpanded && data.hourlyRate && (
+                    <div className="px-4 pb-3 text-sm text-muted-foreground">
+                      €{data.hourlyRate}/ora
+                      {data.yearsExperience && ` • ${data.yearsExperience} anni exp.`}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
         </section>
-
-        {/* Years of Experience */}
-        <section>
-          <label className="block text-base font-semibold mb-2">
-            Anni di esperienza
-          </label>
-          <Input
-            type="number"
-            placeholder="Es. 5"
-            value={yearsExperience}
-            onChange={(e) => setYearsExperience(e.target.value)}
-            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
-          />
-        </section>
-
-        {/* Hourly Rate */}
-        <section>
-          <label className="block text-base font-semibold mb-2">
-            Tariffa oraria (€)
-          </label>
-          <Input
-            type="number"
-            placeholder="Es. 15"
-            value={hourlyRate}
-            onChange={(e) => setHourlyRate(e.target.value)}
-            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
-          />
-        </section>
-
-        {/* Bio */}
-        <section>
-          <label className="block text-base font-semibold mb-2">
-            Descrizione breve
-          </label>
-          <Textarea
-            placeholder="Presentati ai clienti"
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="min-h-[120px] rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base resize-none"
-            maxLength={500}
-          />
-        </section>
       </div>
 
       {/* Submit */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3 border-t">
         <Button
           onClick={handleSubmit}
           className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
