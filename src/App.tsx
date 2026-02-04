@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { ClientLayout } from "@/components/client/ClientLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import Professionals from "@/pages/admin/Professionals";
 import Clients from "@/pages/admin/Clients";
@@ -19,6 +20,11 @@ import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
 import ServicesSetup from "@/pages/professional/onboarding/Services";
 import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
 import DocumentsUpload from "@/pages/professional/onboarding/Documents";
+import ClientHome from "@/pages/client/Home";
+import ClientSearch from "@/pages/client/Search";
+import ClientBookings from "@/pages/client/Bookings";
+import ClientMessages from "@/pages/client/Messages";
+import ClientProfile from "@/pages/client/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,8 +36,17 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Redirect root to admin dashboard */}
-          <Route path="/" element={<Navigate to="/admin" replace />} />
+          {/* Redirect root to client home */}
+          <Route path="/" element={<Navigate to="/client" replace />} />
+          
+          {/* Client Routes */}
+          <Route path="/client" element={<ClientLayout />}>
+            <Route index element={<ClientHome />} />
+            <Route path="search" element={<ClientSearch />} />
+            <Route path="bookings" element={<ClientBookings />} />
+            <Route path="messages" element={<ClientMessages />} />
+            <Route path="profile" element={<ClientProfile />} />
+          </Route>
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
