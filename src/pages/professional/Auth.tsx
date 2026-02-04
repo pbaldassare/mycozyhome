@@ -116,7 +116,7 @@ export default function ProfessionalAuth() {
         }
 
         toast.success("Registrazione completata!");
-        navigate("/professional/onboarding/personal-info");
+        navigate("/professional/onboarding/personal");
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
