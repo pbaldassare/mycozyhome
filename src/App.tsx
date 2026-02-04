@@ -25,6 +25,7 @@ import ClientSearch from "@/pages/client/Search";
 import ClientBookings from "@/pages/client/Bookings";
 import ClientMessages from "@/pages/client/Messages";
 import ClientProfile from "@/pages/client/Profile";
+import ClientChat from "@/pages/client/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,8 @@ const App = () => (
             <Route path="messages" element={<ClientMessages />} />
             <Route path="profile" element={<ClientProfile />} />
           </Route>
+          {/* Chat route outside layout (full screen) */}
+          <Route path="/client/chat/:conversationId" element={<ClientChat />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
