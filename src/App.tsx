@@ -44,7 +44,9 @@ import ClientPromotions from "@/pages/client/Promotions";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
+import Install from "@/pages/Install";
 import NotFound from "./pages/NotFound";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,7 @@ const App = () => (
           {/* Welcome/Landing Page */}
           <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/install" element={<Install />} />
           
           {/* Client Routes */}
           <Route path="/client" element={<ClientLayout />}>
@@ -112,6 +115,7 @@ const App = () => (
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <InstallBanner />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
