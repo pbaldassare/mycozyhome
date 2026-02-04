@@ -12,6 +12,12 @@ import Bookings from "@/pages/admin/Bookings";
 import Disputes from "@/pages/admin/Disputes";
 import Payments from "@/pages/admin/Payments";
 import Settings from "@/pages/admin/Settings";
+import ProfessionalAuth from "@/pages/professional/Auth";
+import ProfessionalDashboard from "@/pages/professional/Dashboard";
+import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
+import ServicesSetup from "@/pages/professional/onboarding/Services";
+import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
+import DocumentsUpload from "@/pages/professional/onboarding/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +43,14 @@ const App = () => (
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<Settings />} />
           </Route>
+          
+          {/* Professional Routes */}
+          <Route path="/professional/auth" element={<ProfessionalAuth />} />
+          <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
+          <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />
+          <Route path="/professional/onboarding/services" element={<ServicesSetup />} />
+          <Route path="/professional/onboarding/availability" element={<AvailabilitySetup />} />
+          <Route path="/professional/onboarding/documents" element={<DocumentsUpload />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
