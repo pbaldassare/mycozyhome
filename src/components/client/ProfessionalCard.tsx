@@ -2,8 +2,10 @@ import { Star, MapPin, CheckCircle2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { FavoriteButton } from "@/components/client/FavoriteButton";
 
 interface ProfessionalCardProps {
+  id?: string;
   name: string;
   avatarUrl?: string;
   rating?: number;
@@ -12,11 +14,13 @@ interface ProfessionalCardProps {
   services: string[];
   hourlyRate?: number;
   isVerified?: boolean;
+  showFavorite?: boolean;
   onClick?: () => void;
   className?: string;
 }
 
 export function ProfessionalCard({
+  id,
   name,
   avatarUrl,
   rating = 0,
@@ -25,6 +29,7 @@ export function ProfessionalCard({
   services,
   hourlyRate,
   isVerified = false,
+  showFavorite = false,
   onClick,
   className,
 }: ProfessionalCardProps) {
@@ -102,6 +107,10 @@ export function ProfessionalCard({
           <div className="text-lg font-bold text-primary">€{hourlyRate}</div>
           <div className="text-xs text-muted-foreground">/ora</div>
         </div>
+      )}
+
+      {showFavorite && id && (
+        <FavoriteButton professionalId={id} size="sm" className="flex-shrink-0" />
       )}
     </button>
   );

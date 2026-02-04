@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/client/AppHeader";
+import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -104,7 +105,10 @@ export default function ProfessionalDetail() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      <AppHeader showBack />
+      <AppHeader 
+        showBack 
+        rightAction={id ? <FavoriteButton professionalId={id} size="md" /> : undefined}
+      />
       
       {/* Profile Header */}
       <div className="px-4 pt-4 pb-6">

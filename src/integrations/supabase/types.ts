@@ -260,6 +260,35 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          professional_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          professional_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
