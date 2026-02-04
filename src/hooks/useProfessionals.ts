@@ -72,7 +72,7 @@ export function useSearchProfessionals(
       let query = supabase
         .from("professionals")
         .select(`
-          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio,
+          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio, latitude, longitude,
           professional_services(service_type, hourly_rate)
         `)
         .eq("status", "approved");
@@ -93,6 +93,8 @@ export function useSearchProfessionals(
         isVerified: pro.status === "approved",
         avatarUrl: pro.avatar_url,
         city: pro.city,
+        latitude: pro.latitude ? Number(pro.latitude) : undefined,
+        longitude: pro.longitude ? Number(pro.longitude) : undefined,
       }));
 
       // Filter by service type

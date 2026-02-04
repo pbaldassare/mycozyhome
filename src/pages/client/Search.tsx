@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2 } from "lucide-react";
+import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2, List, Map } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
+import { ProfessionalsMap } from "@/components/maps/ProfessionalsMap";
 import { cn } from "@/lib/utils";
 import { useSearchProfessionals } from "@/hooks/useProfessionals";
 
@@ -25,6 +26,7 @@ export default function ClientSearch() {
   const [selectedService, setSelectedService] = useState(
     searchParams.get("service") || "all"
   );
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
 
   const { data: professionals, isLoading } = useSearchProfessionals(
     selectedService,
@@ -32,7 +34,7 @@ export default function ClientSearch() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <AppHeader title="Cerca" showBack />
 
       <div className="px-4 py-4 space-y-4">
@@ -75,47 +77,83 @@ export default function ClientSearch() {
           ))}
         </div>
 
-        {/* Results */}
-        <div>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <p className="text-sm text-muted-foreground mb-4">
-                {professionals?.length || 0} professionisti trovati
-              </p>
-              {professionals && professionals.length > 0 ? (
-                <div className="space-y-3">
-                  {professionals.map((pro) => (
-                    <ProfessionalCard
-                      key={pro.id}
-                      id={pro.id}
-                      name={pro.name}
-                      rating={pro.rating}
-                      reviewCount={pro.reviewCount}
-                      distance={pro.distance}
-                      services={pro.services}
-                      hourlyRate={pro.hourlyRate}
-                      isVerified={pro.isVerified}
-                      showFavorite
-                      onClick={() => navigate(`/client/professional/${pro.id}`)}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold">Nessun risultato</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Prova a modificare i filtri di ricerca
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+        {/* View Mode Toggle */}
+        <div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-xl">
+          <button
+            onClick={() => setViewMode("list")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg flex-1 justify-center transition-colors",
+              viewMode === "list"
+                ? "bg-background shadow-sm text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <List className="h-4 w-4" />
+            Lista
+          </button>
+          <button
+            onClick={() => setViewMode("map")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg flex-1 justify-center transition-colors",
+              viewMode === "map"
+                ? "bg-background shadow-sm text-foreground font-medium"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Map className="h-4 w-4" />
+            Mappa
+          </button>
         </div>
+      </div>
+
+      {/* Results */}
+      <div className={cn("flex-1", viewMode === "list" ? "px-4 pb-4" : "")}>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : viewMode === "map" ? (
+          <div className="h-[calc(100vh-280px)] min-h-[400px]">
+            <ProfessionalsMap
+              professionals={professionals || []}
+              onProfessionalClick={(id) => navigate(`/client/professional/${id}`)}
+            />
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground mb-4">
+              {professionals?.length || 0} professionisti trovati
+            </p>
+            {professionals && professionals.length > 0 ? (
+              <div className="space-y-3">
+                {professionals.map((pro) => (
+                  <ProfessionalCard
+                    key={pro.id}
+                    id={pro.id}
+                    name={pro.name}
+                    rating={pro.rating}
+                    reviewCount={pro.reviewCount}
+                    distance={pro.distance}
+                    services={pro.services}
+                    hourlyRate={pro.hourlyRate}
+                    isVerified={pro.isVerified}
+                    avatarUrl={pro.avatarUrl || undefined}
+                    showFavorite
+                    onClick={() => navigate(`/client/professional/${pro.id}`)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="font-semibold">Nessun risultato</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Prova a modificare i filtri di ricerca
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
