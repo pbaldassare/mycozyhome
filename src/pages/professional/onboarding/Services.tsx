@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -44,7 +43,6 @@ export default function ServicesSetup() {
         return;
       }
 
-      // Get professional profile
       const { data: prof } = await supabase
         .from("professionals")
         .select("id, years_experience, bio")
@@ -60,7 +58,6 @@ export default function ServicesSetup() {
       if (prof.years_experience) setYearsExperience(String(prof.years_experience));
       if (prof.bio) setBio(prof.bio);
 
-      // Load existing services
       const { data: existingServices } = await supabase
         .from("professional_services")
         .select("*")
@@ -68,7 +65,6 @@ export default function ServicesSetup() {
 
       if (existingServices && existingServices.length > 0) {
         setSelectedServices(existingServices.map((s) => s.service_type));
-        // Use first service hourly rate as default
         setHourlyRate(String(existingServices[0].hourly_rate));
       }
     };
@@ -100,7 +96,6 @@ export default function ServicesSetup() {
     try {
       if (!professionalId) throw new Error("Professional ID not found");
 
-      // Update professional profile with experience and bio
       await supabase
         .from("professionals")
         .update({
@@ -109,7 +104,6 @@ export default function ServicesSetup() {
         })
         .eq("id", professionalId);
 
-      // Delete existing and insert new services
       await supabase
         .from("professional_services")
         .delete()
@@ -139,7 +133,6 @@ export default function ServicesSetup() {
     }
   };
 
-  // Calculate progress (step 2 of 4)
   const progress = 50;
 
   return (
@@ -158,9 +151,9 @@ export default function ServicesSetup() {
         </div>
 
         {/* Progress Bar */}
-        <div className="mt-4 h-2 bg-primary/20 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-[hsl(var(--sage-light))] rounded-full overflow-hidden">
           <div
-            className="h-full bg-primary transition-all duration-500 rounded-full"
+            className="h-full bg-[hsl(var(--sage))] transition-all duration-500 rounded-full"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -184,7 +177,7 @@ export default function ServicesSetup() {
                     className={cn(
                       "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
                       isSelected
-                        ? "bg-success border-success"
+                        ? "bg-[hsl(var(--sage))] border-[hsl(var(--sage))]"
                         : "border-muted-foreground/30 bg-background"
                     )}
                   >
@@ -207,7 +200,7 @@ export default function ServicesSetup() {
             placeholder="Es. 5"
             value={yearsExperience}
             onChange={(e) => setYearsExperience(e.target.value)}
-            className="h-12 rounded-xl bg-primary/5 border-0 text-base"
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
           />
         </section>
 
@@ -221,7 +214,7 @@ export default function ServicesSetup() {
             placeholder="Es. 15"
             value={hourlyRate}
             onChange={(e) => setHourlyRate(e.target.value)}
-            className="h-12 rounded-xl bg-primary/5 border-0 text-base"
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
           />
         </section>
 
@@ -234,7 +227,7 @@ export default function ServicesSetup() {
             placeholder="Presentati ai clienti"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="min-h-[120px] rounded-xl bg-primary/5 border-0 text-base resize-none"
+            className="min-h-[120px] rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base resize-none"
             maxLength={500}
           />
         </section>
@@ -244,7 +237,7 @@ export default function ServicesSetup() {
       <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
         <Button
           onClick={handleSubmit}
-          className="w-full h-14 text-base rounded-2xl"
+          className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
           size="lg"
           disabled={loading}
         >
@@ -252,7 +245,7 @@ export default function ServicesSetup() {
         </Button>
         <button
           onClick={() => navigate("/professional/onboarding/personal")}
-          className="w-full text-center text-primary font-medium py-2"
+          className="w-full text-center text-[hsl(var(--sage-dark))] font-medium py-2"
         >
           Indietro
         </button>

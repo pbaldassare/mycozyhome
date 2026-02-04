@@ -3,9 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, MapPin, Phone, Calendar, CreditCard } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -19,13 +17,11 @@ const personalInfoSchema = z.object({
   city: z.string().min(2, "Inserisci la città"),
   province: z.string().optional(),
   postalCode: z.string().optional(),
-  bio: z.string().optional(),
 });
 
 export default function PersonalInfo() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: "",
@@ -37,7 +33,6 @@ export default function PersonalInfo() {
     city: "",
     province: "",
     postalCode: "",
-    bio: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -50,12 +45,8 @@ export default function PersonalInfo() {
         return;
       }
 
-      setUserId(session.user.id);
-
-      // Get user metadata for initial values
       const metadata = session.user.user_metadata;
       
-      // Check if professional profile exists
       const { data: prof } = await supabase
         .from("professionals")
         .select("*")
@@ -74,10 +65,8 @@ export default function PersonalInfo() {
           city: prof.city || "",
           province: prof.province || "",
           postalCode: prof.postal_code || "",
-          bio: prof.bio || "",
         });
       } else {
-        // Use metadata from signup
         setFormData((prev) => ({
           ...prev,
           firstName: metadata?.first_name || "",
@@ -89,7 +78,7 @@ export default function PersonalInfo() {
     loadData();
   }, [navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setErrors({ ...errors, [e.target.name]: "" });
   };
@@ -120,12 +109,10 @@ export default function PersonalInfo() {
         city: validated.city,
         province: validated.province || null,
         postal_code: validated.postalCode || null,
-        bio: validated.bio || null,
         profile_completed: true,
       };
 
       if (professionalId) {
-        // Update existing
         const { error } = await supabase
           .from("professionals")
           .update(professionalData)
@@ -133,7 +120,6 @@ export default function PersonalInfo() {
 
         if (error) throw error;
       } else {
-        // Insert new
         const { error } = await supabase
           .from("professionals")
           .insert(professionalData);
@@ -161,199 +147,170 @@ export default function PersonalInfo() {
     }
   };
 
+  // Progress: step 1 of 4 = 25%
+  const progress = 25;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground p-4">
-        <div className="flex items-center gap-3">
+      <header className="bg-background p-4 sticky top-0 z-10">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/professional/dashboard")}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
-          <div>
-            <h1 className="font-semibold">Dati Personali</h1>
-            <p className="text-sm text-white/70">Step 1 di 4</p>
-          </div>
+          <h1 className="font-semibold text-lg">Dati personali</h1>
+          <div className="w-9" />
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mt-4 h-2 bg-[hsl(var(--sage-light))] rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[hsl(var(--sage))] transition-all duration-500 rounded-full"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </header>
 
-      {/* Progress */}
-      <div className="h-1 bg-muted">
-        <div className="h-full bg-primary w-1/4" />
-      </div>
-
       {/* Form */}
-      <form onSubmit={handleSubmit} className="flex-1 p-4 space-y-6 overflow-auto">
-        {/* Name Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <User className="w-4 h-4" />
-            <span>Informazioni Base</span>
-          </div>
+      <form onSubmit={handleSubmit} className="flex-1 px-4 py-6 space-y-6 pb-32">
+        {/* Nome e Cognome */}
+        <section>
+          <label className="block text-base font-semibold mb-2">Nome *</label>
+          <Input
+            name="firstName"
+            placeholder="Es. Mario"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+          {errors.firstName && (
+            <p className="text-xs text-destructive mt-1">{errors.firstName}</p>
+          )}
+        </section>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Nome *</Label>
-              <Input
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Mario"
-              />
-              {errors.firstName && (
-                <p className="text-xs text-destructive">{errors.firstName}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Cognome *</Label>
-              <Input
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Rossi"
-              />
-              {errors.lastName && (
-                <p className="text-xs text-destructive">{errors.lastName}</p>
-              )}
-            </div>
-          </div>
+        <section>
+          <label className="block text-base font-semibold mb-2">Cognome *</label>
+          <Input
+            name="lastName"
+            placeholder="Es. Rossi"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+          {errors.lastName && (
+            <p className="text-xs text-destructive mt-1">{errors.lastName}</p>
+          )}
+        </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefono *</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+39 333 1234567"
-                className="pl-9"
-              />
-            </div>
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone}</p>
-            )}
-          </div>
+        <section>
+          <label className="block text-base font-semibold mb-2">Telefono *</label>
+          <Input
+            name="phone"
+            type="tel"
+            placeholder="Es. +39 333 1234567"
+            value={formData.phone}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+          {errors.phone && (
+            <p className="text-xs text-destructive mt-1">{errors.phone}</p>
+          )}
+        </section>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="birthDate">Data di Nascita</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="birthDate"
-                  name="birthDate"
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                  className="pl-9"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fiscalCode">Codice Fiscale</Label>
-              <div className="relative">
-                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="fiscalCode"
-                  name="fiscalCode"
-                  value={formData.fiscalCode}
-                  onChange={handleChange}
-                  placeholder="RSSMRA80A01H501U"
-                  className="pl-9"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        <section>
+          <label className="block text-base font-semibold mb-2">Data di nascita</label>
+          <Input
+            name="birthDate"
+            type="date"
+            value={formData.birthDate}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+        </section>
 
-        {/* Address Section */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-            <MapPin className="w-4 h-4" />
-            <span>Indirizzo</span>
-          </div>
+        <section>
+          <label className="block text-base font-semibold mb-2">Codice Fiscale</label>
+          <Input
+            name="fiscalCode"
+            placeholder="Es. RSSMRA80A01H501U"
+            value={formData.fiscalCode}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+        </section>
 
-          <div className="space-y-2">
-            <Label htmlFor="address">Via e Numero</Label>
+        <section>
+          <label className="block text-base font-semibold mb-2">Città *</label>
+          <Input
+            name="city"
+            placeholder="Es. Milano"
+            value={formData.city}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+          {errors.city && (
+            <p className="text-xs text-destructive mt-1">{errors.city}</p>
+          )}
+        </section>
+
+        <section>
+          <label className="block text-base font-semibold mb-2">Indirizzo</label>
+          <Input
+            name="address"
+            placeholder="Es. Via Roma 123"
+            value={formData.address}
+            onChange={handleChange}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
+          />
+        </section>
+
+        <div className="grid grid-cols-2 gap-4">
+          <section>
+            <label className="block text-base font-semibold mb-2">Provincia</label>
             <Input
-              id="address"
-              name="address"
-              value={formData.address}
+              name="province"
+              placeholder="MI"
+              value={formData.province}
               onChange={handleChange}
-              placeholder="Via Roma 123"
+              maxLength={2}
+              className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="city">Città *</Label>
-              <Input
-                id="city"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Milano"
-              />
-              {errors.city && (
-                <p className="text-xs text-destructive">{errors.city}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="province">Provincia</Label>
-              <Input
-                id="province"
-                name="province"
-                value={formData.province}
-                onChange={handleChange}
-                placeholder="MI"
-                maxLength={2}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="postalCode">CAP</Label>
+          </section>
+          <section>
+            <label className="block text-base font-semibold mb-2">CAP</label>
             <Input
-              id="postalCode"
               name="postalCode"
+              placeholder="20100"
               value={formData.postalCode}
               onChange={handleChange}
-              placeholder="20100"
               maxLength={5}
+              className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
             />
-          </div>
-        </div>
-
-        {/* Bio Section */}
-        <div className="space-y-2">
-          <Label htmlFor="bio">Presentazione</Label>
-          <Textarea
-            id="bio"
-            name="bio"
-            value={formData.bio}
-            onChange={handleChange}
-            placeholder="Raccontaci qualcosa di te e della tua esperienza..."
-            rows={4}
-          />
-          <p className="text-xs text-muted-foreground">
-            Questa descrizione sarà visibile ai clienti
-          </p>
-        </div>
-
-        {/* Submit */}
-        <div className="sticky bottom-0 bg-background pt-4 pb-6 -mx-4 px-4 border-t border-border">
-          <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Salvataggio..." : "Continua"}
-          </Button>
+          </section>
         </div>
       </form>
+
+      {/* Submit */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background p-4 space-y-3">
+        <Button
+          onClick={handleSubmit}
+          className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
+          size="lg"
+          disabled={loading}
+        >
+          {loading ? "Salvataggio..." : "Continua"}
+        </Button>
+        <button
+          type="button"
+          onClick={() => navigate("/professional/dashboard")}
+          className="w-full text-center text-[hsl(var(--sage-dark))] font-medium py-2"
+        >
+          Indietro
+        </button>
+      </div>
     </div>
   );
 }
