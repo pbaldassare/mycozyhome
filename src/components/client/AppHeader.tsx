@@ -9,6 +9,7 @@ interface AppHeaderProps {
   showNotifications?: boolean;
   rightAction?: React.ReactNode;
   className?: string;
+  onBack?: () => void;
 }
 
 export function AppHeader({
@@ -17,8 +18,17 @@ export function AppHeader({
   showNotifications = false,
   rightAction,
   className,
+  onBack,
 }: AppHeaderProps) {
   const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <header className={cn("app-header", className)}>
@@ -29,7 +39,7 @@ export function AppHeader({
               variant="ghost"
               size="icon"
               className="h-9 w-9 rounded-xl -ml-2"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
