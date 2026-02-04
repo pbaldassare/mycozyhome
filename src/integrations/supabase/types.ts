@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          address: string
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          discount_amount: number | null
+          hourly_rate: number
+          id: string
+          latitude: number | null
+          longitude: number | null
+          notes: string | null
+          professional_id: string
+          promo_code: string | null
+          scheduled_date: string
+          scheduled_time_end: string
+          scheduled_time_start: string
+          service_type: string
+          status: string
+          total_amount: number
+          total_hours: number
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          hourly_rate: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          professional_id: string
+          promo_code?: string | null
+          scheduled_date: string
+          scheduled_time_end: string
+          scheduled_time_start: string
+          service_type: string
+          status?: string
+          total_amount: number
+          total_hours: number
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          discount_amount?: number | null
+          hourly_rate?: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notes?: string | null
+          professional_id?: string
+          promo_code?: string | null
+          scheduled_date?: string
+          scheduled_time_end?: string
+          scheduled_time_start?: string
+          service_type?: string
+          status?: string
+          total_amount?: number
+          total_hours?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           booking_id: string | null
@@ -158,6 +244,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "disputes_conversation_id_fkey"
             columns: ["conversation_id"]
@@ -394,6 +487,7 @@ export type Database = {
           approved_at: string | null
           approved_by: string | null
           avatar_url: string | null
+          average_rating: number | null
           bio: string | null
           birth_date: string | null
           city: string
@@ -412,6 +506,7 @@ export type Database = {
           postal_code: string | null
           profile_completed: boolean | null
           province: string | null
+          review_count: number | null
           status: Database["public"]["Enums"]["professional_status"]
           updated_at: string
           user_id: string
@@ -423,6 +518,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
           city: string
@@ -441,6 +537,7 @@ export type Database = {
           postal_code?: string | null
           profile_completed?: boolean | null
           province?: string | null
+          review_count?: number | null
           status?: Database["public"]["Enums"]["professional_status"]
           updated_at?: string
           user_id: string
@@ -452,6 +549,7 @@ export type Database = {
           approved_at?: string | null
           approved_by?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
           city?: string
@@ -470,12 +568,63 @@ export type Database = {
           postal_code?: string | null
           profile_completed?: boolean | null
           province?: string | null
+          review_count?: number | null
           status?: Database["public"]["Enums"]["professional_status"]
           updated_at?: string
           user_id?: string
           years_experience?: number | null
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          admin_hidden: boolean | null
+          admin_notes: string | null
+          booking_id: string
+          client_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          is_visible: boolean | null
+          professional_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          admin_hidden?: boolean | null
+          admin_notes?: string | null
+          booking_id: string
+          client_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean | null
+          professional_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          admin_hidden?: boolean | null
+          admin_notes?: string | null
+          booking_id?: string
+          client_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_visible?: boolean | null
+          professional_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
@@ -559,7 +708,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_professional_rating: {
+        Args: { p_professional_id: string }
+        Returns: {
+          average_rating: number
+          review_count: number
+        }[]
+      }
     }
     Enums: {
       document_status: "pending" | "approved" | "rejected"

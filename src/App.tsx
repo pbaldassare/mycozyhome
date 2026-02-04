@@ -26,6 +26,8 @@ import ClientBookings from "@/pages/client/Bookings";
 import ClientMessages from "@/pages/client/Messages";
 import ClientProfile from "@/pages/client/Profile";
 import ClientChat from "@/pages/client/Chat";
+import ClientDispute from "@/pages/client/Dispute";
+import SafetyCenter from "@/pages/client/SafetyCenter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,8 +50,10 @@ const App = () => (
             <Route path="messages" element={<ClientMessages />} />
             <Route path="profile" element={<ClientProfile />} />
           </Route>
-          {/* Chat route outside layout (full screen) */}
+          {/* Client routes outside layout (full screen) */}
           <Route path="/client/chat/:conversationId" element={<ClientChat />} />
+          <Route path="/client/dispute" element={<ClientDispute />} />
+          <Route path="/client/safety" element={<SafetyCenter />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>

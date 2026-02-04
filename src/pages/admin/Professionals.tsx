@@ -1,12 +1,20 @@
 import { useState } from "react";
-import { Search, Filter, UserCheck, Clock, XCircle } from "lucide-react";
+import { Search, Filter, UserCheck, Clock, XCircle, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
+import { ProfessionalReviewPanel } from "@/components/admin/ProfessionalReviewPanel";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data
-const allProfessionals: Professional[] = [
+// Mock data with documents
+const allProfessionals: (Professional & { documents?: any[] })[] = [
   {
     id: "1",
     name: "Maria Rossi",
@@ -14,8 +22,18 @@ const allProfessionals: Professional[] = [
     services: ["cleaning", "ironing"],
     city: "Milano",
     status: "pending",
-    documentsCount: 3,
+    documentsCount: 1,
     submittedAt: "3 Feb 2026",
+    documents: [
+      {
+        id: "doc1",
+        type: "id_card",
+        name: "Carta_identita_fronte.jpg",
+        url: "",
+        status: "pending",
+        uploadedAt: "2026-02-03T10:00:00Z",
+      },
+    ],
   },
   {
     id: "2",
@@ -24,8 +42,18 @@ const allProfessionals: Professional[] = [
     services: ["babysitter"],
     city: "Roma",
     status: "pending",
-    documentsCount: 5,
+    documentsCount: 1,
     submittedAt: "2 Feb 2026",
+    documents: [
+      {
+        id: "doc2",
+        type: "id_card",
+        name: "CI_Giuseppe.pdf",
+        url: "",
+        status: "pending",
+        uploadedAt: "2026-02-02T14:30:00Z",
+      },
+    ],
   },
   {
     id: "3",
@@ -33,9 +61,19 @@ const allProfessionals: Professional[] = [
     email: "anna.bianchi@email.com",
     services: ["dog_sitter"],
     city: "Napoli",
-    status: "pending",
-    documentsCount: 4,
+    status: "in_review",
+    documentsCount: 1,
     submittedAt: "1 Feb 2026",
+    documents: [
+      {
+        id: "doc3",
+        type: "id_card",
+        name: "Documento_Anna.jpg",
+        url: "",
+        status: "approved",
+        uploadedAt: "2026-02-01T09:00:00Z",
+      },
+    ],
   },
   {
     id: "4",
@@ -44,10 +82,20 @@ const allProfessionals: Professional[] = [
     services: ["cleaning", "office_cleaning", "sanitization"],
     city: "Torino",
     status: "approved",
-    documentsCount: 4,
+    documentsCount: 1,
     rating: 4.9,
     reviewsCount: 47,
     submittedAt: "15 Gen 2026",
+    documents: [
+      {
+        id: "doc4",
+        type: "id_card",
+        name: "ID_Luca.jpg",
+        url: "",
+        status: "approved",
+        uploadedAt: "2026-01-15T11:00:00Z",
+      },
+    ],
   },
   {
     id: "5",
@@ -56,10 +104,20 @@ const allProfessionals: Professional[] = [
     services: ["babysitter"],
     city: "Firenze",
     status: "approved",
-    documentsCount: 6,
+    documentsCount: 1,
     rating: 4.7,
     reviewsCount: 32,
     submittedAt: "10 Gen 2026",
+    documents: [
+      {
+        id: "doc5",
+        type: "id_card",
+        name: "CartaID_Francesca.pdf",
+        url: "",
+        status: "approved",
+        uploadedAt: "2026-01-10T16:00:00Z",
+      },
+    ],
   },
   {
     id: "6",
@@ -68,41 +126,84 @@ const allProfessionals: Professional[] = [
     services: ["dog_sitter"],
     city: "Bologna",
     status: "rejected",
-    documentsCount: 2,
+    documentsCount: 1,
     submittedAt: "28 Dic 2025",
+    documents: [
+      {
+        id: "doc6",
+        type: "id_card",
+        name: "Doc_Marco.jpg",
+        url: "",
+        status: "rejected",
+        uploadedAt: "2025-12-28T12:00:00Z",
+      },
+    ],
   },
 ];
 
 export default function Professionals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
+  const [selectedProfessional, setSelectedProfessional] = useState<any | null>(null);
+  const { toast } = useToast();
 
   const filteredProfessionals = allProfessionals.filter((p) => {
     const matchesSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.city.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = p.status === activeTab || activeTab === "all";
+    const matchesStatus = 
+      activeTab === "all" || 
+      p.status === activeTab || 
+      (activeTab === "pending" && p.status === "in_review");
     return matchesSearch && matchesStatus;
   });
 
   const counts = {
     all: allProfessionals.length,
-    pending: allProfessionals.filter((p) => p.status === "pending").length,
+    pending: allProfessionals.filter((p) => p.status === "pending" || p.status === "in_review").length,
     approved: allProfessionals.filter((p) => p.status === "approved").length,
     rejected: allProfessionals.filter((p) => p.status === "rejected").length,
   };
 
-  const handleApprove = (id: string) => {
-    console.log("Approved:", id);
+  const handleApprove = (id: string, notes?: string) => {
+    console.log("Approved:", id, "Notes:", notes);
+    toast({
+      title: "Professionista approvato",
+      description: "Il professionista è ora visibile ai clienti.",
+    });
   };
 
-  const handleReject = (id: string) => {
-    console.log("Rejected:", id);
+  const handleReject = (id: string, notes?: string) => {
+    console.log("Rejected:", id, "Notes:", notes);
+    toast({
+      title: "Professionista rifiutato",
+      description: "La richiesta è stata rifiutata.",
+    });
   };
+
+  const handleCardApprove = (id: string) => handleApprove(id);
+  const handleCardReject = (id: string) => handleReject(id);
 
   const handleView = (id: string) => {
-    console.log("View:", id);
+    const prof = allProfessionals.find((p) => p.id === id);
+    if (prof) {
+      const [firstName, ...lastNameParts] = prof.name.split(" ");
+      setSelectedProfessional({
+        id: prof.id,
+        firstName,
+        lastName: lastNameParts.join(" "),
+        email: prof.email,
+        phone: "+39 333 1234567",
+        city: prof.city,
+        status: prof.status,
+        services: prof.services,
+        documents: prof.documents || [],
+        createdAt: prof.submittedAt,
+        rating: prof.rating,
+        reviewCount: prof.reviewsCount,
+      });
+    }
   };
 
   return (
@@ -174,8 +275,8 @@ export default function Professionals() {
                 <ProfessionalCard
                   key={professional.id}
                   professional={professional}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
+                  onApprove={handleCardApprove}
+                  onReject={handleCardReject}
                   onView={handleView}
                 />
               ))}
@@ -183,6 +284,23 @@ export default function Professionals() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Review Panel Sheet */}
+      <Sheet open={!!selectedProfessional} onOpenChange={() => setSelectedProfessional(null)}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Revisione professionista</SheetTitle>
+          </SheetHeader>
+          {selectedProfessional && (
+            <ProfessionalReviewPanel
+              professional={selectedProfessional}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onClose={() => setSelectedProfessional(null)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
