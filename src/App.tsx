@@ -29,6 +29,12 @@ import ClientChat from "@/pages/client/Chat";
 import ClientDispute from "@/pages/client/Dispute";
 import ClientAuth from "@/pages/client/Auth";
 import ClientPersonalData from "@/pages/client/profile/PersonalData";
+import ClientPaymentMethods from "@/pages/client/profile/PaymentMethods";
+import ClientNotifications from "@/pages/client/profile/Notifications";
+import ClientPaymentHistory from "@/pages/client/profile/PaymentHistory";
+import ClientMyReviews from "@/pages/client/profile/MyReviews";
+import ClientPrivacy from "@/pages/client/profile/Privacy";
+import ClientSettings from "@/pages/client/profile/Settings";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
@@ -58,6 +64,12 @@ const App = () => (
           {/* Client routes outside layout (full screen) */}
           <Route path="/client/auth" element={<ClientAuth />} />
           <Route path="/client/profile/personal" element={<ClientPersonalData />} />
+          <Route path="/client/profile/payments" element={<ClientPaymentMethods />} />
+          <Route path="/client/profile/notifications" element={<ClientNotifications />} />
+          <Route path="/client/profile/payment-history" element={<ClientPaymentHistory />} />
+          <Route path="/client/profile/reviews" element={<ClientMyReviews />} />
+          <Route path="/client/profile/privacy" element={<ClientPrivacy />} />
+          <Route path="/client/profile/settings" element={<ClientSettings />} />
           <Route path="/client/chat/:conversationId" element={<ClientChat />} />
           <Route path="/client/dispute" element={<ClientDispute />} />
           <Route path="/client/safety" element={<SafetyCenter />} />
