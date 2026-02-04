@@ -11,7 +11,7 @@ export default function Welcome() {
       <div className="w-full bg-[#d4e4d9] flex items-center justify-center py-8">
         <img
           src={welcomeIllustration}
-          alt="Home cleaning illustration"
+          alt="Illustrazione pulizia casa"
           className="w-full max-w-md h-auto object-contain"
         />
       </div>
@@ -19,10 +19,10 @@ export default function Welcome() {
       {/* Content Section */}
       <div className="flex-1 flex flex-col items-center px-6 pt-10 pb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">
-          Welcome to CasaFacile
+          Benvenuto su CasaFacile
         </h1>
         <p className="text-center text-muted-foreground text-lg max-w-md mb-10">
-          Find trusted professionals for your home cleaning and domestic needs. We ensure secure intermediation and quality service.
+          Trova professionisti affidabili per la pulizia della tua casa e le tue esigenze domestiche. Garantiamo intermediazione sicura e servizio di qualità.
         </p>
 
         {/* Buttons */}
@@ -32,7 +32,7 @@ export default function Welcome() {
             className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/90"
             onClick={() => navigate("/client/auth")}
           >
-            Sign up as Client
+            Registrati come Cliente
           </Button>
           <Button
             size="lg"
@@ -40,7 +40,7 @@ export default function Welcome() {
             className="w-full h-14 text-lg rounded-2xl border-primary text-primary hover:bg-primary/5"
             onClick={() => navigate("/professional/auth")}
           >
-            Sign up as Professional
+            Registrati come Professionista
           </Button>
         </div>
 
@@ -50,7 +50,7 @@ export default function Welcome() {
             onClick={() => navigate("/login")}
             className="text-primary hover:underline text-base"
           >
-            Already have an account? Log in
+            Hai già un account? Accedi
           </button>
         </div>
       </div>
