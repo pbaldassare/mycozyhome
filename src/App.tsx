@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { ClientLayout } from "@/components/client/ClientLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -28,6 +28,7 @@ import ClientProfile from "@/pages/client/Profile";
 import ClientChat from "@/pages/client/Chat";
 import ClientDispute from "@/pages/client/Dispute";
 import SafetyCenter from "@/pages/client/SafetyCenter";
+import Welcome from "@/pages/Welcome";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,8 +40,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Redirect root to client home */}
-          <Route path="/" element={<Navigate to="/client" replace />} />
+          {/* Welcome/Landing Page */}
+          <Route path="/" element={<Welcome />} />
           
           {/* Client Routes */}
           <Route path="/client" element={<ClientLayout />}>
