@@ -244,7 +244,7 @@ export default function Professionals() {
           >
             <Clock className="w-4 h-4" />
             <span className="hidden sm:inline">In Attesa</span>
-            <span className="bg-warning/20 text-warning text-xs px-2 py-0.5 rounded-full font-medium">
+            <span className="bg-straw/30 text-straw-dark text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.pending}
             </span>
           </TabsTrigger>
@@ -254,7 +254,7 @@ export default function Professionals() {
           >
             <UserCheck className="w-4 h-4" />
             <span className="hidden sm:inline">Approvati</span>
-            <span className="bg-success/20 text-success text-xs px-2 py-0.5 rounded-full font-medium">
+            <span className="bg-sage/25 text-sage-dark text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.approved}
             </span>
           </TabsTrigger>
@@ -264,7 +264,7 @@ export default function Professionals() {
           >
             <XCircle className="w-4 h-4" />
             <span className="hidden sm:inline">Rifiutati</span>
-            <span className="bg-destructive/20 text-destructive text-xs px-2 py-0.5 rounded-full font-medium">
+            <span className="bg-blush/25 text-blush-dark text-xs px-2 py-0.5 rounded-full font-medium">
               {counts.rejected}
             </span>
           </TabsTrigger>
@@ -272,7 +272,9 @@ export default function Professionals() {
             value="all"
             className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-sm"
           >
-            Tutti ({counts.all})
+            <span className="bg-primary/15 text-primary text-xs px-2 py-0.5 rounded-full font-medium">
+              Tutti ({counts.all})
+            </span>
           </TabsTrigger>
         </TabsList>
 

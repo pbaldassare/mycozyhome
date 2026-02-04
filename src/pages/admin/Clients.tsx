@@ -111,21 +111,41 @@ export default function Clients() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card">
+        <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-primary/15">
+              <Search className="w-4 h-4 text-primary" />
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">Totale Clienti</p>
-          <p className="text-2xl font-bold">2,847</p>
+          <p className="text-2xl font-bold text-primary">2,847</p>
         </div>
-        <div className="stat-card">
+        <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-sage/20">
+              <Calendar className="w-4 h-4 text-sage-dark" />
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">Attivi Questo Mese</p>
-          <p className="text-2xl font-bold">1,234</p>
+          <p className="text-2xl font-bold text-sage-dark">1,234</p>
         </div>
-        <div className="stat-card">
+        <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-straw/25">
+              <Calendar className="w-4 h-4 text-straw-dark" />
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">Nuovi Questa Settimana</p>
-          <p className="text-2xl font-bold">89</p>
+          <p className="text-2xl font-bold text-straw-dark">89</p>
         </div>
-        <div className="stat-card">
+        <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-blush/20">
+              <Ban className="w-4 h-4 text-blush-dark" />
+            </div>
+          </div>
           <p className="text-sm text-muted-foreground">Bloccati</p>
-          <p className="text-2xl font-bold text-destructive">12</p>
+          <p className="text-2xl font-bold text-blush-dark">12</p>
         </div>
       </div>
 
@@ -159,7 +179,7 @@ export default function Clients() {
               <TableRow key={client.id} className="group">
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-sage-dark font-semibold">
                       {client.name.charAt(0)}
                     </div>
                     <div>
@@ -197,9 +217,9 @@ export default function Clients() {
                 </TableCell>
                 <TableCell>
                   {client.status === "active" ? (
-                    <span className="status-badge status-approved">Attivo</span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sage/20 text-sage-dark border border-sage/50">Attivo</span>
                   ) : (
-                    <span className="status-badge status-rejected">Bloccato</span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blush/20 text-blush-dark border border-blush/50">Bloccato</span>
                   )}
                 </TableCell>
                 <TableCell>
