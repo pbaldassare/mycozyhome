@@ -20,8 +20,11 @@ export type Database = {
           client_id: string
           created_at: string
           id: string
+          last_message_at: string | null
           professional_id: string
           status: string
+          unread_count_client: number | null
+          unread_count_professional: number | null
           updated_at: string
         }
         Insert: {
@@ -29,8 +32,11 @@ export type Database = {
           client_id: string
           created_at?: string
           id?: string
+          last_message_at?: string | null
           professional_id: string
           status?: string
+          unread_count_client?: number | null
+          unread_count_professional?: number | null
           updated_at?: string
         }
         Update: {
@@ -38,8 +44,11 @@ export type Database = {
           client_id?: string
           created_at?: string
           id?: string
+          last_message_at?: string | null
           professional_id?: string
           status?: string
+          unread_count_client?: number | null
+          unread_count_professional?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -165,8 +174,10 @@ export type Database = {
           created_at: string
           file_url: string | null
           id: string
+          is_blocked: boolean | null
           is_read: boolean | null
           message_type: string
+          original_content: string | null
           sender_id: string
           sender_type: string
         }
@@ -176,8 +187,10 @@ export type Database = {
           created_at?: string
           file_url?: string | null
           id?: string
+          is_blocked?: boolean | null
           is_read?: boolean | null
           message_type?: string
+          original_content?: string | null
           sender_id: string
           sender_type: string
         }
@@ -187,8 +200,10 @@ export type Database = {
           created_at?: string
           file_url?: string | null
           id?: string
+          is_blocked?: boolean | null
           is_read?: boolean | null
           message_type?: string
+          original_content?: string | null
           sender_id?: string
           sender_type?: string
         }
