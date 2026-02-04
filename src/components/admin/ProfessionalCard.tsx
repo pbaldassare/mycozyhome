@@ -10,7 +10,7 @@ export interface Professional {
   avatar?: string;
   services: string[];
   city: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "in_review" | "approved" | "rejected" | "suspended";
   documentsCount: number;
   rating?: number;
   reviewsCount?: number;
@@ -24,10 +24,12 @@ interface ProfessionalCardProps {
   onView?: (id: string) => void;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "In attesa", className: "status-pending" },
+  in_review: { label: "In revisione", className: "bg-info/10 text-info" },
   approved: { label: "Approvato", className: "status-approved" },
   rejected: { label: "Rifiutato", className: "status-rejected" },
+  suspended: { label: "Sospeso", className: "bg-muted text-muted-foreground" },
 };
 
 const serviceLabels: Record<string, string> = {
@@ -114,7 +116,7 @@ export function ProfessionalCard({
       </div>
 
       {/* Actions */}
-      {professional.status === "pending" && (
+      {(professional.status === "pending" || professional.status === "in_review") && (
         <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
           <Button
             variant="outline"
@@ -142,7 +144,7 @@ export function ProfessionalCard({
         </div>
       )}
 
-      {professional.status !== "pending" && (
+      {professional.status !== "pending" && professional.status !== "in_review" && (
         <div className="mt-4 pt-4 border-t border-border">
           <Button
             variant="outline"
