@@ -3,7 +3,7 @@ import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-m
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Loader2 } from "lucide-react";
+import { Star, MapPin, Loader2, AlertCircle, MapPinOff, RefreshCw } from "lucide-react";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { useGoogleMapsApiKey } from "@/hooks/useGoogleMapsApiKey";
 
@@ -47,7 +47,7 @@ const defaultOptions: google.maps.MapOptions = {
 
 export function ProfessionalsMap({ professionals, onProfessionalClick }: ProfessionalsMapProps) {
   const navigate = useNavigate();
-  const { center, loading: geoLoading } = useGeolocation();
+  const { center, loading: geoLoading, error: geoError } = useGeolocation();
   const { apiKey, loading: apiKeyLoading, error: apiKeyError } = useGoogleMapsApiKey();
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -112,18 +112,52 @@ export function ProfessionalsMap({ professionals, onProfessionalClick }: Profess
     }
   };
 
-  if (loadError || apiKeyError) {
+  const handleRequestLocation = () => {
+    window.location.reload();
+  };
+
+  // API Key Error
+  if (apiKeyError) {
     return (
-      <div className="h-full flex items-center justify-center bg-muted">
-        <p className="text-muted-foreground">Errore nel caricamento della mappa</p>
+      <div className="h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Mappa non disponibile</h3>
+        <p className="text-muted-foreground text-sm mb-4">
+          Si è verificato un errore nel caricamento della mappa. 
+          Riprova più tardi o contatta l'assistenza.
+        </p>
+        <Button variant="outline" onClick={handleRequestLocation}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Riprova
+        </Button>
       </div>
     );
   }
 
+  // Maps load error
+  if (loadError) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
+        <AlertCircle className="h-12 w-12 text-warning mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Errore caricamento mappa</h3>
+        <p className="text-muted-foreground text-sm mb-4">
+          Impossibile caricare Google Maps. 
+          Verifica la connessione internet e riprova.
+        </p>
+        <Button variant="outline" onClick={handleRequestLocation}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Riprova
+        </Button>
+      </div>
+    );
+  }
+
+  // Loading state
   if (!isLoaded || geoLoading || apiKeyLoading || !apiKey) {
     return (
-      <div className="h-full flex items-center justify-center bg-muted">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="h-full flex flex-col items-center justify-center bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-sm">Caricamento mappa...</p>
       </div>
     );
   }

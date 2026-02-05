@@ -5,6 +5,7 @@ import { X, Download, Smartphone } from "lucide-react";
 import { useInstallPWA } from "@/hooks/useInstallPWA";
 
 const BANNER_DISMISSED_KEY = "pwa-banner-dismissed";
+const IOS_BANNER_DISMISSED_KEY = "pwa-ios-banner-dismissed";
 
 export function InstallBanner() {
   const navigate = useNavigate();
@@ -17,16 +18,27 @@ export function InstallBanner() {
                      location.pathname.startsWith("/professional");
 
   useEffect(() => {
-    const dismissed = localStorage.getItem(BANNER_DISMISSED_KEY);
-    const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    
-    // Show banner if not dismissed or dismissed more than 24h ago
-    setIsDismissed(dismissedTime > oneDayAgo);
-  }, []);
+    // For iOS, use a separate dismiss key with a shorter duration (6 hours)
+    // This ensures iOS users see the banner more often since they need manual instructions
+    if (isIOS) {
+      const dismissed = localStorage.getItem(IOS_BANNER_DISMISSED_KEY);
+      const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
+      const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+      setIsDismissed(dismissedTime > sixHoursAgo);
+    } else {
+      const dismissed = localStorage.getItem(BANNER_DISMISSED_KEY);
+      const dismissedTime = dismissed ? parseInt(dismissed, 10) : 0;
+      const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+      setIsDismissed(dismissedTime > oneDayAgo);
+    }
+  }, [isIOS]);
 
   const handleDismiss = () => {
-    localStorage.setItem(BANNER_DISMISSED_KEY, Date.now().toString());
+    if (isIOS) {
+      localStorage.setItem(IOS_BANNER_DISMISSED_KEY, Date.now().toString());
+    } else {
+      localStorage.setItem(BANNER_DISMISSED_KEY, Date.now().toString());
+    }
     setIsDismissed(true);
   };
 
