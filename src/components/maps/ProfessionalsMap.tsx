@@ -1,4 +1,4 @@
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -29,6 +29,23 @@ const mapContainerStyle = {
   width: "100%",
   height: "100%",
 };
+
+// Safe coordinate validation - checks finite numbers and valid geo range
+function isValidCoordinate(lat: unknown, lng: unknown): boolean {
+  if (typeof lat !== "number" || typeof lng !== "number") return false;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  if (lat < -90 || lat > 90) return false;
+  if (lng < -180 || lng > 180) return false;
+  return true;
+}
+
+// Safe access to google.maps - returns null if not available
+function getGoogleMaps(): typeof google.maps | null {
+  if (typeof window === "undefined") return null;
+  const g = window.google;
+  if (!g?.maps) return null;
+  return g.maps;
+}
 
 // Inner component that only mounts when apiKey is ready
 function ProfessionalsMapInner({ 
@@ -61,45 +78,62 @@ function ProfessionalsMapInner({
     ],
   }), []);
 
-  // Filter professionals with valid coordinates
+  // Filter professionals with valid coordinates (robust validation)
   const professionalsWithCoords = useMemo(() => {
-    return professionals.filter(
-      (p) => p.latitude && p.longitude && !isNaN(p.latitude) && !isNaN(p.longitude)
-    );
+    return professionals.filter((p) => isValidCoordinate(p.latitude, p.longitude));
   }, [professionals]);
 
   // Calculate distances
   const professionalsWithDistance = useMemo(() => {
-    if (!center.lat || !center.lng) return professionalsWithCoords;
+    if (!isValidCoordinate(center.lat, center.lng)) return professionalsWithCoords;
     
     return professionalsWithCoords.map((p) => ({
       ...p,
-      distance: p.latitude && p.longitude
+      distance: p.latitude !== undefined && p.longitude !== undefined
         ? calculateDistance(center.lat, center.lng, p.latitude, p.longitude)
         : null,
     }));
   }, [professionalsWithCoords, center]);
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
+  const onLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+    
+    const gMaps = getGoogleMaps();
+    if (!gMaps) return;
     
     // Fit bounds to show all markers
     if (professionalsWithCoords.length > 0) {
-      const bounds = new google.maps.LatLngBounds();
+      const bounds = new gMaps.LatLngBounds();
       professionalsWithCoords.forEach((p) => {
-        if (p.latitude && p.longitude) {
-          bounds.extend({ lat: p.latitude, lng: p.longitude });
+        if (isValidCoordinate(p.latitude, p.longitude)) {
+          bounds.extend({ lat: p.latitude!, lng: p.longitude! });
         }
       });
-      // Also include user location
-      bounds.extend(center);
-      map.fitBounds(bounds, 50);
+      // Also include user location if valid
+      if (isValidCoordinate(center.lat, center.lng)) {
+        bounds.extend(center);
+      }
+      mapInstance.fitBounds(bounds, 50);
     }
   }, [professionalsWithCoords, center]);
 
   const onUnmount = useCallback(() => {
     setMap(null);
   }, []);
+
+  // Trigger resize when map mounts or container may have changed
+  useEffect(() => {
+    if (map) {
+      const gMaps = getGoogleMaps();
+      if (gMaps?.event) {
+        // Use requestAnimationFrame to ensure DOM is ready
+        const rafId = requestAnimationFrame(() => {
+          gMaps.event.trigger(map, "resize");
+        });
+        return () => cancelAnimationFrame(rafId);
+      }
+    }
+  }, [map]);
 
   const handleMarkerClick = (professional: Professional) => {
     setSelectedProfessional(professional);
@@ -149,6 +183,30 @@ function ProfessionalsMapInner({
     );
   }
 
+  // Safe mode: if no professionals have valid coordinates, show message
+  if (professionalsWithCoords.length === 0 && professionals.length > 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
+        <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Nessun professionista geolocalizzato</h3>
+        <p className="text-muted-foreground text-sm">
+          I professionisti trovati non hanno coordinate disponibili per la visualizzazione su mappa.
+        </p>
+      </div>
+    );
+  }
+
+  // Ensure google.maps is available before rendering markers
+  const gMaps = getGoogleMaps();
+  if (!gMaps) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-sm">Inizializzazione mappa...</p>
+      </div>
+    );
+  }
+
   return (
     <GoogleMap
       mapContainerStyle={mapContainerStyle}
@@ -159,39 +217,48 @@ function ProfessionalsMapInner({
       options={defaultOptions}
     >
       {/* User location marker */}
-      <MarkerF
-        position={center}
-        icon={{
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#3B82F6",
-          fillOpacity: 1,
-          strokeColor: "#FFFFFF",
-          strokeWeight: 3,
-        }}
-        title="La tua posizione"
-      />
+      {isValidCoordinate(center.lat, center.lng) && (
+        <MarkerF
+          position={center}
+          icon={{
+            path: gMaps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#3B82F6",
+            fillOpacity: 1,
+            strokeColor: "#FFFFFF",
+            strokeWeight: 3,
+          }}
+          title="La tua posizione"
+        />
+      )}
 
       {/* Professional markers */}
-      {professionalsWithDistance.map((professional) => (
-        <MarkerF
-          key={professional.id}
-          position={{ lat: professional.latitude!, lng: professional.longitude! }}
-          onClick={() => handleMarkerClick(professional)}
-          icon={{
-            url: professional.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&size=40&background=8B5CF6&color=fff`,
-            scaledSize: new google.maps.Size(40, 40),
-            anchor: new google.maps.Point(20, 20),
-          }}
-        />
-      ))}
+      {professionalsWithDistance.map((professional) => {
+        if (!isValidCoordinate(professional.latitude, professional.longitude)) return null;
+        
+        // Create icon options safely
+        const iconOptions = {
+          url: professional.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&size=40&background=8B5CF6&color=fff`,
+          scaledSize: new gMaps.Size(40, 40),
+          anchor: new gMaps.Point(20, 20),
+        };
+        
+        return (
+          <MarkerF
+            key={professional.id}
+            position={{ lat: professional.latitude!, lng: professional.longitude! }}
+            onClick={() => handleMarkerClick(professional)}
+            icon={iconOptions}
+          />
+        );
+      })}
 
       {/* Info Window */}
-      {selectedProfessional && selectedProfessional.latitude && selectedProfessional.longitude && (
+      {selectedProfessional && isValidCoordinate(selectedProfessional.latitude, selectedProfessional.longitude) && (
         <InfoWindowF
           position={{
-            lat: selectedProfessional.latitude,
-            lng: selectedProfessional.longitude,
+            lat: selectedProfessional.latitude!,
+            lng: selectedProfessional.longitude!,
           }}
           onCloseClick={handleInfoWindowClose}
         >
