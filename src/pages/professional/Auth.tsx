@@ -146,7 +146,13 @@ export default function ProfessionalAuth() {
         }
 
         toast.success("Registrazione completata!");
-        navigate("/professional/onboarding/personal");
+         // Show tutorial for new professionals
+         const tutorialSeen = localStorage.getItem("professional_tutorial_seen");
+         if (!tutorialSeen) {
+           navigate("/professional/tutorial");
+         } else {
+           navigate("/professional/onboarding/personal");
+         }
       }
     } catch (err) {
       if (err instanceof z.ZodError) {

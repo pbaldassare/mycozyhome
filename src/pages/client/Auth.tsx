@@ -97,7 +97,13 @@ export default function ClientAuth() {
         }
 
         toast.success("Registrazione completata!");
-        navigate("/client");
+         // Show onboarding for new users
+         const onboardingSeen = localStorage.getItem("client_onboarding_seen");
+         if (!onboardingSeen) {
+           navigate("/client/onboarding");
+         } else {
+           navigate("/client");
+         }
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
