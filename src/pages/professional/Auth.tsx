@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Home, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useAuth } from "@/hooks/useAuth";
 
 const loginSchema = z.object({
   email: z.string().email("Email non valida"),
@@ -53,7 +54,7 @@ export default function ProfessionalAuth() {
           password: formData.password,
         });
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: validated.email,
           password: validated.password,
         });
@@ -69,8 +70,37 @@ export default function ProfessionalAuth() {
           return;
         }
 
-        toast.success("Accesso effettuato!");
-        navigate("/professional/dashboard");
+        // Check user role from user_roles table
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+
+        const role = roleData?.role;
+
+        if (role === "professional") {
+          // Check if onboarding is completed
+          const { data: prof } = await supabase
+            .from("professionals")
+            .select("profile_completed")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
+
+          toast.success("Accesso effettuato!");
+          if (prof?.profile_completed) {
+            navigate("/professional");
+          } else {
+            navigate("/professional/onboarding/personal");
+          }
+        } else if (role === "admin") {
+          toast.success("Accesso effettuato!");
+          navigate("/admin");
+        } else {
+          // Not a professional - redirect to client area with message
+          toast.info("Questo account non è registrato come professionista");
+          navigate("/client");
+        }
       } else {
         const validated = signupSchema.parse(formData);
 
