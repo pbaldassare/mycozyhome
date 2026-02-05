@@ -3,7 +3,7 @@ import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from "@react-google-m
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Loader2, AlertCircle, MapPinOff, RefreshCw } from "lucide-react";
+import { Star, MapPin, Loader2, AlertCircle, RefreshCw } from "lucide-react";
 import { useGeolocation, calculateDistance } from "@/hooks/useGeolocation";
 import { useGoogleMapsApiKey } from "@/hooks/useGoogleMapsApiKey";
 
@@ -30,31 +30,36 @@ const mapContainerStyle = {
   height: "100%",
 };
 
-const defaultOptions: google.maps.MapOptions = {
-  disableDefaultUI: true,
-  zoomControl: true,
-  mapTypeControl: false,
-  streetViewControl: false,
-  fullscreenControl: false,
-  styles: [
-    {
-      featureType: "poi",
-      elementType: "labels",
-      stylers: [{ visibility: "off" }],
-    },
-  ],
-};
-
-export function ProfessionalsMap({ professionals, onProfessionalClick }: ProfessionalsMapProps) {
+// Inner component that only mounts when apiKey is ready
+function ProfessionalsMapInner({ 
+  professionals, 
+  onProfessionalClick,
+  apiKey,
+  center,
+}: ProfessionalsMapProps & { apiKey: string; center: { lat: number; lng: number } }) {
   const navigate = useNavigate();
-  const { center, loading: geoLoading, error: geoError } = useGeolocation();
-  const { apiKey, loading: apiKeyLoading, error: apiKeyError } = useGoogleMapsApiKey();
   const [selectedProfessional, setSelectedProfessional] = useState<Professional | null>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || "",
+    googleMapsApiKey: apiKey,
   });
+
+  // Map options - defined inside component where google.maps is guaranteed to be available
+  const defaultOptions: google.maps.MapOptions = useMemo(() => ({
+    disableDefaultUI: true,
+    zoomControl: true,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: false,
+    styles: [
+      {
+        featureType: "poi",
+        elementType: "labels",
+        stylers: [{ visibility: "off" }],
+      },
+    ],
+  }), []);
 
   // Filter professionals with valid coordinates
   const professionalsWithCoords = useMemo(() => {
@@ -116,24 +121,6 @@ export function ProfessionalsMap({ professionals, onProfessionalClick }: Profess
     window.location.reload();
   };
 
-  // API Key Error
-  if (apiKeyError) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
-        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <h3 className="font-semibold text-lg mb-2">Mappa non disponibile</h3>
-        <p className="text-muted-foreground text-sm mb-4">
-          Si è verificato un errore nel caricamento della mappa. 
-          Riprova più tardi o contatta l'assistenza.
-        </p>
-        <Button variant="outline" onClick={handleRequestLocation}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Riprova
-        </Button>
-      </div>
-    );
-  }
-
   // Maps load error
   if (loadError) {
     return (
@@ -152,8 +139,8 @@ export function ProfessionalsMap({ professionals, onProfessionalClick }: Profess
     );
   }
 
-  // Loading state
-  if (!isLoaded || geoLoading || apiKeyLoading || !apiKey) {
+  // Loading state while Google Maps loads
+  if (!isLoaded) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-muted">
         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -253,5 +240,53 @@ export function ProfessionalsMap({ professionals, onProfessionalClick }: Profess
         </InfoWindowF>
       )}
     </GoogleMap>
+  );
+}
+
+// Wrapper component that handles API key loading
+export function ProfessionalsMap({ professionals, onProfessionalClick }: ProfessionalsMapProps) {
+  const { center, loading: geoLoading } = useGeolocation();
+  const { apiKey, loading: apiKeyLoading, error: apiKeyError } = useGoogleMapsApiKey();
+
+  const handleRequestLocation = () => {
+    window.location.reload();
+  };
+
+  // API Key Error
+  if (apiKeyError) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-muted p-6 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+        <h3 className="font-semibold text-lg mb-2">Mappa non disponibile</h3>
+        <p className="text-muted-foreground text-sm mb-4">
+          Si è verificato un errore nel caricamento della mappa. 
+          Riprova più tardi o contatta l'assistenza.
+        </p>
+        <Button variant="outline" onClick={handleRequestLocation}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Riprova
+        </Button>
+      </div>
+    );
+  }
+
+  // Loading state - wait for API key and geolocation
+  if (apiKeyLoading || geoLoading || !apiKey) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground text-sm">Caricamento mappa...</p>
+      </div>
+    );
+  }
+
+  // Only render inner component when apiKey is ready
+  return (
+    <ProfessionalsMapInner
+      professionals={professionals}
+      onProfessionalClick={onProfessionalClick}
+      apiKey={apiKey}
+      center={center}
+    />
   );
 }
