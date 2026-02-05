@@ -30,6 +30,9 @@ import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
 import ProfessionalMessages from "@/pages/professional/Messages";
 import ProfessionalChat from "@/pages/professional/Chat";
 import DocumentsUpload from "@/pages/professional/onboarding/Documents";
+import ProfessionalPersonalData from "@/pages/professional/profile/PersonalData";
+import ProfessionalSettings from "@/pages/professional/profile/Settings";
+import ProfessionalPreferences from "@/pages/professional/profile/Preferences";
 import ClientHome from "@/pages/client/Home";
 import ClientSearch from "@/pages/client/Search";
 import ClientBookings from "@/pages/client/Bookings";
@@ -134,6 +137,9 @@ const App = () => (
           <Route path="/professional/onboarding/services" element={<ServicesSetup />} />
           <Route path="/professional/onboarding/availability" element={<AvailabilitySetup />} />
           <Route path="/professional/onboarding/documents" element={<DocumentsUpload />} />
+          <Route path="/professional/profile/personal" element={<ProfessionalPersonalData />} />
+          <Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
+          <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
            <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
           
           {/* Catch-all */}
