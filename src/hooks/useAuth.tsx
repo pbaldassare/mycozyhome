@@ -16,10 +16,13 @@ interface ClientProfile {
   postal_code: string | null;
 }
 
+type UserRole = "admin" | "professional" | "client" | null;
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: ClientProfile | null;
+  role: UserRole;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -31,9 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<ClientProfile | null>(null);
+  const [role, setRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<UserRole> => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+    
+    return (data?.role as UserRole) || null;
+  };
+
+  const fetchClientProfile = async (userId: string, userEmail?: string | null) => {
     const { data, error } = await supabase
       .from("client_profiles")
       .select("*")
@@ -46,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Create profile if it doesn't exist
       const { data: newProfile } = await supabase
         .from("client_profiles")
-        .insert({ user_id: userId, email: user?.email })
+        .insert({ user_id: userId, email: userEmail })
         .select()
         .single();
       
@@ -56,9 +70,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchUserData = async (userId: string, userEmail?: string | null) => {
+    // First, fetch the user's role
+    const userRole = await fetchUserRole(userId);
+    setRole(userRole);
+
+    // Only fetch/create client profile if the user is a client (or has no role yet)
+    if (userRole === "client" || userRole === null) {
+      await fetchClientProfile(userId, userEmail);
+    } else {
+      // For professionals and admins, don't load/create client profile
+      setProfile(null);
+    }
+  };
+
   const refreshProfile = async () => {
     if (user?.id) {
-      await fetchProfile(user.id);
+      await fetchUserData(user.id, user.email);
     }
   };
 
@@ -67,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    setRole(null);
   };
 
   useEffect(() => {
@@ -79,10 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Defer profile fetch to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
-            fetchProfile(session.user.id);
+            fetchUserData(session.user.id, session.user.email);
           }, 0);
         } else {
           setProfile(null);
+          setRole(null);
         }
         setLoading(false);
       }
@@ -93,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchUserData(session.user.id, session.user.email);
       }
       setLoading(false);
     });
@@ -102,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, role, loading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

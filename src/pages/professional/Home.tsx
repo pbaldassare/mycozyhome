@@ -26,6 +26,7 @@ import {
   useProfessionalBookings,
   useUpdateBookingStatus,
 } from "@/hooks/useProfessionalData";
+import { useAuth } from "@/hooks/useAuth";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -45,18 +46,39 @@ function formatBookingDate(dateStr: string): string {
 
 export default function ProfessionalHome() {
   const navigate = useNavigate();
+  const { user, loading: authLoading, role } = useAuth();
   const { data: professional, isLoading: loadingProfile } = useProfessionalProfile();
   const { data: stats, isLoading: loadingStats } = useProfessionalStats(professional?.id);
   const { data: bookings, isLoading: loadingBookings } = useProfessionalBookings(professional?.id);
   const updateStatus = useUpdateBookingStatus();
 
   useEffect(() => {
-    if (!loadingProfile && !professional) {
-      navigate("/professional/auth");
-    }
-  }, [loadingProfile, professional, navigate]);
+    // Wait for auth to load
+    if (authLoading) return;
 
-  if (loadingProfile) {
+    // If not logged in, redirect to auth
+    if (!user) {
+      navigate("/professional/auth", { replace: true });
+      return;
+    }
+
+    // If user is logged in but not a professional, redirect appropriately
+    if (role && role !== "professional") {
+      if (role === "admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/client", { replace: true });
+      }
+      return;
+    }
+
+    // If professional profile not found but role is professional, go to onboarding
+    if (!loadingProfile && !professional && role === "professional") {
+      navigate("/professional/onboarding/personal", { replace: true });
+    }
+  }, [authLoading, user, role, loadingProfile, professional, navigate]);
+
+  if (authLoading || loadingProfile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
