@@ -1,94 +1,52 @@
 
-# Piano: Correggere il Redirect Login per Professionisti
 
-## Problema Identificato
+# Piano: Correggere Login Professionisti - Schermate Cliente
 
-Quando un professionista fa login, viene reindirizzato alle schermate del **cliente** invece che a quelle del **professionista**.
+## Problema
+
+Quando un professionista fa login, viene mostrata la UI del cliente invece di quella del professionista.
 
 ### Causa Tecnica
 
-Il file `Login.tsx` (riga 58) controlla il ruolo dell'utente così:
+Ci sono due pagine di login diverse con logiche differenti:
 
+| Pagina | Redirect dopo login |
+|--------|---------------------|
+| `/login` | Controlla `user_roles` e reindirizza correttamente |
+| `/professional/auth` | **Ignora** `user_roles`, va sempre a `/professional/dashboard` |
+
+Il problema è che `/professional/auth` (riga 73) fa:
 ```typescript
-const role = data.user?.user_metadata?.role;
+navigate("/professional/dashboard");
 ```
 
-Ma `user_metadata` contiene solo `{ email_verified: true }` - **il campo `role` non esiste**.
+Ma dovrebbe controllare la tabella `user_roles` come fa `/login`.
 
-I ruoli sono salvati correttamente nella tabella `user_roles`:
-
-| email | role |
-|-------|------|
-| admin@domesticdelight.app | admin |
-| professionista@domesticdelight.app | professional |
-| cliente@domesticdelight.app | client |
-
-Ma il login non consulta questa tabella, quindi tutti finiscono nel caso default → `/client`.
+Inoltre, `useAuth.tsx` cerca sempre di creare/caricare un `client_profile` per tutti gli utenti - questo è corretto solo per i clienti, non per i professionisti.
 
 ## Soluzione
 
-Modificare `Login.tsx` per consultare la tabella `user_roles` invece di `user_metadata`:
+### 1. Correggere `/professional/auth` - Login professionisti
 
-```text
-Prima:
-  const role = data.user?.user_metadata?.role;
-
-Dopo:
-  const { data: roleData } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", data.user.id)
-    .single();
-  
-  const role = roleData?.role;
-```
-
-## File da Modificare
-
-| File | Modifica |
-|------|----------|
-| `src/pages/Login.tsx` | Cambiare la logica per leggere il ruolo dalla tabella `user_roles` |
-
-## Flusso Corretto dopo la Modifica
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│                    LOGIN                                │
-│                                                         │
-│  1. Utente inserisce email + password                   │
-│  2. Supabase autentica l'utente                        │
-│  3. Query a user_roles per ottenere il ruolo           │
-│                                                         │
-│     ┌──────────────┬──────────────┬───────────────┐    │
-│     │    admin     │ professional │    client     │    │
-│     └──────┬───────┴──────┬───────┴───────┬───────┘    │
-│            │              │               │            │
-│            ▼              ▼               ▼            │
-│        /admin      /professional      /client          │
-└─────────────────────────────────────────────────────────┘
-```
-
-## Codice Completo della Modifica
-
-Sostituiremo le righe 57-77 di `Login.tsx` con:
+Modificare la logica di login per verificare il ruolo dalla tabella `user_roles`:
 
 ```typescript
-// Check user role from user_roles table
+// Dopo signInWithPassword
 const { data: roleData } = await supabase
   .from("user_roles")
   .select("role")
   .eq("user_id", data.user.id)
-  .single();
+  .maybeSingle();
 
 const role = roleData?.role;
 
 if (role === "professional") {
-  // Check if professional has completed onboarding
+  // Controlla se ha completato l'onboarding
   const { data: prof } = await supabase
     .from("professionals")
-    .select("status, profile_completed")
+    .select("profile_completed")
     .eq("user_id", data.user.id)
-    .single();
+    .maybeSingle();
 
   if (prof?.profile_completed) {
     navigate("/professional");
@@ -98,14 +56,73 @@ if (role === "professional") {
 } else if (role === "admin") {
   navigate("/admin");
 } else {
+  // Se non e' professionista, manda al client
   navigate("/client");
 }
 ```
 
+### 2. Correggere `useAuth.tsx` - Context Auth
+
+Il context attualmente cerca sempre di creare un `client_profile` per tutti gli utenti.
+
+Modificheremo per controllare prima il ruolo e caricare il profilo appropriato (client o professional).
+
+### 3. Verificare `ProfessionalHome.tsx`
+
+Assicurarsi che il redirect a `/professional/auth` avvenga solo quando necessario (non loggato), non quando il professionista esiste ma con `profile_completed: false`.
+
+## File da Modificare
+
+| File | Modifica |
+|------|----------|
+| `src/pages/professional/Auth.tsx` | Aggiungere controllo `user_roles` nel login |
+| `src/hooks/useAuth.tsx` | Evitare creazione automatica `client_profile` per professionisti |
+| `src/pages/professional/Home.tsx` | Correggere logica redirect se necessario |
+
 ## Risultato Atteso
 
-| Account | Redirect |
-|---------|----------|
-| `admin@domesticdelight.app` | `/admin` |
-| `professionista@domesticdelight.app` | `/professional` |
-| `cliente@domesticdelight.app` | `/client` |
+| Account | Da `/login` | Da `/professional/auth` |
+|---------|------------|------------------------|
+| professionista@domesticdelight.app | `/professional/onboarding/personal` | `/professional/onboarding/personal` |
+| cliente@domesticdelight.app | `/client` | `/client` (con messaggio) |
+| admin@domesticdelight.app | `/admin` | `/admin` |
+
+## Flusso Corretto
+
+```text
+Login Professionista
+        │
+        ▼
+┌───────────────────┐
+│ Autenticazione OK │
+└─────────┬─────────┘
+          │
+          ▼
+┌─────────────────────────┐
+│ Query user_roles        │
+│ per ottenere il ruolo   │
+└───────────┬─────────────┘
+            │
+    ┌───────┴───────┐
+    │ role = ?      │
+    └───────┬───────┘
+            │
+  ┌─────────┼─────────┬──────────┐
+  │         │         │          │
+  ▼         ▼         ▼          ▼
+admin   professional  client    null
+  │         │         │          │
+  ▼         ▼         ▼          ▼
+/admin   Controlla   /client   /client
+        onboarding
+            │
+    ┌───────┴───────┐
+    │               │
+    ▼               ▼
+ completato?    non completato
+    │               │
+    ▼               ▼
+/professional  /professional/
+               onboarding/personal
+```
+
