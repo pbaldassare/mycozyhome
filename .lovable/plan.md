@@ -1,189 +1,120 @@
 
-# Piano: Funzionalità Mancanti per Professionisti e Schermate Educative
+# Piano: Correggere Visualizzazione Prenotazioni e Chat - Lato Professionista
 
-## Analisi Attuale
+## Problema Identificato
 
-### Cosa è già implementato:
-| Funzionalità | Stato | Note |
-|--------------|-------|------|
-| Prenotazioni in arrivo | ✅ Presente | Tab "In attesa" in `/professional/bookings` |
-| Storico prenotazioni | ✅ Presente | Tab "Completate" e "Annullate" già esistenti |
-| Chat | ✅ Presente | `/professional/chat/:id` funziona con realtime |
-| Caricamento immagini | ✅ Presente | `ChatInput.tsx` supporta upload immagini |
-| Screen educativi | ❌ Mancanti | Non esistono schermate onboarding/tutorial |
+Le pagine dei **Messaggi/Chat** e altre funzionalità non vengono visualizzate per i professionisti perché c'è un bug nella query delle conversazioni.
 
-### Il problema reale
-Le funzionalità principali esistono già! Quello che manca sono:
-1. **Screen educativi/tutorial** per professionisti
-2. **Screen educativi/tutorial** per clienti
-3. Possibilmente un miglioramento della visibilità delle prenotazioni nella Home
+## Analisi Tecnica
 
-## Piano di Implementazione
+### Causa del Bug
 
-### 1. Schermate Educative Professionisti
+Nel file `src/hooks/useConversations.ts` (riga 61), la query usa `user.id` (l'ID dell'utente autenticato) per cercare le conversazioni:
 
-Creeremo un flusso di 3-4 schermate che spiegano:
-
-| Schermata | Contenuto |
-|-----------|-----------|
-| **Benvenuto** | "Diventa un professionista CasaFacile" con illustrazione |
-| **Come funziona** | Ricevi richieste → Accetta/Rifiuta → Lavora → Guadagna |
-| **Vantaggi** | Guadagni flessibili, clienti verificati, pagamenti sicuri |
-| **Sicurezza** | Chat protetta, pagamenti garantiti, supporto 24/7 |
-
-```text
-┌─────────────────────────────────────────┐
-│           Screen 1: Benvenuto           │
-│  ┌─────────────────────────────────┐    │
-│  │       [Illustrazione Pro]       │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-│    "Benvenuto su CasaFacile Pro!"       │
-│                                         │
-│    Inizia a guadagnare offrendo i       │
-│    tuoi servizi domestici.              │
-│                                         │
-│    ●○○○     [Avanti →]                  │
-└─────────────────────────────────────────┘
+```typescript
+// CODICE ATTUALE (SBAGLIATO)
+const column = userType === "client" ? "client_id" : "professional_id";
+.eq(column, user.id)  // ❌ SBAGLIATO per i professionisti!
 ```
 
-### 2. Schermate Educative Clienti
+**Problema:** Il campo `professional_id` nella tabella `conversations` contiene l'ID della tabella `professionals`, **NON** l'`user_id` dell'autenticazione.
 
-Creeremo un flusso simile per i clienti:
+### Prova dal Database
 
-| Schermata | Contenuto |
-|-----------|-----------|
-| **Benvenuto** | "Trova aiuto per la tua casa" |
-| **Come funziona** | Cerca → Prenota → Ricevi servizio → Paga |
-| **Sicurezza** | Professionisti verificati, pagamenti protetti |
-| **Vantaggi** | Risparmia tempo, qualità garantita, supporto |
+| Tabella | Campo | Valore Esempio |
+|---------|-------|----------------|
+| `professionals` | `id` (professional_id) | `a3333333-3333-3333-3333-333333333333` |
+| `professionals` | `user_id` (auth user) | `b3333333-3333-3333-3333-333333333333` |
+| `conversations` | `professional_id` | `a1111111-1111-1111-1111-111111111111` (usa professionals.id!) |
 
-### 3. Componenti da Creare
+### Impatto
 
-```text
-src/
-├── components/
-│   └── onboarding/
-│       ├── OnboardingSlide.tsx      # Componente singola slide
-│       └── OnboardingCarousel.tsx   # Wrapper con dots e navigazione
-├── pages/
-│   ├── client/
-│   │   └── Onboarding.tsx           # Tutorial clienti
-│   └── professional/
-│       └── Tutorial.tsx             # Tutorial professionisti
+| Pagina | Funziona? | Motivo |
+|--------|-----------|--------|
+| `/professional/bookings` | ✅ Sì | Usa `useProfessionalProfile()` correttamente |
+| `/professional/messages` | ❌ No | Usa `user.id` invece di `professional.id` |
+| `/professional/chat/:id` | ⚠️ Parziale | Funziona se si accede con ID diretto |
+| Home dashboard | ✅ Sì | Usa `useProfessionalProfile()` |
+
+## Soluzione
+
+### 1. Modificare `useConversations` hook
+
+Il hook deve prima recuperare il `professional.id` dal `user.id`, poi usare quello per cercare le conversazioni:
+
+```typescript
+// LOGICA CORRETTA
+if (userType === "professional") {
+  // 1. Prima: recupera professional.id dall'user.id
+  const { data: professional } = await supabase
+    .from("professionals")
+    .select("id")
+    .eq("user_id", user.id)
+    .single();
+  
+  if (!professional) return;
+  
+  // 2. Poi: usa professional.id per cercare conversazioni
+  const { data } = await supabase
+    .from("conversations")
+    .select(...)
+    .eq("professional_id", professional.id);
+}
 ```
 
-### 4. Logica di Visualizzazione
+### 2. File da Modificare
 
-- Prima volta che un utente si registra → mostra tutorial
-- Salvare in localStorage se l'utente ha visto il tutorial
-- Aggiungere accesso dal profilo per rivederlo
+| File | Modifica |
+|------|----------|
+| `src/hooks/useConversations.ts` | Correggere query per professionisti: prima recuperare `professionals.id` dall'`user_id`, poi usare quello per filtrare |
+
+## Flusso Corretto
 
 ```text
-Flusso:
-                ┌──────────────┐
-                │  Registra    │
-                └──────┬───────┘
-                       │
-                       ▼
-              ┌────────────────┐
-              │ Tutorial visto? │
-              └────────┬───────┘
-                       │
-         ┌─────────────┼─────────────┐
-         │ NO          │             │ SÌ
-         ▼             │             ▼
-┌────────────────┐     │    ┌────────────────┐
-│ Mostra Tutorial│     │    │   Home/Dashboard│
-└────────┬───────┘     │    └────────────────┘
-         │             │
-         └─────────────┘
-                │
-                ▼
-         ┌─────────────┐
-         │ Salva stato │
-         │ localStorage│
-         └─────────────┘
+Professionista apre Messaggi
+         │
+         ▼
+┌─────────────────────────┐
+│ useConversations()      │
+│ userType = "professional"│
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Query professionals     │
+│ WHERE user_id = auth.id │
+│ → Ottieni professional.id│
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Query conversations     │
+│ WHERE professional_id = │
+│   professional.id       │
+└───────────┬─────────────┘
+            │
+            ▼
+┌─────────────────────────┐
+│ Mostra lista conversazioni│
+│ con tutti i clienti     │
+└─────────────────────────┘
 ```
 
-## File da Creare/Modificare
+## Nota sulla Pagina Prenotazioni
 
-| File | Azione | Descrizione |
-|------|--------|-------------|
-| `src/components/onboarding/OnboardingSlide.tsx` | Creare | Componente slide singola |
-| `src/components/onboarding/OnboardingCarousel.tsx` | Creare | Carousel con navigazione |
-| `src/pages/client/Onboarding.tsx` | Creare | Pagina tutorial cliente |
-| `src/pages/professional/Tutorial.tsx` | Creare | Pagina tutorial professionista |
-| `src/App.tsx` | Modificare | Aggiungere route per tutorial |
-| `src/pages/client/Auth.tsx` | Modificare | Redirect a tutorial dopo registrazione |
-| `src/pages/professional/Auth.tsx` | Modificare | Redirect a tutorial dopo registrazione |
+La pagina `/professional/bookings` **funziona già correttamente** perché usa `useProfessionalProfile()` per ottenere il `professional.id` prima di fare le query:
 
-## Contenuti delle Slide
+```typescript
+// In ProfessionalBookings.tsx - GIÀ CORRETTO
+const { data: professional } = useProfessionalProfile();
+const { data: bookings } = useAllProfessionalBookings(professional?.id);
+```
 
-### Professionista - 4 Slide
+Se non vedi le prenotazioni, potrebbe essere perché non ci sono prenotazioni associate a quel professionista nel database.
 
-**Slide 1: Benvenuto**
-- Titolo: "Benvenuto in CasaFacile Pro"
-- Testo: "Inizia a guadagnare offrendo i tuoi servizi domestici a clienti verificati nella tua zona."
+## Risultato Atteso
 
-**Slide 2: Come Funziona**
-- Titolo: "Come Funziona"
-- Punti:
-  - 📩 Ricevi richieste di prenotazione
-  - ✅ Accetta o rifiuta in base alla tua disponibilità
-  - 🏠 Svolgi il servizio al domicilio del cliente
-  - 💰 Ricevi il pagamento in modo sicuro
-
-**Slide 3: I Tuoi Vantaggi**
-- Titolo: "I Tuoi Vantaggi"
-- Punti:
-  - 📅 Orari flessibili - lavora quando vuoi
-  - 👥 Clienti verificati e affidabili
-  - 💳 Pagamenti garantiti e puntuali
-  - 📈 Costruisci la tua reputazione con le recensioni
-
-**Slide 4: Sicurezza**
-- Titolo: "Lavora in Sicurezza"
-- Punti:
-  - 🔒 Chat interna protetta
-  - 🛡️ Intermediazione pagamenti sicura
-  - 📞 Supporto clienti 24/7
-  - ⚖️ Sistema di risoluzione dispute
-
-### Cliente - 4 Slide
-
-**Slide 1: Benvenuto**
-- Titolo: "Benvenuto su CasaFacile"
-- Testo: "Trova professionisti affidabili per la pulizia e i servizi domestici nella tua zona."
-
-**Slide 2: Come Funziona**
-- Titolo: "Come Funziona"
-- Punti:
-  - 🔍 Cerca professionisti vicino a te
-  - 📅 Prenota il servizio che ti serve
-  - 🏠 Ricevi il professionista a casa
-  - ⭐ Lascia una recensione
-
-**Slide 3: Sicurezza**
-- Titolo: "La Tua Sicurezza Prima di Tutto"
-- Punti:
-  - ✅ Professionisti verificati e recensiti
-  - 🔒 Pagamenti sicuri tramite l'app
-  - 💬 Comunicazione protetta
-  - 🛡️ Garanzia soddisfazione
-
-**Slide 4: Vantaggi**
-- Titolo: "Perché Scegliere CasaFacile"
-- Punti:
-  - ⏰ Risparmia tempo prezioso
-  - 💯 Qualità garantita
-  - 💰 Prezzi trasparenti
-  - 📱 Tutto a portata di app
-
-## Risultato Finale
-
-Dopo l'implementazione:
-1. Nuovo utente cliente → vede 4 slide tutorial → arriva alla Home
-2. Nuovo professionista → vede 4 slide tutorial → arriva all'onboarding profilo
-3. Utenti esistenti possono rivedere il tutorial dal profilo
-4. Le funzionalità esistenti (prenotazioni, chat, immagini) rimangono invariate
+Dopo la correzione:
+- La pagina **Messaggi** mostrerà tutte le conversazioni del professionista
+- La navigazione alla **Chat** funzionerà correttamente
+- Le **Prenotazioni** continueranno a funzionare come prima
