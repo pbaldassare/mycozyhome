@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Globe, Moon, Sun, Smartphone } from "lucide-react";
+import { ArrowLeft, Globe, Moon, Sun, Smartphone, Download } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useInstallPWA } from "@/hooks/useInstallPWA";
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { isInstallable, isInstalled, isIOS, promptInstall } = useInstallPWA();
   const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
   const [language, setLanguage] = useState("it");
 
@@ -21,6 +23,17 @@ export default function Settings() {
     { id: "it", label: "Italiano" },
     { id: "en", label: "English" },
   ];
+
+  const handleInstall = async () => {
+    if (isInstallable) {
+      const success = await promptInstall();
+      if (success) {
+        toast.success("App installata con successo!");
+      }
+    } else {
+      navigate("/install");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -106,14 +119,36 @@ export default function Settings() {
           <h2 className="text-sm font-medium text-muted-foreground mb-3 px-1">
             Informazioni App
           </h2>
-          <div className="bg-card rounded-2xl border border-border/30 p-4 space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Versione</span>
-              <span className="font-medium">1.0.0</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Build</span>
-              <span className="font-medium">2026.02.04</span>
+          <div className="bg-card rounded-2xl border border-border/30 overflow-hidden">
+            {/* Install App - only show if not already installed */}
+            {!isInstalled && (
+              <button
+                onClick={handleInstall}
+                className="w-full flex items-center justify-between p-4 border-b border-border/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5 text-primary" />
+                  <div className="text-left">
+                    <span className="font-medium block">Installa App</span>
+                    <span className="text-xs text-muted-foreground">
+                      {isIOS ? "Aggiungi a Home" : "Installa sul dispositivo"}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-primary text-sm font-medium">
+                  {isInstallable ? "Installa" : "Scopri come"}
+                </div>
+              </button>
+            )}
+            <div className="p-4 space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Versione</span>
+                <span className="font-medium">1.0.0</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Build</span>
+                <span className="font-medium">2026.02.04</span>
+              </div>
             </div>
           </div>
         </div>

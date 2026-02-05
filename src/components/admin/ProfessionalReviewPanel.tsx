@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   X,
@@ -13,6 +13,7 @@ import {
   MapPin,
   Phone,
   Mail,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +38,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Document {
   id: string;
@@ -99,7 +101,62 @@ export function ProfessionalReviewPanel({
   const [adminNotes, setAdminNotes] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(null);
+  const [loadingDocument, setLoadingDocument] = useState(false);
   const { toast } = useToast();
+
+  // Generate signed URL for private bucket documents
+  const getSignedUrl = useCallback(async (fileUrl: string): Promise<string | null> => {
+    try {
+      // Extract the file path from the URL
+      // URL format: https://xxx.supabase.co/storage/v1/object/public/bucket/path
+      // or it might just be the path
+      let filePath = fileUrl;
+      if (fileUrl.includes('/storage/v1/object/')) {
+        const match = fileUrl.match(/\/storage\/v1\/object\/(?:public|authenticated)\/professional-documents\/(.+)/);
+        if (match) {
+          filePath = match[1];
+        }
+      }
+      
+      const { data, error } = await supabase.storage
+        .from('professional-documents')
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
+      
+      if (error) {
+        console.error('Error creating signed URL:', error);
+        return null;
+      }
+      
+      return data.signedUrl;
+    } catch (err) {
+      console.error('Error getting signed URL:', err);
+      return null;
+    }
+  }, []);
+
+  const handleViewDocument = async (doc: Document) => {
+    setSelectedDocument(doc);
+    setLoadingDocument(true);
+    setDocumentPreviewUrl(null);
+    
+    const signedUrl = await getSignedUrl(doc.url);
+    setDocumentPreviewUrl(signedUrl);
+    setLoadingDocument(false);
+  };
+
+  const handleDownloadDocument = async (doc: Document) => {
+    const signedUrl = await getSignedUrl(doc.url);
+    if (signedUrl) {
+      window.open(signedUrl, '_blank');
+    } else {
+      toast({
+        title: "Errore download",
+        description: "Impossibile scaricare il documento. Riprova più tardi.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const initials = `${professional.firstName[0]}${professional.lastName[0]}`;
   const fullName = `${professional.firstName} ${professional.lastName}`;
@@ -273,14 +330,16 @@ export function ProfessionalReviewPanel({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSelectedDocument(doc)}
+                    onClick={() => handleViewDocument(doc)}
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" asChild>
-                    <a href={doc.url} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4" />
-                    </a>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleDownloadDocument(doc)}
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -360,32 +419,45 @@ export function ProfessionalReviewPanel({
       </Dialog>
 
       {/* Document Preview Dialog */}
-      <Dialog open={!!selectedDocument} onOpenChange={() => setSelectedDocument(null)}>
+      <Dialog open={!!selectedDocument} onOpenChange={() => {
+        setSelectedDocument(null);
+        setDocumentPreviewUrl(null);
+      }}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>{selectedDocument?.name}</DialogTitle>
           </DialogHeader>
           <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-            {selectedDocument?.url ? (
+            {loadingDocument ? (
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            ) : documentPreviewUrl ? (
               <img
-                src={selectedDocument.url}
-                alt={selectedDocument.name}
+                src={documentPreviewUrl}
+                alt={selectedDocument?.name}
                 className="max-h-full max-w-full object-contain rounded-lg"
+                onError={(e) => {
+                  // If image fails to load, it might be a PDF or other file type
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
               />
             ) : (
-              <FileText className="h-20 w-20 text-muted-foreground" />
+              <div className="text-center">
+                <FileText className="h-20 w-20 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">Anteprima non disponibile</p>
+              </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedDocument(null)}>
+            <Button variant="outline" onClick={() => {
+              setSelectedDocument(null);
+              setDocumentPreviewUrl(null);
+            }}>
               Chiudi
             </Button>
             {selectedDocument && (
-              <Button asChild>
-                <a href={selectedDocument.url} target="_blank" rel="noopener noreferrer">
-                  <Download className="h-4 w-4 mr-2" />
-                  Scarica
-                </a>
+              <Button onClick={() => handleDownloadDocument(selectedDocument)}>
+                <Download className="h-4 w-4 mr-2" />
+                Scarica
               </Button>
             )}
           </DialogFooter>
