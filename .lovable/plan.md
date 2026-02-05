@@ -1,120 +1,125 @@
 
-# Piano: Correggere Visualizzazione Prenotazioni e Chat - Lato Professionista
+# Piano: Aggiungere Pagine Profilo Professionista Mancanti
 
-## Problema Identificato
+## Problemi Identificati
 
-Le pagine dei **Messaggi/Chat** e altre funzionalità non vengono visualizzate per i professionisti perché c'è un bug nella query delle conversazioni.
-
-## Analisi Tecnica
-
-### Causa del Bug
-
-Nel file `src/hooks/useConversations.ts` (riga 61), la query usa `user.id` (l'ID dell'utente autenticato) per cercare le conversazioni:
-
-```typescript
-// CODICE ATTUALE (SBAGLIATO)
-const column = userType === "client" ? "client_id" : "professional_id";
-.eq(column, user.id)  // ❌ SBAGLIATO per i professionisti!
-```
-
-**Problema:** Il campo `professional_id` nella tabella `conversations` contiene l'ID della tabella `professionals`, **NON** l'`user_id` dell'autenticazione.
-
-### Prova dal Database
-
-| Tabella | Campo | Valore Esempio |
-|---------|-------|----------------|
-| `professionals` | `id` (professional_id) | `a3333333-3333-3333-3333-333333333333` |
-| `professionals` | `user_id` (auth user) | `b3333333-3333-3333-3333-333333333333` |
-| `conversations` | `professional_id` | `a1111111-1111-1111-1111-111111111111` (usa professionals.id!) |
-
-### Impatto
-
-| Pagina | Funziona? | Motivo |
-|--------|-----------|--------|
-| `/professional/bookings` | ✅ Sì | Usa `useProfessionalProfile()` correttamente |
-| `/professional/messages` | ❌ No | Usa `user.id` invece di `professional.id` |
-| `/professional/chat/:id` | ⚠️ Parziale | Funziona se si accede con ID diretto |
-| Home dashboard | ✅ Sì | Usa `useProfessionalProfile()` |
+| Problema | Causa |
+|----------|-------|
+| Rotella Settings → 404 | La route `/professional/settings` non esiste in App.tsx |
+| Manca modifica anagrafica | Non esiste una pagina dedicata per modificare i dati personali del professionista |
+| Manca modifica preferenze | Non esiste una sezione preferenze per il professionista |
 
 ## Soluzione
 
-### 1. Modificare `useConversations` hook
-
-Il hook deve prima recuperare il `professional.id` dal `user.id`, poi usare quello per cercare le conversazioni:
-
-```typescript
-// LOGICA CORRETTA
-if (userType === "professional") {
-  // 1. Prima: recupera professional.id dall'user.id
-  const { data: professional } = await supabase
-    .from("professionals")
-    .select("id")
-    .eq("user_id", user.id)
-    .single();
-  
-  if (!professional) return;
-  
-  // 2. Poi: usa professional.id per cercare conversazioni
-  const { data } = await supabase
-    .from("conversations")
-    .select(...)
-    .eq("professional_id", professional.id);
-}
-```
-
-### 2. File da Modificare
-
-| File | Modifica |
-|------|----------|
-| `src/hooks/useConversations.ts` | Correggere query per professionisti: prima recuperare `professionals.id` dall'`user_id`, poi usare quello per filtrare |
-
-## Flusso Corretto
+Creeremo una struttura simile a quella del cliente (`src/pages/client/profile/`):
 
 ```text
-Professionista apre Messaggi
-         │
-         ▼
-┌─────────────────────────┐
-│ useConversations()      │
-│ userType = "professional"│
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Query professionals     │
-│ WHERE user_id = auth.id │
-│ → Ottieni professional.id│
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Query conversations     │
-│ WHERE professional_id = │
-│   professional.id       │
-└───────────┬─────────────┘
-            │
-            ▼
-┌─────────────────────────┐
-│ Mostra lista conversazioni│
-│ con tutti i clienti     │
-└─────────────────────────┘
+src/pages/professional/
+├── profile/
+│   ├── PersonalData.tsx    ← Modifica anagrafica
+│   ├── Settings.tsx        ← Impostazioni (tema, lingua)
+│   └── Preferences.tsx     ← Preferenze (notifiche, visibilità)
+├── Profile.tsx             ← Aggiungere menu con link alle nuove pagine
+└── ...
 ```
 
-## Nota sulla Pagina Prenotazioni
+## File da Creare
 
-La pagina `/professional/bookings` **funziona già correttamente** perché usa `useProfessionalProfile()` per ottenere il `professional.id` prima di fare le query:
+### 1. `src/pages/professional/profile/PersonalData.tsx`
+Pagina per modificare i dati anagrafici del professionista:
+- Nome, Cognome, Telefono
+- Data di nascita, Codice Fiscale
+- Indirizzo, Città, Provincia, CAP
+- Bio/Descrizione
 
+Riutilizzerà la logica di `onboarding/PersonalInfo.tsx` ma senza il flusso di onboarding.
+
+### 2. `src/pages/professional/profile/Settings.tsx`
+Pagina impostazioni con:
+- Selezione tema (Chiaro/Scuro/Sistema)
+- Selezione lingua
+- Informazioni app
+
+### 3. `src/pages/professional/profile/Preferences.tsx`
+Pagina preferenze con:
+- Notifiche push (on/off)
+- Notifiche email (on/off)
+- Visibilità profilo (on/off)
+- Raggio massimo di lavoro
+
+## File da Modificare
+
+### 1. `src/pages/professional/Profile.tsx`
+Aggiungere un menu con le voci:
+- Dati personali → `/professional/profile/personal`
+- Preferenze → `/professional/profile/preferences`
+- Impostazioni → `/professional/profile/settings`
+- I miei servizi → `/professional/services`
+- Le mie recensioni → `/professional/reviews`
+- Documenti → `/professional/onboarding/documents`
+
+Struttura del menu (simile al profilo cliente):
+
+```text
+┌─────────────────────────────────────────┐
+│  [Avatar]  Mario Rossi                  │
+│            Milano • ★ 4.8               │
+├─────────────────────────────────────────┤
+│  Account                                │
+│  ┌───────────────────────────────────┐  │
+│  │ 👤 Dati personali              → │  │
+│  ├───────────────────────────────────┤  │
+│  │ ⚙️ Preferenze                  → │  │
+│  ├───────────────────────────────────┤  │
+│  │ 🔔 Notifiche                   → │  │
+│  └───────────────────────────────────┘  │
+│                                         │
+│  Attività                               │
+│  ┌───────────────────────────────────┐  │
+│  │ 🛠️ I miei servizi              → │  │
+│  ├───────────────────────────────────┤  │
+│  │ ⭐ Le mie recensioni           → │  │
+│  ├───────────────────────────────────┤  │
+│  │ 📄 Documenti                   → │  │
+│  └───────────────────────────────────┘  │
+│                                         │
+│  Supporto                               │
+│  ┌───────────────────────────────────┐  │
+│  │ ❓ Centro assistenza           → │  │
+│  ├───────────────────────────────────┤  │
+│  │ 🔒 Privacy                     → │  │
+│  ├───────────────────────────────────┤  │
+│  │ ⚙️ Impostazioni                → │  │
+│  └───────────────────────────────────┘  │
+│                                         │
+│  ┌───────────────────────────────────┐  │
+│  │ 🚪 Esci                           │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+### 2. `src/App.tsx`
+Aggiungere le nuove routes:
 ```typescript
-// In ProfessionalBookings.tsx - GIÀ CORRETTO
-const { data: professional } = useProfessionalProfile();
-const { data: bookings } = useAllProfessionalBookings(professional?.id);
+<Route path="/professional/profile/personal" element={<ProfessionalPersonalData />} />
+<Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
+<Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
 ```
 
-Se non vedi le prenotazioni, potrebbe essere perché non ci sono prenotazioni associate a quel professionista nel database.
+## Riepilogo Modifiche
+
+| File | Azione | Descrizione |
+|------|--------|-------------|
+| `src/pages/professional/profile/PersonalData.tsx` | Creare | Form modifica dati anagrafici |
+| `src/pages/professional/profile/Settings.tsx` | Creare | Pagina impostazioni tema/lingua |
+| `src/pages/professional/profile/Preferences.tsx` | Creare | Pagina preferenze notifiche/visibilità |
+| `src/pages/professional/Profile.tsx` | Modificare | Aggiungere menu navigazione |
+| `src/App.tsx` | Modificare | Aggiungere 3 nuove routes |
 
 ## Risultato Atteso
 
-Dopo la correzione:
-- La pagina **Messaggi** mostrerà tutte le conversazioni del professionista
-- La navigazione alla **Chat** funzionerà correttamente
-- Le **Prenotazioni** continueranno a funzionare come prima
+Dopo l'implementazione:
+- La rotella in alto a destra porterà a `/professional/profile/settings` (funzionante)
+- Il profilo avrà un menu organizzato con tutte le opzioni
+- Il professionista potrà modificare i propri dati anagrafici
+- Il professionista potrà gestire le proprie preferenze
