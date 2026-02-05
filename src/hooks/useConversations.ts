@@ -45,9 +45,30 @@ export function useConversations(userType: "client" | "professional" = "client")
     try {
       setIsLoading(true);
 
+      // For professionals, we need to get the professional.id first
+      // because conversations.professional_id references professionals.id, not user_id
+      let queryId = user.id;
+      
+      if (userType === "professional") {
+        const { data: professional, error: profError } = await supabase
+          .from("professionals")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (profError || !professional) {
+          console.error("Error fetching professional profile:", profError);
+          setConversations([]);
+          setIsLoading(false);
+          return;
+        }
+        
+        queryId = professional.id;
+      }
+
       // Query conversations based on user type
       const column = userType === "client" ? "client_id" : "professional_id";
-
+      
       const { data: convData, error: convError } = await supabase
         .from("conversations")
         .select(`
@@ -58,7 +79,7 @@ export function useConversations(userType: "client" | "professional" = "client")
             avatar_url
           )
         `)
-        .eq(column, user.id)
+        .eq(column, queryId)
         .eq("status", "active")
         .order("last_message_at", { ascending: false, nullsFirst: false });
 
