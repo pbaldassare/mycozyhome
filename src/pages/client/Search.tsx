@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { ProfessionalsMap } from "@/components/maps/ProfessionalsMap";
+import { MapErrorBoundary } from "@/components/maps/MapErrorBoundary";
 import { SearchFilters, SearchFiltersState } from "@/components/client/SearchFilters";
 import { cn } from "@/lib/utils";
 import { useSearchProfessionals } from "@/hooks/useProfessionals";
@@ -168,10 +169,12 @@ export default function ClientSearch() {
           </div>
         ) : viewMode === "map" ? (
           <div className="h-[calc(100vh-280px)] min-h-[400px]">
-            <ProfessionalsMap
-              professionals={professionals || []}
-              onProfessionalClick={(id) => navigate(`/client/professional/${id}`)}
-            />
+            <MapErrorBoundary fallbackMessage="Errore durante il caricamento della mappa. Prova a tornare alla lista o riprova.">
+              <ProfessionalsMap
+                professionals={professionals || []}
+                onProfessionalClick={(id) => navigate(`/client/professional/${id}`)}
+              />
+            </MapErrorBoundary>
           </div>
         ) : (
           <>
