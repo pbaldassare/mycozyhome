@@ -18,11 +18,20 @@ export default function Welcome() {
 
       {/* Content Section */}
       <div className="flex-1 flex flex-col items-center px-6 pt-10 pb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">
-          Benvenuto su MyCozyHome
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-2">
+          MyCozyHome
         </h1>
-        <p className="text-center text-muted-foreground text-lg max-w-md mb-10">
-          Trova professionisti affidabili per la pulizia della tua casa e le tue esigenze domestiche. Garantiamo intermediazione sicura e servizio di qualità.
+        <p className="text-center text-primary font-medium text-base md:text-lg mb-4">
+          Il tuo tempo, il tuo comfort, i tuoi spazi
+        </p>
+        <p className="text-center text-muted-foreground text-base max-w-md mb-4">
+          Trova in pochi clic professionisti affidabili per pulizie, stiratura, pet sitting e altri lavori domestici.
+        </p>
+        <p className="text-center text-muted-foreground text-sm max-w-md mb-6">
+          MyCozyHome: mettiamo in contatto chi vuole godersi la propria casa ed i propri spazi, con professionisti affidabili che se ne prendono cura.
+        </p>
+        <p className="text-center text-primary font-semibold text-lg mb-10">
+          Rilassati. Al resto pensiamo noi.
         </p>
 
         {/* Buttons */}
