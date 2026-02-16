@@ -33,8 +33,9 @@ import { useCancelBooking } from "@/hooks/useBookings";
 import { useCreateReview, useCanReview } from "@/hooks/useReviews";
 import { ReviewForm } from "@/components/client/ReviewForm";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBookingTracking } from "@/hooks/useBookingTracking";
+import { useQueryClient } from "@tanstack/react-query";
 import { Navigation } from "lucide-react";
 
 const statusConfig = {
@@ -62,6 +63,46 @@ export default function BookingDetail() {
   const createReview = useCreateReview();
   const { data: canReviewBooking } = useCanReview(id);
   const { tracking } = useBookingTracking(id);
+  const queryClient = useQueryClient();
+
+  // Realtime: notifica il cliente quando il professionista fa check-in/check-out
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`booking-tracking-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'booking_tracking',
+          filter: `booking_id=eq.${id}`,
+        },
+        (payload: any) => {
+          const newRecord = payload.new;
+          queryClient.invalidateQueries({ queryKey: ["booking-tracking", id] });
+
+          if (payload.eventType === 'INSERT' && newRecord?.check_in_at) {
+            toast.info("🟢 Il professionista è arrivato!", {
+              description: `Check-in registrato alle ${new Date(newRecord.check_in_at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}`,
+              duration: 8000,
+            });
+          } else if (payload.eventType === 'UPDATE' && newRecord?.check_out_at) {
+            const hours = newRecord.actual_hours ? `${Number(newRecord.actual_hours).toFixed(1)}h` : "";
+            toast.info("🔴 Il professionista ha terminato!", {
+              description: `Check-out alle ${new Date(newRecord.check_out_at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })}${hours ? ` — Ore lavorate: ${hours}` : ""}`,
+              duration: 8000,
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient]);
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking-detail", id],
