@@ -1,13 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   HelpCircle,
   Search,
-  Filter,
   MessageSquare,
   Clock,
   CheckCircle,
   User,
   AlertTriangle,
+  Send,
+  Paperclip,
+  X,
+  Loader2,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,18 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useTicketResponses, useSendTicketResponse } from "@/hooks/useSupportTickets";
 
 interface SupportTicket {
   id: string;
@@ -69,13 +68,12 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
 };
 
 export default function SupportCenter() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-  const [replyText, setReplyText] = useState("");
-  const [isReplying, setIsReplying] = useState(false);
 
   useEffect(() => {
     loadTickets();
@@ -104,32 +102,11 @@ export default function SupportCenter() {
       setTickets((prev) =>
         prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
       );
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket((prev) => prev ? { ...prev, status: newStatus } : null);
+      }
       toast({ title: "Stato aggiornato" });
     }
-  }
-
-  async function sendReply() {
-    if (!selectedTicket || !replyText.trim()) return;
-    
-    setIsReplying(true);
-    
-    const { error } = await supabase.from("ticket_responses").insert({
-      ticket_id: selectedTicket.id,
-      responder_id: "admin", // In produzione, usa l'ID admin reale
-      responder_type: "admin",
-      content: replyText.trim(),
-    });
-
-    if (!error) {
-      // Update ticket to in_progress if it was open
-      if (selectedTicket.status === "open") {
-        await updateTicketStatus(selectedTicket.id, "in_progress");
-      }
-      toast({ title: "Risposta inviata" });
-      setReplyText("");
-    }
-    
-    setIsReplying(false);
   }
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -151,9 +128,23 @@ export default function SupportCenter() {
     resolved: tickets.filter((t) => t.status === "resolved" || t.status === "closed").length,
   };
 
+  // Show chat view when ticket is selected
+  if (selectedTicket && user) {
+    return (
+      <AdminTicketChat
+        ticket={selectedTicket}
+        adminId={user.id}
+        onBack={() => {
+          setSelectedTicket(null);
+          loadTickets();
+        }}
+        onStatusChange={(status) => updateTicketStatus(selectedTicket.id, status)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Centro Assistenza</h1>
         <p className="text-muted-foreground mt-1">
@@ -161,7 +152,6 @@ export default function SupportCenter() {
         </p>
       </div>
 
-      {/* Urgent tickets alert */}
       {tickets.some((t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed") && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
@@ -175,7 +165,6 @@ export default function SupportCenter() {
         </div>
       )}
 
-      {/* Search and filters */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -188,7 +177,6 @@ export default function SupportCenter() {
         </div>
       </div>
 
-      {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">Tutti ({counts.all})</TabsTrigger>
@@ -275,86 +263,206 @@ export default function SupportCenter() {
           )}
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
 
-      {/* Ticket Detail Dialog */}
-      <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
-        <DialogContent className="max-w-2xl">
-          {selectedTicket && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="outline">
-                    {categoryLabels[selectedTicket.category] || selectedTicket.category}
-                  </Badge>
-                  <span
-                    className={cn(
-                      "status-badge",
-                      statusConfig[selectedTicket.status]?.className
-                    )}
-                  >
-                    {statusConfig[selectedTicket.status]?.label}
-                  </span>
+function AdminTicketChat({
+  ticket,
+  adminId,
+  onBack,
+  onStatusChange,
+}: {
+  ticket: SupportTicket;
+  adminId: string;
+  onBack: () => void;
+  onStatusChange: (status: string) => void;
+}) {
+  const { data: responses } = useTicketResponses(ticket.id);
+  const sendResponse = useSendTicketResponse();
+  const [message, setMessage] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [responses]);
+
+  const handleSend = async () => {
+    if (!message.trim() && !attachment) return;
+
+    try {
+      await sendResponse.mutateAsync({
+        ticketId: ticket.id,
+        responderId: adminId,
+        responderType: "admin",
+        content: message.trim() || (attachment ? `Allegato: ${attachment.name}` : ""),
+        attachmentFile: attachment || undefined,
+      });
+      setMessage("");
+      setAttachment(null);
+
+      if (ticket.status === "open") {
+        onStatusChange("in_progress");
+      }
+    } catch {
+      toast({
+        title: "Errore",
+        description: "Impossibile inviare il messaggio",
+        variant: "destructive",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={onBack}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1">
+          <h2 className="text-xl font-bold">{ticket.subject}</h2>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline">
+              {categoryLabels[ticket.category] || ticket.category}
+            </Badge>
+            <Badge variant="outline">
+              {ticket.user_type === "client" ? "Cliente" : "Professionista"}
+            </Badge>
+            <Badge className={cn(priorityConfig[ticket.priority]?.className)}>
+              {priorityConfig[ticket.priority]?.label}
+            </Badge>
+          </div>
+        </div>
+        <Select value={ticket.status} onValueChange={onStatusChange}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="open">Aperto</SelectItem>
+            <SelectItem value="in_progress">In corso</SelectItem>
+            <SelectItem value="resolved">Risolto</SelectItem>
+            <SelectItem value="closed">Chiuso</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Chat area */}
+      <div className="border rounded-xl bg-card overflow-hidden">
+        <div className="h-[500px] overflow-y-auto p-4 space-y-3">
+          {/* Original message */}
+          <div className="flex justify-start">
+            <div className="max-w-[70%] bg-muted rounded-2xl rounded-tl-sm px-4 py-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-1">
+                {ticket.user_type === "client" ? "Cliente" : "Professionista"}
+              </p>
+              <p className="text-sm">{ticket.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {format(new Date(ticket.created_at), "d MMM yyyy, HH:mm", { locale: it })}
+              </p>
+            </div>
+          </div>
+
+          {/* Responses */}
+          {responses?.map((resp) => {
+            const isAdmin = resp.responder_type === "admin";
+            return (
+              <div key={resp.id} className={cn("flex", isAdmin ? "justify-end" : "justify-start")}>
+                <div
+                  className={cn(
+                    "max-w-[70%] rounded-2xl px-4 py-3",
+                    isAdmin
+                      ? "bg-primary text-primary-foreground rounded-tr-sm"
+                      : "bg-muted text-foreground rounded-tl-sm"
+                  )}
+                >
+                  <p className={cn("text-xs font-semibold mb-1", isAdmin ? "opacity-70" : "text-muted-foreground")}>
+                    {isAdmin ? "Admin" : ticket.user_type === "client" ? "Cliente" : "Professionista"}
+                  </p>
+                  <p className="text-sm">{resp.content}</p>
+                  {resp.attachment_url && (
+                    <a
+                      href={resp.attachment_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center gap-1 text-xs mt-2 underline",
+                        isAdmin ? "text-primary-foreground/80" : "text-primary"
+                      )}
+                    >
+                      <Paperclip className="h-3 w-3" />
+                      {resp.attachment_name || "Allegato"}
+                    </a>
+                  )}
+                  <p className={cn("text-xs mt-1", isAdmin ? "opacity-70" : "text-muted-foreground")}>
+                    {format(new Date(resp.created_at), "d MMM, HH:mm", { locale: it })}
+                  </p>
                 </div>
-                <DialogTitle>{selectedTicket.subject}</DialogTitle>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-sm whitespace-pre-wrap">{selectedTicket.description}</p>
-                </div>
-
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <User className="w-4 h-4" />
-                    {selectedTicket.user_type === "client" ? "Cliente" : "Professionista"}
-                  </span>
-                  <span>
-                    Creato {formatDistanceToNow(new Date(selectedTicket.created_at), {
-                      addSuffix: true,
-                      locale: it,
-                    })}
-                  </span>
-                </div>
-
-                {/* Reply section */}
-                {selectedTicket.status !== "resolved" && selectedTicket.status !== "closed" && (
-                  <div className="space-y-3 pt-4 border-t">
-                    <Textarea
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      placeholder="Scrivi una risposta..."
-                      className="min-h-[100px]"
-                    />
-                    <div className="flex items-center justify-between">
-                      <Select
-                        value={selectedTicket.status}
-                        onValueChange={(value) => {
-                          updateTicketStatus(selectedTicket.id, value);
-                          setSelectedTicket({ ...selectedTicket, status: value });
-                        }}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="open">Aperto</SelectItem>
-                          <SelectItem value="in_progress">In corso</SelectItem>
-                          <SelectItem value="resolved">Risolto</SelectItem>
-                          <SelectItem value="closed">Chiuso</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button onClick={sendReply} disabled={!replyText.trim() || isReplying}>
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Invia risposta
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
-            </>
+            );
+          })}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="border-t p-3">
+          {attachment && (
+            <div className="flex items-center gap-2 mb-2 px-2 py-1.5 bg-muted rounded-lg text-sm">
+              <Paperclip className="h-4 w-4 text-muted-foreground" />
+              <span className="truncate flex-1">{attachment.name}</span>
+              <button onClick={() => setAttachment(null)}>
+                <X className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (file.size > 10 * 1024 * 1024) {
+                    toast({ title: "File troppo grande", description: "Max 10MB", variant: "destructive" });
+                    return;
+                  }
+                  setAttachment(file);
+                }
+              }}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Paperclip className="h-5 w-5" />
+            </Button>
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Rispondi al ticket..."
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+            />
+            <Button
+              size="icon"
+              className="shrink-0"
+              disabled={(!message.trim() && !attachment) || sendResponse.isPending}
+              onClick={handleSend}
+            >
+              {sendResponse.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

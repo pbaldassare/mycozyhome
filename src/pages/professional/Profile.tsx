@@ -52,7 +52,7 @@ const menuSections: MenuSection[] = [
   {
     title: "Supporto",
     items: [
-      { icon: HelpCircle, label: "Centro assistenza", path: "/professional/tutorial" },
+      { icon: HelpCircle, label: "Centro assistenza", path: "/professional/support" },
       { icon: Shield, label: "Privacy", path: "/professional/profile/settings" },
       { icon: Settings, label: "Impostazioni", path: "/professional/profile/settings" },
     ],
