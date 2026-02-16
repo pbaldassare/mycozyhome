@@ -25,6 +25,7 @@ import {
   Euro,
   Calendar,
   ChevronLeft,
+  Star,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,8 @@ import {
 } from "@/hooks/useProfessionalData";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
+import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -96,6 +99,8 @@ export default function ProfessionalBookings() {
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [reviewBooking, setReviewBooking] = useState<any>(null);
+  const createClientReview = useCreateClientReview();
 
   const handleAccept = (bookingId: string) => {
     updateStatus.mutate({ bookingId, status: "confirmed" });
@@ -259,6 +264,21 @@ export default function ProfessionalBookings() {
               </Button>
             </div>
           )}
+
+          {/* Review button for completed bookings */}
+          {booking.status === "completed" && (
+            <div className="mt-4">
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                onClick={() => setReviewBooking(booking)}
+              >
+                <Star className="h-4 w-4 mr-1" />
+                Valuta il cliente
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -390,6 +410,30 @@ export default function ProfessionalBookings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Client Review Dialog */}
+      {reviewBooking && (
+        <ClientReviewForm
+          isOpen={!!reviewBooking}
+          onClose={() => setReviewBooking(null)}
+          clientName={
+            reviewBooking.client
+              ? `${reviewBooking.client.first_name || ""} ${reviewBooking.client.last_name || ""}`.trim() || "Cliente"
+              : "Cliente"
+          }
+          serviceName={serviceTypeLabels[reviewBooking.service_type] || reviewBooking.service_type}
+          onSubmit={async (rating, comment) => {
+            await createClientReview.mutateAsync({
+              bookingId: reviewBooking.id,
+              professionalId: professional!.id,
+              clientId: reviewBooking.client_id,
+              rating,
+              comment,
+            });
+            setReviewBooking(null);
+          }}
+        />
+      )}
     </div>
   );
 }
