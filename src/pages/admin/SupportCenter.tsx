@@ -75,21 +75,27 @@ const priorityConfig: Record<string, { label: string; className: string }> = {
   urgent: { label: "Urgente", className: "bg-destructive/10 text-destructive" },
 };
 
+interface UserOption {
+  id: string;
+  user_id: string;
+  label: string;
+  subtitle: string;
+}
+
 export default function SupportCenter() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showNewTicketDialog, setShowNewTicketDialog] = useState(false);
-  const [newTicket, setNewTicket] = useState({
-    user_id: "",
-    user_type: "client" as string,
-    category: "other" as string,
-    subject: "",
-    description: "",
-    priority: "normal" as string,
-  });
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
+  const [chatStep, setChatStep] = useState<"type" | "user" | "details">("type");
+  const [chatUserType, setChatUserType] = useState<"client" | "professional">("client");
+  const [userOptions, setUserOptions] = useState<UserOption[]>([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const [newChat, setNewChat] = useState({ subject: "", description: "", category: "other", priority: "normal" });
   const [isCreating, setIsCreating] = useState(false);
 
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
@@ -128,30 +134,80 @@ export default function SupportCenter() {
     }
   }
 
-  async function handleCreateTicket() {
-    if (!newTicket.user_id.trim() || !newTicket.subject.trim() || !newTicket.description.trim()) {
+  async function loadUsers(type: "client" | "professional") {
+    setIsLoadingUsers(true);
+    if (type === "client") {
+      const { data } = await supabase.from("client_profiles").select("id, user_id, first_name, last_name, email");
+      setUserOptions(
+        (data || []).map((u) => ({
+          id: u.id,
+          user_id: u.user_id,
+          label: [u.first_name, u.last_name].filter(Boolean).join(" ") || "Cliente senza nome",
+          subtitle: u.email || u.user_id,
+        }))
+      );
+    } else {
+      const { data } = await supabase.from("professionals").select("id, user_id, first_name, last_name, email");
+      setUserOptions(
+        (data || []).map((u) => ({
+          id: u.id,
+          user_id: u.user_id,
+          label: `${u.first_name} ${u.last_name}`,
+          subtitle: u.email || u.user_id,
+        }))
+      );
+    }
+    setIsLoadingUsers(false);
+  }
+
+  function handleSelectUserType(type: "client" | "professional") {
+    setChatUserType(type);
+    setChatStep("user");
+    loadUsers(type);
+  }
+
+  function handleSelectUser(u: UserOption) {
+    setSelectedUser(u);
+    setChatStep("details");
+  }
+
+  function resetChatDialog() {
+    setChatStep("type");
+    setSelectedUser(null);
+    setUserSearch("");
+    setNewChat({ subject: "", description: "", category: "other", priority: "normal" });
+    setShowNewChatDialog(false);
+  }
+
+  async function handleCreateChat() {
+    if (!selectedUser || !newChat.subject.trim() || !newChat.description.trim()) {
       toast({ title: "Errore", description: "Compila tutti i campi obbligatori", variant: "destructive" });
       return;
     }
     setIsCreating(true);
     const { error } = await supabase.from("support_tickets").insert({
-      user_id: newTicket.user_id.trim(),
-      user_type: newTicket.user_type,
-      category: newTicket.category,
-      subject: newTicket.subject.trim(),
-      description: newTicket.description.trim(),
-      priority: newTicket.priority,
+      user_id: selectedUser.user_id,
+      user_type: chatUserType,
+      category: newChat.category,
+      subject: newChat.subject.trim(),
+      description: newChat.description.trim(),
+      priority: newChat.priority,
     });
     if (error) {
-      toast({ title: "Errore", description: "Impossibile creare il ticket. Verifica l'ID utente.", variant: "destructive" });
+      toast({ title: "Errore", description: "Impossibile creare la chat", variant: "destructive" });
     } else {
-      toast({ title: "Ticket creato" });
-      setShowNewTicketDialog(false);
-      setNewTicket({ user_id: "", user_type: "client", category: "other", subject: "", description: "", priority: "normal" });
+      toast({ title: "Chat creata" });
+      resetChatDialog();
       loadTickets();
     }
     setIsCreating(false);
   }
+
+  const filteredUsers = userOptions.filter(
+    (u) =>
+      u.label.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.subtitle.toLowerCase().includes(userSearch.toLowerCase())
+  );
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =
@@ -195,85 +251,141 @@ export default function SupportCenter() {
             Gestisci le richieste di supporto e le segnalazioni da professionisti e clienti
           </p>
         </div>
-        <Dialog open={showNewTicketDialog} onOpenChange={setShowNewTicketDialog}>
+        <Dialog open={showNewChatDialog} onOpenChange={(open) => { if (!open) resetChatDialog(); else setShowNewChatDialog(true); }}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="w-4 h-4" />
-              Nuovo ticket
+              Nuova chat
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Crea ticket per conto di un utente</DialogTitle>
+              <DialogTitle>
+                {chatStep === "type" && "Seleziona tipo utente"}
+                {chatStep === "user" && (chatUserType === "client" ? "Seleziona cliente" : "Seleziona professionista")}
+                {chatStep === "details" && `Chat con ${selectedUser?.label}`}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div>
-                <label className="text-sm font-medium mb-1 block">ID Utente *</label>
-                <Input
-                  value={newTicket.user_id}
-                  onChange={(e) => setNewTicket((p) => ({ ...p, user_id: e.target.value }))}
-                  placeholder="UUID dell'utente"
-                />
+
+            {chatStep === "type" && (
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <button
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  onClick={() => handleSelectUserType("client")}
+                >
+                  <User className="w-8 h-8 text-primary" />
+                  <span className="font-semibold">Cliente</span>
+                </button>
+                <button
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-border hover:border-primary hover:bg-primary/5 transition-all"
+                  onClick={() => handleSelectUserType("professional")}
+                >
+                  <HelpCircle className="w-8 h-8 text-primary" />
+                  <span className="font-semibold">Professionista</span>
+                </button>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+            )}
+
+            {chatStep === "user" && (
+              <div className="space-y-3 mt-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    placeholder="Cerca per nome o email..."
+                    className="pl-9"
+                  />
+                </div>
+                <div className="max-h-[300px] overflow-y-auto space-y-1">
+                  {isLoadingUsers ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 animate-spin mx-auto mb-2" />
+                      Caricamento...
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground text-sm">Nessun utente trovato</div>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <button
+                        key={u.id}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                        onClick={() => handleSelectUser(u)}
+                      >
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                          {u.label.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{u.label}</p>
+                          <p className="text-xs text-muted-foreground truncate">{u.subtitle}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+                <Button variant="ghost" className="w-full" onClick={() => setChatStep("type")}>
+                  <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
+                </Button>
+              </div>
+            )}
+
+            {chatStep === "details" && (
+              <div className="space-y-4 mt-2">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Tipo utente</label>
-                  <Select value={newTicket.user_type} onValueChange={(v) => setNewTicket((p) => ({ ...p, user_type: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="client">Cliente</SelectItem>
-                      <SelectItem value="professional">Professionista</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium mb-1 block">Oggetto *</label>
+                  <Input
+                    value={newChat.subject}
+                    onChange={(e) => setNewChat((p) => ({ ...p, subject: e.target.value }))}
+                    placeholder="Breve descrizione"
+                  />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Categoria</label>
-                  <Select value={newTicket.category} onValueChange={(v) => setNewTicket((p) => ({ ...p, category: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="technical">Tecnico</SelectItem>
-                      <SelectItem value="billing">Pagamenti</SelectItem>
-                      <SelectItem value="service">Servizio</SelectItem>
-                      <SelectItem value="report">Segnalazione</SelectItem>
-                      <SelectItem value="other">Altro</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium mb-1 block">Messaggio *</label>
+                  <Textarea
+                    value={newChat.description}
+                    onChange={(e) => setNewChat((p) => ({ ...p, description: e.target.value }))}
+                    placeholder="Scrivi il primo messaggio..."
+                    className="min-h-[100px]"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Categoria</label>
+                    <Select value={newChat.category} onValueChange={(v) => setNewChat((p) => ({ ...p, category: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technical">Tecnico</SelectItem>
+                        <SelectItem value="billing">Pagamenti</SelectItem>
+                        <SelectItem value="service">Servizio</SelectItem>
+                        <SelectItem value="report">Segnalazione</SelectItem>
+                        <SelectItem value="other">Altro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Priorità</label>
+                    <Select value={newChat.priority} onValueChange={(v) => setNewChat((p) => ({ ...p, priority: v }))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Bassa</SelectItem>
+                        <SelectItem value="normal">Normale</SelectItem>
+                        <SelectItem value="high">Alta</SelectItem>
+                        <SelectItem value="urgent">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setChatStep("user")}>
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
+                  </Button>
+                  <Button onClick={handleCreateChat} disabled={isCreating} className="flex-1">
+                    {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageSquare className="w-4 h-4 mr-2" />}
+                    Avvia chat
+                  </Button>
                 </div>
               </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Priorità</label>
-                <Select value={newTicket.priority} onValueChange={(v) => setNewTicket((p) => ({ ...p, priority: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Bassa</SelectItem>
-                    <SelectItem value="normal">Normale</SelectItem>
-                    <SelectItem value="high">Alta</SelectItem>
-                    <SelectItem value="urgent">Urgente</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Oggetto *</label>
-                <Input
-                  value={newTicket.subject}
-                  onChange={(e) => setNewTicket((p) => ({ ...p, subject: e.target.value }))}
-                  placeholder="Breve descrizione"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Descrizione *</label>
-                <Textarea
-                  value={newTicket.description}
-                  onChange={(e) => setNewTicket((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Descrizione dettagliata..."
-                  className="min-h-[100px]"
-                />
-              </div>
-              <Button onClick={handleCreateTicket} disabled={isCreating} className="w-full">
-                {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                Crea ticket
-              </Button>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
