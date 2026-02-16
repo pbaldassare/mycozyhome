@@ -83,7 +83,7 @@ export function AdminSidebar() {
             {!collapsed && (
               <div>
                 <h1 className="font-bold text-lg text-white">
-                  HomeServ
+                  MyCozyHome
                 </h1>
                 <p className="text-xs text-white/50">Admin Panel</p>
               </div>
