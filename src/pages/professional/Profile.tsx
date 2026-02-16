@@ -15,6 +15,7 @@ import {
   HelpCircle,
   Shield,
   ChevronRight,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -76,6 +77,7 @@ export default function ProfessionalProfile() {
       items: [
         { icon: Wrench, label: "I miei servizi", path: "/professional/services" },
         { icon: Star, label: "Le mie recensioni", path: "/professional/reviews" },
+        { icon: Heart, label: "Clienti preferiti", path: "/professional/profile/favorite-clients" },
         { icon: FileText, label: "Documenti", path: "/professional/onboarding/documents" },
       ],
     },
