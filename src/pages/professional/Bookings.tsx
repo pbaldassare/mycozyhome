@@ -77,7 +77,7 @@ function useAllProfessionalBookings(professionalId: string | undefined) {
         (data || []).map(async (booking) => {
           const { data: client } = await supabase
             .from("client_profiles")
-            .select("first_name, last_name, avatar_url, phone")
+            .select("first_name, last_name, avatar_url, phone, average_rating, review_count")
             .eq("user_id", booking.client_id)
             .single();
 
@@ -161,9 +161,20 @@ export default function ProfessionalBookings() {
               </Avatar>
               <div>
                 <h3 className="font-semibold">{clientName}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {serviceTypeLabels[booking.service_type] || booking.service_type}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    {serviceTypeLabels[booking.service_type] || booking.service_type}
+                  </p>
+                  {booking.client?.average_rating > 0 && (
+                    <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                      <Star className="h-3 w-3 fill-warning text-warning" />
+                      {Number(booking.client.average_rating).toFixed(1)}
+                      <span className="text-muted-foreground/60">
+                        ({booking.client.review_count})
+                      </span>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <Badge
