@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,6 +16,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Clock,
   MapPin,
   CheckCircle,
@@ -26,6 +33,7 @@ import {
   Calendar,
   ChevronLeft,
   Star,
+  Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -100,7 +108,22 @@ export default function ProfessionalBookings() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [reviewBooking, setReviewBooking] = useState<any>(null);
+  const [serviceFilter, setServiceFilter] = useState<string>("all");
   const createClientReview = useCreateClientReview();
+
+  // Get unique service types from bookings
+  const availableServiceTypes = useMemo(() => {
+    if (!bookings) return [];
+    const types = [...new Set(bookings.map((b) => b.service_type))];
+    return types.sort();
+  }, [bookings]);
+
+  // Filter bookings by service type
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    if (serviceFilter === "all") return bookings;
+    return bookings.filter((b) => b.service_type === serviceFilter);
+  }, [bookings, serviceFilter]);
 
   const handleAccept = (bookingId: string) => {
     updateStatus.mutate({ bookingId, status: "confirmed" });
@@ -126,15 +149,12 @@ export default function ProfessionalBookings() {
   };
 
   // Filter bookings by status
-  const pendingBookings = bookings?.filter((b) => b.status === "pending") || [];
-  const confirmedBookings =
-    bookings?.filter(
-      (b) => b.status === "confirmed" && !isPast(parseISO(b.scheduled_date))
-    ) || [];
-  const completedBookings =
-    bookings?.filter((b) => b.status === "completed") || [];
-  const cancelledBookings =
-    bookings?.filter((b) => b.status === "cancelled") || [];
+  const pendingBookings = filteredBookings.filter((b) => b.status === "pending");
+  const confirmedBookings = filteredBookings.filter(
+    (b) => b.status === "confirmed" && !isPast(parseISO(b.scheduled_date))
+  );
+  const completedBookings = filteredBookings.filter((b) => b.status === "completed");
+  const cancelledBookings = filteredBookings.filter((b) => b.status === "cancelled");
 
   const renderBookingCard = (booking: any, showActions: boolean = false) => {
     const clientName = booking.client
@@ -310,6 +330,26 @@ export default function ProfessionalBookings() {
           <h1 className="text-lg font-semibold">Le mie prenotazioni</h1>
         </div>
       </header>
+
+      {/* Service type filter */}
+      {availableServiceTypes.length > 1 && (
+        <div className="px-4 pt-4 flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={serviceFilter} onValueChange={setServiceFilter}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filtra per servizio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti i servizi</SelectItem>
+              {availableServiceTypes.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {serviceTypeLabels[type] || type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <Tabs defaultValue="pending" className="p-4">
         <TabsList className="grid w-full grid-cols-4 mb-4">
