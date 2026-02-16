@@ -1,4 +1,4 @@
-import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Building2, SprayCan, Baby, Dog, Loader2 } from "lucide-react";
+import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Leaf, PackageOpen, Truck, Snowflake, TreePine, LayoutGrid, Dog, PawPrint, Trash2, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -7,13 +7,28 @@ import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/hooks/useAuth";
 
-const services = [
-  { id: "cleaning", icon: HomeIcon, title: "Pulizie casa", description: "Pulizia professionale domestica" },
-  { id: "office_cleaning", icon: Building2, title: "Pulizie ufficio", description: "Sanificazione ambienti lavoro" },
-  { id: "ironing", icon: Shirt, title: "Stiro", description: "Servizio stiro a domicilio" },
-  { id: "sanitization", icon: SprayCan, title: "Sanificazione", description: "Igienizzazione profonda" },
-  { id: "babysitter", icon: Baby, title: "Babysitter", description: "Assistenza bambini" },
-  { id: "dog_sitter", icon: Dog, title: "Dog sitter", description: "Cura animali domestici" },
+const serviceCategories = [
+  {
+    title: "🏠 Cura della casa",
+    services: [
+      { id: "cleaning", icon: HomeIcon, title: "Pulizie", description: "Pulizie ordinarie e profonde" },
+      { id: "ironing", icon: Shirt, title: "Stiro e lavanderia", description: "Stiraggio e lavanderia a domicilio" },
+      { id: "wardrobe_seasonal", icon: PackageOpen, title: "Cambio stagione", description: "Cambio stagione armadi" },
+      { id: "decluttering", icon: LayoutGrid, title: "Riordino", description: "Riordino e decluttering" },
+      { id: "post_renovation", icon: Truck, title: "Post-trasloco", description: "Pulizia post-trasloco o ristrutturazione" },
+      { id: "seasonal_cleaning", icon: Snowflake, title: "Servizi stagionali", description: "Natale, primavera e altro" },
+      { id: "garden_care", icon: TreePine, title: "Piante e giardino", description: "Cura piante e giardino" },
+      { id: "home_organizing", icon: Leaf, title: "Home organizing", description: "Organizzazione professionale spazi" },
+    ],
+  },
+  {
+    title: "🐾 Animali",
+    services: [
+      { id: "dog_walking", icon: Dog, title: "Dog walking", description: "Passeggiate con il cane" },
+      { id: "pet_care_travel", icon: PawPrint, title: "Cura animali", description: "Cura animali in casa durante viaggi" },
+      { id: "pet_space_cleaning", icon: Trash2, title: "Pulizia spazi", description: "Pulizia lettiere e spazi animali" },
+    ],
+  },
 ];
 
 export default function ClientHome() {
@@ -57,32 +72,36 @@ export default function ClientHome() {
           description="Tutti i nostri professionisti sono verificati e assicurati"
         />
 
-        {/* Services Grid */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Servizi</h2>
-            <button 
-              className="text-sm text-primary font-medium"
-              onClick={() => navigate("/client/search")}
-            >
-              Vedi tutti
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {services.slice(0, 4).map((service) => (
-              <div
-                key={service.id}
-                onClick={() => navigate(`/client/search?service=${service.id}`)}
-                className="service-card flex flex-col items-center text-center p-4 cursor-pointer"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                  <service.icon className="h-6 w-6 text-primary" />
+        {/* Services by Category */}
+        {serviceCategories.map((category) => (
+          <section key={category.title}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">{category.title}</h2>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {category.services.slice(0, 4).map((service) => (
+                <div
+                  key={service.id}
+                  onClick={() => navigate(`/client/search?service=${service.id}`)}
+                  className="service-card flex flex-col items-center text-center p-4 cursor-pointer"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <service.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="font-medium text-sm">{service.title}</h3>
                 </div>
-                <h3 className="font-medium text-sm">{service.title}</h3>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+            {category.services.length > 4 && (
+              <button
+                className="text-sm text-primary font-medium mt-2 w-full text-center"
+                onClick={() => navigate("/client/search")}
+              >
+                Vedi tutti i servizi →
+              </button>
+            )}
+          </section>
+        ))}
 
         {/* Featured Professionals */}
         <section>
