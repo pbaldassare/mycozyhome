@@ -34,6 +34,7 @@ import {
   ChevronLeft,
   Star,
   Filter,
+  Heart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -48,6 +49,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
 import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
+import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -109,6 +111,7 @@ export default function ProfessionalBookings() {
   const [reviewBooking, setReviewBooking] = useState<any>(null);
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const createClientReview = useCreateClientReview();
+  const { isFavorite, toggleFavorite } = useProfessionalFavorites();
 
   // Get unique service types from bookings
   const availableServiceTypes = useMemo(() => {
@@ -196,20 +199,38 @@ export default function ProfessionalBookings() {
                 </div>
               </div>
             </div>
-            <Badge
-              variant="secondary"
-              className={cn(
-                booking.status === "confirmed" && "bg-success/10 text-success",
-                booking.status === "pending" && "bg-warning/10 text-warning",
-                booking.status === "completed" && "bg-primary/10 text-primary",
-                booking.status === "cancelled" && "bg-destructive/10 text-destructive"
-              )}
-            >
-              {booking.status === "confirmed" && "Confermato"}
-              {booking.status === "pending" && "In attesa"}
-              {booking.status === "completed" && "Completato"}
-              {booking.status === "cancelled" && "Annullato"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(booking.client_id);
+                }}
+                className="p-1 hover:bg-muted rounded-full transition-colors"
+              >
+                <Heart
+                  className={cn(
+                    "h-4 w-4",
+                    isFavorite(booking.client_id)
+                      ? "fill-destructive text-destructive"
+                      : "text-muted-foreground"
+                  )}
+                />
+              </button>
+              <Badge
+                variant="secondary"
+                className={cn(
+                  booking.status === "confirmed" && "bg-success/10 text-success",
+                  booking.status === "pending" && "bg-warning/10 text-warning",
+                  booking.status === "completed" && "bg-primary/10 text-primary",
+                  booking.status === "cancelled" && "bg-destructive/10 text-destructive"
+                )}
+              >
+                {booking.status === "confirmed" && "Confermato"}
+                {booking.status === "pending" && "In attesa"}
+                {booking.status === "completed" && "Completato"}
+                {booking.status === "cancelled" && "Annullato"}
+              </Badge>
+            </div>
           </div>
 
           {/* Booking details */}

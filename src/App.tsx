@@ -63,6 +63,7 @@ import Login from "@/pages/Login";
 import Install from "@/pages/Install";
  import ProfessionalTutorial from "@/pages/professional/Tutorial";
 import ProfessionalSupport from "@/pages/professional/Support";
+import ProfessionalFavoriteClients from "@/pages/professional/FavoriteClients";
 import NotFound from "./pages/NotFound";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
 
@@ -147,6 +148,7 @@ const App = () => (
           <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
            <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
           <Route path="/professional/support" element={<ProfessionalSupport />} />
+          <Route path="/professional/profile/favorite-clients" element={<ProfessionalFavoriteClients />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
