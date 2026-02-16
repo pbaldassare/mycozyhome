@@ -97,6 +97,7 @@ export default function SupportCenter() {
   const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
   const [newChat, setNewChat] = useState({ subject: "", description: "", category: "other", priority: "normal" });
   const [isCreating, setIsCreating] = useState(false);
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
 
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
@@ -113,6 +114,32 @@ export default function SupportCenter() {
 
     if (!error && data) {
       setTickets(data);
+
+      // Load user names for all tickets
+      const userIds = [...new Set(data.map((t) => t.user_id))];
+      const names: Record<string, string> = {};
+
+      // Fetch client names
+      const { data: clients } = await supabase
+        .from("client_profiles")
+        .select("user_id, first_name, last_name")
+        .in("user_id", userIds);
+      (clients || []).forEach((c) => {
+        const name = [c.first_name, c.last_name].filter(Boolean).join(" ");
+        if (name) names[c.user_id] = name;
+      });
+
+      // Fetch professional names
+      const { data: pros } = await supabase
+        .from("professionals")
+        .select("user_id, first_name, last_name")
+        .in("user_id", userIds);
+      (pros || []).forEach((p) => {
+        const name = [p.first_name, p.last_name].filter(Boolean).join(" ");
+        if (name) names[p.user_id] = name;
+      });
+
+      setUserNames(names);
     }
     setIsLoading(false);
   }
@@ -481,7 +508,7 @@ export default function SupportCenter() {
                           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3" />
-                              {ticket.user_type === "client" ? "Cliente" : "Professionista"}
+                              {userNames[ticket.user_id] || (ticket.user_type === "client" ? "Cliente" : "Professionista")}
                             </span>
                             <span>
                               {formatDistanceToNow(new Date(ticket.created_at), {
