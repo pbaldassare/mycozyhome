@@ -5,7 +5,7 @@ import {
   UserCheck,
   Briefcase,
   Calendar,
-  MessageSquareWarning,
+  
   CreditCard,
   Settings,
   LogOut,
@@ -24,7 +24,6 @@ const navItems = [
   { icon: Users, label: "Clienti", path: "/admin/clients" },
   { icon: Briefcase, label: "Servizi", path: "/admin/services" },
   { icon: Calendar, label: "Prenotazioni", path: "/admin/bookings" },
-  { icon: MessageSquareWarning, label: "Segnalazioni", path: "/admin/disputes" },
   { icon: HelpCircle, label: "Assistenza", path: "/admin/support" },
   { icon: CreditCard, label: "Pagamenti", path: "/admin/payments" },
   { icon: Settings, label: "Impostazioni", path: "/admin/settings" },
