@@ -55,11 +55,13 @@ import ClientSettings from "@/pages/client/profile/Settings";
 import ClientFavorites from "@/pages/client/profile/Favorites";
 import ClientPromotions from "@/pages/client/Promotions";
 import SafetyCenter from "@/pages/client/SafetyCenter";
+import ClientSupport from "@/pages/client/Support";
  import ClientOnboarding from "@/pages/client/Onboarding";
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
 import Install from "@/pages/Install";
  import ProfessionalTutorial from "@/pages/professional/Tutorial";
+import ProfessionalSupport from "@/pages/professional/Support";
 import NotFound from "./pages/NotFound";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
 
@@ -104,6 +106,7 @@ const App = () => (
           <Route path="/client/dispute" element={<ClientDispute />} />
           <Route path="/client/promotions" element={<ClientPromotions />} />
           <Route path="/client/safety" element={<SafetyCenter />} />
+          <Route path="/client/support" element={<ClientSupport />} />
            <Route path="/client/onboarding" element={<ClientOnboarding />} />
           
           {/* Admin Routes */}
@@ -141,6 +144,7 @@ const App = () => (
           <Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
           <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
            <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
+          <Route path="/professional/support" element={<ProfessionalSupport />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
