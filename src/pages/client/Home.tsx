@@ -65,6 +65,22 @@ export default function ClientHome() {
           </button>
         </div>
 
+        {/* Pubblica inserzione */}
+        <div
+          className="p-4 rounded-xl border bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors"
+          onClick={() => navigate("/client/service-requests")}
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Sparkles className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold">Pubblica una richiesta</h3>
+              <p className="text-sm text-muted-foreground">Ricevi offerte dai professionisti</p>
+            </div>
+          </div>
+        </div>
+
         {/* Trust Indicator */}
         <TrustIndicator
           type="secure"
