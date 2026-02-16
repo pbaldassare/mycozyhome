@@ -260,6 +260,7 @@ export default function SupportCenter() {
       <AdminTicketChat
         ticket={selectedTicket}
         adminId={user.id}
+        userName={userNames[selectedTicket.user_id]}
         onBack={() => {
           setSelectedTicket(null);
           loadTickets();
@@ -535,11 +536,13 @@ export default function SupportCenter() {
 function AdminTicketChat({
   ticket,
   adminId,
+  userName,
   onBack,
   onStatusChange,
 }: {
   ticket: SupportTicket;
   adminId: string;
+  userName?: string;
   onBack: () => void;
   onStatusChange: (status: string) => void;
 }) {
@@ -594,7 +597,7 @@ function AdminTicketChat({
               {categoryLabels[ticket.category] || ticket.category}
             </Badge>
             <Badge variant="outline">
-              {ticket.user_type === "client" ? "Cliente" : "Professionista"}
+              {userName || (ticket.user_type === "client" ? "Cliente" : "Professionista")}
             </Badge>
             <Badge className={cn(priorityConfig[ticket.priority]?.className)}>
               {priorityConfig[ticket.priority]?.label}
