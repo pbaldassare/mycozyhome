@@ -5,6 +5,8 @@ import {
   Shield, Award, Briefcase 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getProfessionalLevel } from "@/lib/professional-level";
+import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/client/AppHeader";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -111,6 +113,12 @@ export default function ProfessionalDetail() {
   const minHourlyRate = services?.length 
     ? Math.min(...services.map(s => s.hourly_rate)) 
     : null;
+  const levelInfo = getProfessionalLevel(
+    professional.average_rating || 0,
+    professional.years_experience || 0,
+    professional.review_count || 0
+  );
+  const LevelIcon = levelInfo.icon;
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -162,6 +170,10 @@ export default function ProfessionalDetail() {
 
         {/* Trust Badges */}
         <div className="flex gap-2 mt-4 overflow-x-auto pb-1">
+          <Badge variant="secondary" className={cn("flex items-center gap-1 whitespace-nowrap", levelInfo.bgClass, levelInfo.colorClass, "border-0")}>
+            <LevelIcon className="h-3 w-3" />
+            {levelInfo.label}
+          </Badge>
           <Badge variant="secondary" className="flex items-center gap-1 whitespace-nowrap">
             <Shield className="h-3 w-3" />
             Verificato

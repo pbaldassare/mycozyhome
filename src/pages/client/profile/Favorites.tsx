@@ -64,6 +64,7 @@ export default function Favorites() {
           avatarUrl: pro.avatar_url,
           rating: pro.average_rating || 0,
           reviewCount: pro.review_count || 0,
+          yearsExperience: pro.years_experience || 0,
           distance: pro.city,
           services: proServices.map((s) => serviceTypeLabels[s.service_type] || s.service_type),
           hourlyRate: minRate,
@@ -94,6 +95,7 @@ export default function Favorites() {
                 avatarUrl={pro.avatarUrl || undefined}
                 rating={pro.rating}
                 reviewCount={pro.reviewCount}
+                yearsExperience={pro.yearsExperience}
                 distance={pro.distance}
                 services={pro.services}
                 hourlyRate={pro.hourlyRate || undefined}

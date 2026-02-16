@@ -38,7 +38,7 @@ export function useFeaturedProfessionals(limit = 5) {
       const { data, error } = await supabase
         .from("professionals")
         .select(`
-          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio,
+          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio, years_experience,
           professional_services(service_type, hourly_rate)
         `)
         .eq("status", "approved")
@@ -52,6 +52,7 @@ export function useFeaturedProfessionals(limit = 5) {
         name: `${pro.first_name} ${pro.last_name}`,
         rating: pro.average_rating || 0,
         reviewCount: pro.review_count || 0,
+        yearsExperience: pro.years_experience || 0,
         distance: "N/A", // Would need geo calculation
         services: pro.professional_services?.map(s => serviceTypeLabels[s.service_type] || s.service_type) || [],
         hourlyRate: pro.professional_services?.[0]?.hourly_rate || 0,
@@ -88,7 +89,7 @@ export function useSearchProfessionals(
       let query = supabase
         .from("professionals")
         .select(`
-          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio, latitude, longitude,
+          id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio, latitude, longitude, years_experience,
           professional_services(service_type, hourly_rate)
         `)
         .eq("status", "approved");
@@ -117,6 +118,7 @@ export function useSearchProfessionals(
           name: `${pro.first_name} ${pro.last_name}`,
           rating: pro.average_rating || 0,
           reviewCount: pro.review_count || 0,
+          yearsExperience: pro.years_experience || 0,
           distance,
           distanceKm,
           services: pro.professional_services?.map(s => serviceTypeLabels[s.service_type] || s.service_type) || [],

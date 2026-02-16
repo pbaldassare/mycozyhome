@@ -27,6 +27,7 @@ import {
   useUpdateBookingStatus,
 } from "@/hooks/useProfessionalData";
 import { useAuth } from "@/hooks/useAuth";
+import { getProfessionalLevel } from "@/lib/professional-level";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -98,6 +99,13 @@ export default function ProfessionalHome() {
     updateStatus.mutate({ bookingId, status: "cancelled" });
   };
 
+  const levelInfo = getProfessionalLevel(
+    professional.average_rating || 0,
+    professional.years_experience || 0,
+    professional.review_count || 0
+  );
+  const LevelIcon = levelInfo.icon;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -105,7 +113,13 @@ export default function ProfessionalHome() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-primary-foreground/80 text-sm">Bentornato,</p>
-            <h1 className="text-xl font-bold">{professional.first_name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold">{professional.first_name}</h1>
+              <span className={cn("inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-semibold", levelInfo.bgClass, levelInfo.colorClass)}>
+                <LevelIcon className="h-3.5 w-3.5" />
+                {levelInfo.label}
+              </span>
+            </div>
           </div>
           <Button
             variant="ghost"

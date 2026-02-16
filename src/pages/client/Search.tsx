@@ -195,6 +195,7 @@ export default function ClientSearch() {
                     name={pro.name}
                     rating={pro.rating}
                     reviewCount={pro.reviewCount}
+                    yearsExperience={pro.yearsExperience}
                     distance={pro.distance}
                     services={pro.services}
                     hourlyRate={pro.hourlyRate}
