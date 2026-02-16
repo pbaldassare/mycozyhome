@@ -66,7 +66,6 @@ const statusConfig: Record<string, { label: string; className: string; icon: any
   open: { label: "Aperto", className: "bg-warning/10 text-warning", icon: Clock },
   in_progress: { label: "In corso", className: "bg-primary/10 text-primary", icon: MessageSquare },
   resolved: { label: "Risolto", className: "bg-success/10 text-success", icon: CheckCircle },
-  closed: { label: "Chiuso", className: "bg-muted text-muted-foreground", icon: CheckCircle },
 };
 
 const priorityConfig: Record<string, { label: string; className: string }> = {
@@ -159,20 +158,17 @@ export default function SupportCenter() {
       ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (activeTab === "all") return matchesSearch;
-    if (activeTab === "reports") return matchesSearch && ticket.category === "report";
-    if (activeTab === "open") return matchesSearch && ticket.status === "open" && ticket.category !== "report";
+    if (activeTab === "open") return matchesSearch && ticket.status === "open";
     if (activeTab === "in_progress") return matchesSearch && ticket.status === "in_progress";
-    if (activeTab === "resolved") return matchesSearch && (ticket.status === "resolved" || ticket.status === "closed");
+    if (activeTab === "resolved") return matchesSearch && ticket.status === "resolved";
     return matchesSearch;
   });
 
   const counts = {
     all: tickets.length,
-    reports: tickets.filter((t) => t.category === "report").length,
-    open: tickets.filter((t) => t.status === "open" && t.category !== "report").length,
+    open: tickets.filter((t) => t.status === "open").length,
     in_progress: tickets.filter((t) => t.status === "in_progress").length,
-    resolved: tickets.filter((t) => t.status === "resolved" || t.status === "closed").length,
+    resolved: tickets.filter((t) => t.status === "resolved").length,
   };
 
   // Show chat view when ticket is selected
@@ -194,7 +190,7 @@ export default function SupportCenter() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Centro Assistenza e Segnalazioni</h1>
+          <h1 className="text-3xl font-bold">Segnalazioni</h1>
           <p className="text-muted-foreground mt-1">
             Gestisci le richieste di supporto e le segnalazioni da professionisti e clienti
           </p>
@@ -282,13 +278,13 @@ export default function SupportCenter() {
         </Dialog>
       </div>
 
-      {tickets.some((t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed") && (
+      {tickets.some((t) => t.priority === "urgent" && t.status !== "resolved") && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0" />
           <div>
             <p className="font-medium text-destructive">Ticket urgenti in attesa</p>
             <p className="text-sm text-muted-foreground">
-              {tickets.filter((t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed").length}{" "}
+              {tickets.filter((t) => t.priority === "urgent" && t.status !== "resolved").length}{" "}
               ticket richiedono attenzione immediata
             </p>
           </div>
@@ -310,14 +306,6 @@ export default function SupportCenter() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">Tutti ({counts.all})</TabsTrigger>
-          <TabsTrigger value="reports" className="gap-2">
-            Segnalazioni
-            {counts.reports > 0 && (
-              <span className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
-                {counts.reports}
-              </span>
-            )}
-          </TabsTrigger>
           <TabsTrigger value="open" className="gap-2">
             Aperti
             <span className="bg-warning text-warning-foreground text-xs px-1.5 py-0.5 rounded-full">
@@ -349,7 +337,7 @@ export default function SupportCenter() {
                     key={ticket.id}
                     className={cn(
                       "p-4 rounded-xl border bg-card cursor-pointer hover:border-primary/50 transition-colors",
-                      ticket.priority === "urgent" && ticket.status !== "resolved" && ticket.status !== "closed"
+                      ticket.priority === "urgent" && ticket.status !== "resolved"
                         ? "border-destructive/50"
                         : ""
                     )}
@@ -482,7 +470,6 @@ function AdminTicketChat({
             <SelectItem value="open">Aperto</SelectItem>
             <SelectItem value="in_progress">In corso</SelectItem>
             <SelectItem value="resolved">Risolto</SelectItem>
-            <SelectItem value="closed">Chiuso</SelectItem>
           </SelectContent>
         </Select>
       </div>
