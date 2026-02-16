@@ -104,6 +104,7 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          average_rating: number | null
           city: string | null
           created_at: string
           email: string | null
@@ -115,12 +116,14 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           province: string | null
+          review_count: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           city?: string | null
           created_at?: string
           email?: string | null
@@ -132,12 +135,14 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          review_count?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
+          average_rating?: number | null
           city?: string | null
           created_at?: string
           email?: string | null
@@ -149,10 +154,59 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          review_count?: number | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      client_reviews: {
+        Row: {
+          booking_id: string
+          client_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          professional_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          client_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          client_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          professional_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
