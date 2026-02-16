@@ -19,7 +19,7 @@ export default function Welcome() {
       {/* Content Section */}
       <div className="flex-1 flex flex-col items-center px-6 pt-10 pb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">
-          Benvenuto su CasaFacile
+          Benvenuto su MyCozyHome
         </h1>
         <p className="text-center text-muted-foreground text-lg max-w-md mb-10">
           Trova professionisti affidabili per la pulizia della tua casa e le tue esigenze domestiche. Garantiamo intermediazione sicura e servizio di qualità.

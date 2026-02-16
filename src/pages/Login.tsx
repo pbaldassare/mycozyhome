@@ -107,7 +107,7 @@ export default function Login() {
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
             <Home className="w-4 h-4" />
           </div>
-          <span className="font-display font-semibold">CasaFacile</span>
+          <span className="font-display font-semibold">MyCozyHome</span>
         </div>
       </header>
 
@@ -118,7 +118,7 @@ export default function Login() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold mb-2">Bentornato!</h1>
             <p className="text-muted-foreground">
-              Accedi al tuo account CasaFacile
+              Accedi al tuo account MyCozyHome
             </p>
           </div>
 

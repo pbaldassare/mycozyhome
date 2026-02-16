@@ -21,7 +21,7 @@
            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
              <Home className="w-4 h-4" />
            </div>
-           <span className="font-display font-semibold">CasaFacile</span>
+           <span className="font-display font-semibold">MyCozyHome</span>
          </div>
        </header>
  
@@ -33,7 +33,7 @@
          >
            {/* Slide 1: Welcome */}
            <OnboardingSlide
-             title="Benvenuto su CasaFacile"
+             title="Benvenuto su MyCozyHome"
              description="Trova professionisti affidabili per la pulizia e i servizi domestici nella tua zona."
              illustration={
                <div className="w-48 h-48 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center">
@@ -68,7 +68,7 @@
  
            {/* Slide 4: Benefits */}
            <OnboardingSlide
-             title="Perché Scegliere CasaFacile"
+             title="Perché Scegliere MyCozyHome"
              features={[
                { icon: "⏰", text: "Risparmia tempo prezioso - noi troviamo il professionista giusto" },
                { icon: "💯", text: "Qualità garantita con professionisti selezionati" },

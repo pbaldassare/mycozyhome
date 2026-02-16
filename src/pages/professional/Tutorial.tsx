@@ -21,7 +21,7 @@
            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
              <Home className="w-4 h-4" />
            </div>
-           <span className="font-display font-semibold">CasaFacile Pro</span>
+           <span className="font-display font-semibold">MyCozyHome Pro</span>
          </div>
        </header>
  
@@ -33,7 +33,7 @@
          >
            {/* Slide 1: Welcome */}
            <OnboardingSlide
-             title="Benvenuto in CasaFacile Pro"
+             title="Benvenuto in MyCozyHome Pro"
              description="Inizia a guadagnare offrendo i tuoi servizi domestici a clienti verificati nella tua zona."
              illustration={
                <div className="w-48 h-48 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center">

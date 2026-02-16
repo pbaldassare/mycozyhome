@@ -29,7 +29,7 @@ export default function Install() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">App Installata!</h1>
           <p className="text-muted-foreground">
-            CasaFacile è già installata sul tuo dispositivo.
+            MyCozyHome è già installata sul tuo dispositivo.
           </p>
           <Button onClick={() => navigate("/client")} className="mt-4">
             Vai all'App
@@ -64,7 +64,7 @@ export default function Install() {
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground">
-              Installa CasaFacile
+              Installa MyCozyHome
             </h2>
             <p className="text-muted-foreground mt-2">
               Aggiungi l'app alla schermata Home per un accesso rapido e un'esperienza migliore.

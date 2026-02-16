@@ -131,7 +131,7 @@ export default function ClientAuth() {
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
             <Home className="w-4 h-4" />
           </div>
-          <span className="font-display font-semibold">CasaFacile</span>
+          <span className="font-display font-semibold">MyCozyHome</span>
         </div>
       </header>
 

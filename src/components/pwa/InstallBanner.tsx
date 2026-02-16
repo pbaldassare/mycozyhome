@@ -72,7 +72,7 @@ export function InstallBanner() {
           </div>
           
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-foreground">Installa CasaFacile</p>
+            <p className="font-semibold text-foreground">Installa MyCozyHome</p>
             <p className="text-sm text-muted-foreground mt-0.5">
               Aggiungi alla Home per un'esperienza migliore
             </p>
