@@ -28,7 +28,6 @@ const serviceOptions: ServiceOption[] = [
   { id: "office_cleaning", label: "Pulizia uffici" },
   { id: "ironing", label: "Stiratura" },
   { id: "sanitization", label: "Sanificazione" },
-  { id: "babysitter", label: "Babysitter" },
   { id: "dog_sitter", label: "Dog sitter" },
 ];
 

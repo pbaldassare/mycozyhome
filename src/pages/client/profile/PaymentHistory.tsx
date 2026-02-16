@@ -41,7 +41,7 @@ const mockPayments: Payment[] = [
     date: "15 Gen 2026",
     amount: 25,
     status: "failed",
-    description: "Babysitter - 2.5 ore",
+    description: "Dog sitter - 2.5 ore",
     professionalName: "Lucia Bianchi",
   },
 ];

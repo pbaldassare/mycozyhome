@@ -59,7 +59,7 @@ const payments: Payment[] = [
     net: 45,
     from: "Giulia Romano",
     to: "Francesca Neri",
-    service: "Babysitter",
+    service: "Dog sitter",
     status: "completed",
     date: "3 Feb 2026, 20:15",
   },

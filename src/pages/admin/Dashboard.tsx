@@ -28,7 +28,7 @@ const pendingProfessionals: Professional[] = [
     id: "2",
     name: "Giuseppe Verdi",
     email: "giuseppe.v@email.com",
-    services: ["babysitter"],
+    services: ["dog_sitter"],
     city: "Roma",
     status: "pending",
     documentsCount: 5,

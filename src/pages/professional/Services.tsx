@@ -32,7 +32,6 @@ const serviceImages: Record<string, string> = {
   office_cleaning: serviceCleaningImg,
   ironing: serviceIroningImg,
   sanitization: serviceCleaningImg,
-  babysitter: servicePetsitterImg,
   dog_sitter: servicePetsitterImg,
 };
 
@@ -41,7 +40,6 @@ const serviceTypeLabels: Record<string, string> = {
   office_cleaning: "Pulizie ufficio",
   ironing: "Stiro",
   sanitization: "Sanificazione",
-  babysitter: "Babysitter",
   dog_sitter: "Dog sitter",
 };
 

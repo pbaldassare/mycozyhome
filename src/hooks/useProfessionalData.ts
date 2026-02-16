@@ -308,7 +308,7 @@ export function useAddService() {
     }) => {
       const { error } = await supabase.from("professional_services").insert({
         professional_id: professionalId,
-        service_type: data.service_type as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "babysitter" | "dog_sitter",
+        service_type: data.service_type as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "dog_sitter",
         hourly_rate: data.hourly_rate,
         description: data.description,
         min_hours: data.min_hours,

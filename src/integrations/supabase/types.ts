@@ -915,7 +915,6 @@ export type Database = {
         | "office_cleaning"
         | "ironing"
         | "sanitization"
-        | "babysitter"
         | "dog_sitter"
         | "wardrobe_seasonal"
         | "decluttering"
@@ -1067,7 +1066,6 @@ export const Constants = {
         "office_cleaning",
         "ironing",
         "sanitization",
-        "babysitter",
         "dog_sitter",
         "wardrobe_seasonal",
         "decluttering",
