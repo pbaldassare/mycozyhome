@@ -24,7 +24,6 @@ const serviceTypeLabels: Record<string, string> = {
   office_cleaning: "Pulizie ufficio",
   ironing: "Stiro",
   sanitization: "Sanificazione",
-  babysitter: "Babysitter",
   dog_sitter: "Dog sitter",
 };
 
@@ -33,7 +32,6 @@ const allServiceTypes = [
   "office_cleaning",
   "ironing",
   "sanitization",
-  "babysitter",
   "dog_sitter",
 ] as const;
 

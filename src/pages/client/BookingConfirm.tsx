@@ -22,7 +22,6 @@ const serviceTypeLabels: Record<string, string> = {
   office_cleaning: "Pulizie ufficio",
   ironing: "Stiro",
   sanitization: "Sanificazione",
-  babysitter: "Babysitter",
   dog_sitter: "Dog sitter",
 };
 
@@ -71,7 +70,7 @@ export default function BookingConfirm() {
         .from("professional_services")
         .select("*")
         .eq("professional_id", professionalId!)
-        .eq("service_type", serviceType as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "babysitter" | "dog_sitter")
+        .eq("service_type", serviceType as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "dog_sitter")
         .single();
       
       if (error) throw error;

@@ -5,7 +5,7 @@ import {
   Building2,
   Shirt,
   ShieldCheck,
-  Baby,
+  
   Dog,
   Edit,
 } from "lucide-react";
@@ -60,16 +60,6 @@ const services: Service[] = [
     isActive: true,
     professionalsCount: 12,
     bookingsThisMonth: 23,
-  },
-  {
-    id: "babysitter",
-    name: "Babysitter",
-    icon: Baby,
-    description: "Assistenza bambini a domicilio",
-    isActive: true,
-    professionalsCount: 28,
-    bookingsThisMonth: 134,
-    requirements: ["Certificato primo soccorso", "Esperienza minima 2 anni"],
   },
   {
     id: "dog_sitter",

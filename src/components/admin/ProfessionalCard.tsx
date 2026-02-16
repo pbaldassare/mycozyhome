@@ -37,7 +37,6 @@ const serviceLabels: Record<string, string> = {
   office_cleaning: "Pulizia Uffici",
   ironing: "Stiratura",
   sanitization: "Sanificazione",
-  babysitter: "Babysitter",
   dog_sitter: "Dog Sitter",
 };
 
