@@ -123,12 +123,12 @@ export default function ServiceBoard() {
               className="pl-9"
             />
           </div>
-          <Select value={serviceFilter} onValueChange={setServiceFilter}>
+          <Select value={serviceFilter || "all"} onValueChange={(v) => setServiceFilter(v === "all" ? "" : v)}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Servizio" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tutti</SelectItem>
+              <SelectItem value="all">Tutti</SelectItem>
               {serviceOptions.map((s) => (
                 <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
               ))}
