@@ -115,7 +115,8 @@ export default function SupportCenter() {
       ticket.description.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "open") return matchesSearch && ticket.status === "open";
+    if (activeTab === "reports") return matchesSearch && ticket.category === "report";
+    if (activeTab === "open") return matchesSearch && ticket.status === "open" && ticket.category !== "report";
     if (activeTab === "in_progress") return matchesSearch && ticket.status === "in_progress";
     if (activeTab === "resolved") return matchesSearch && (ticket.status === "resolved" || ticket.status === "closed");
     return matchesSearch;
@@ -123,7 +124,8 @@ export default function SupportCenter() {
 
   const counts = {
     all: tickets.length,
-    open: tickets.filter((t) => t.status === "open").length,
+    reports: tickets.filter((t) => t.category === "report").length,
+    open: tickets.filter((t) => t.status === "open" && t.category !== "report").length,
     in_progress: tickets.filter((t) => t.status === "in_progress").length,
     resolved: tickets.filter((t) => t.status === "resolved" || t.status === "closed").length,
   };
@@ -146,9 +148,9 @@ export default function SupportCenter() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Centro Assistenza</h1>
+        <h1 className="text-3xl font-bold">Centro Assistenza e Segnalazioni</h1>
         <p className="text-muted-foreground mt-1">
-          Gestisci le richieste di supporto da professionisti e clienti
+          Gestisci le richieste di supporto e le segnalazioni da professionisti e clienti
         </p>
       </div>
 
@@ -180,6 +182,14 @@ export default function SupportCenter() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="all">Tutti ({counts.all})</TabsTrigger>
+          <TabsTrigger value="reports" className="gap-2">
+            Segnalazioni
+            {counts.reports > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-xs px-1.5 py-0.5 rounded-full">
+                {counts.reports}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="open" className="gap-2">
             Aperti
             <span className="bg-warning text-warning-foreground text-xs px-1.5 py-0.5 rounded-full">
