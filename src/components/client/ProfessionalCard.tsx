@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
+import { getProfessionalLevel } from "@/lib/professional-level";
 
 interface ProfessionalCardProps {
   id?: string;
@@ -10,6 +11,7 @@ interface ProfessionalCardProps {
   avatarUrl?: string;
   rating?: number;
   reviewCount?: number;
+  yearsExperience?: number;
   distance?: string;
   services: string[];
   hourlyRate?: number;
@@ -25,6 +27,7 @@ export function ProfessionalCard({
   avatarUrl,
   rating = 0,
   reviewCount = 0,
+  yearsExperience = 0,
   distance,
   services,
   hourlyRate,
@@ -38,6 +41,9 @@ export function ProfessionalCard({
     .map((n) => n[0])
     .join("")
     .toUpperCase();
+
+  const levelInfo = getProfessionalLevel(rating, yearsExperience, reviewCount);
+  const LevelIcon = levelInfo.icon;
 
   return (
     <button
@@ -64,6 +70,10 @@ export function ProfessionalCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-foreground truncate">{name}</h3>
+          <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0", levelInfo.bgClass, levelInfo.colorClass)}>
+            <LevelIcon className="h-3 w-3" />
+            {levelInfo.label}
+          </span>
         </div>
 
         <div className="flex items-center gap-3 mt-1">
