@@ -798,6 +798,151 @@ export type Database = {
           },
         ]
       }
+      service_offers: {
+        Row: {
+          booking_id: string | null
+          client_accepted_at: string | null
+          created_at: string
+          estimated_hours: number | null
+          hourly_rate: number | null
+          id: string
+          message: string | null
+          price_type: string
+          professional_confirmed_at: string | null
+          professional_id: string
+          request_id: string
+          status: string
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id?: string | null
+          client_accepted_at?: string | null
+          created_at?: string
+          estimated_hours?: number | null
+          hourly_rate?: number | null
+          id?: string
+          message?: string | null
+          price_type?: string
+          professional_confirmed_at?: string | null
+          professional_id: string
+          request_id: string
+          status?: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string | null
+          client_accepted_at?: string | null
+          created_at?: string
+          estimated_hours?: number | null
+          hourly_rate?: number | null
+          id?: string
+          message?: string | null
+          price_type?: string
+          professional_confirmed_at?: string | null
+          professional_id?: string
+          request_id?: string
+          status?: string
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_offers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_offers_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_offers_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "service_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_requests: {
+        Row: {
+          address: string
+          budget_max: number | null
+          budget_min: number | null
+          city: string
+          client_id: string
+          created_at: string
+          description: string
+          estimated_hours: number | null
+          flexible_dates: boolean | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          offers_count: number | null
+          preferred_date: string | null
+          preferred_time_end: string | null
+          preferred_time_start: string | null
+          province: string | null
+          service_type: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          budget_max?: number | null
+          budget_min?: number | null
+          city: string
+          client_id: string
+          created_at?: string
+          description: string
+          estimated_hours?: number | null
+          flexible_dates?: boolean | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          offers_count?: number | null
+          preferred_date?: string | null
+          preferred_time_end?: string | null
+          preferred_time_start?: string | null
+          province?: string | null
+          service_type: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          budget_max?: number | null
+          budget_min?: number | null
+          city?: string
+          client_id?: string
+          created_at?: string
+          description?: string
+          estimated_hours?: number | null
+          flexible_dates?: boolean | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          offers_count?: number | null
+          preferred_date?: string | null
+          preferred_time_end?: string | null
+          preferred_time_start?: string | null
+          province?: string | null
+          service_type?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null

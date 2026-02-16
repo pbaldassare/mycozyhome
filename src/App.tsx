@@ -63,6 +63,11 @@ import Install from "@/pages/Install";
  import ProfessionalTutorial from "@/pages/professional/Tutorial";
 import ProfessionalSupport from "@/pages/professional/Support";
 import ProfessionalFavoriteClients from "@/pages/professional/FavoriteClients";
+import ServiceBoard from "@/pages/professional/ServiceBoard";
+import MyOffers from "@/pages/professional/MyOffers";
+import ClientServiceRequests from "@/pages/client/ServiceRequests";
+import ServiceRequestNew from "@/pages/client/ServiceRequestNew";
+import ServiceRequestDetail from "@/pages/client/ServiceRequestDetail";
 import NotFound from "./pages/NotFound";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
 
@@ -110,6 +115,9 @@ const App = () => (
           <Route path="/client/safety" element={<SafetyCenter />} />
           <Route path="/client/support" element={<ClientSupport />} />
            <Route path="/client/onboarding" element={<ClientOnboarding />} />
+          <Route path="/client/service-requests" element={<ClientServiceRequests />} />
+          <Route path="/client/service-requests/new" element={<ServiceRequestNew />} />
+          <Route path="/client/service-requests/:id" element={<ServiceRequestDetail />} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -147,6 +155,8 @@ const App = () => (
            <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
           <Route path="/professional/support" element={<ProfessionalSupport />} />
           <Route path="/professional/profile/favorite-clients" element={<ProfessionalFavoriteClients />} />
+          <Route path="/professional/service-board" element={<ServiceBoard />} />
+          <Route path="/professional/my-offers" element={<MyOffers />} />
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
