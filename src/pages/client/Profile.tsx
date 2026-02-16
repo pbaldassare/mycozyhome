@@ -6,6 +6,7 @@ import {
   Settings,
   Shield,
   Star,
+  MessageSquareQuote,
   User,
   Bell,
   FileText,
@@ -182,6 +183,12 @@ export default function ClientProfile() {
               icon={Star}
               label="Le mie recensioni"
               onClick={() => navigate("/client/profile/reviews")}
+            />
+            <Separator />
+            <MenuItem
+              icon={MessageSquareQuote}
+              label="Recensioni ricevute"
+              onClick={() => navigate("/client/profile/received-reviews")}
             />
           </div>
         </div>
