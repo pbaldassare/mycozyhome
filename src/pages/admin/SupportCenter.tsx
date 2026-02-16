@@ -12,6 +12,7 @@ import {
   X,
   Loader2,
   ArrowLeft,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
@@ -73,6 +82,17 @@ export default function SupportCenter() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNewTicketDialog, setShowNewTicketDialog] = useState(false);
+  const [newTicket, setNewTicket] = useState({
+    user_id: "",
+    user_type: "client" as string,
+    category: "other" as string,
+    subject: "",
+    description: "",
+    priority: "normal" as string,
+  });
+  const [isCreating, setIsCreating] = useState(false);
+
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
 
   useEffect(() => {
@@ -107,6 +127,31 @@ export default function SupportCenter() {
       }
       toast({ title: "Stato aggiornato" });
     }
+  }
+
+  async function handleCreateTicket() {
+    if (!newTicket.user_id.trim() || !newTicket.subject.trim() || !newTicket.description.trim()) {
+      toast({ title: "Errore", description: "Compila tutti i campi obbligatori", variant: "destructive" });
+      return;
+    }
+    setIsCreating(true);
+    const { error } = await supabase.from("support_tickets").insert({
+      user_id: newTicket.user_id.trim(),
+      user_type: newTicket.user_type,
+      category: newTicket.category,
+      subject: newTicket.subject.trim(),
+      description: newTicket.description.trim(),
+      priority: newTicket.priority,
+    });
+    if (error) {
+      toast({ title: "Errore", description: "Impossibile creare il ticket. Verifica l'ID utente.", variant: "destructive" });
+    } else {
+      toast({ title: "Ticket creato" });
+      setShowNewTicketDialog(false);
+      setNewTicket({ user_id: "", user_type: "client", category: "other", subject: "", description: "", priority: "normal" });
+      loadTickets();
+    }
+    setIsCreating(false);
   }
 
   const filteredTickets = tickets.filter((ticket) => {
@@ -147,11 +192,94 @@ export default function SupportCenter() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Centro Assistenza e Segnalazioni</h1>
-        <p className="text-muted-foreground mt-1">
-          Gestisci le richieste di supporto e le segnalazioni da professionisti e clienti
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Centro Assistenza e Segnalazioni</h1>
+          <p className="text-muted-foreground mt-1">
+            Gestisci le richieste di supporto e le segnalazioni da professionisti e clienti
+          </p>
+        </div>
+        <Dialog open={showNewTicketDialog} onOpenChange={setShowNewTicketDialog}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nuovo ticket
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Crea ticket per conto di un utente</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <label className="text-sm font-medium mb-1 block">ID Utente *</label>
+                <Input
+                  value={newTicket.user_id}
+                  onChange={(e) => setNewTicket((p) => ({ ...p, user_id: e.target.value }))}
+                  placeholder="UUID dell'utente"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tipo utente</label>
+                  <Select value={newTicket.user_type} onValueChange={(v) => setNewTicket((p) => ({ ...p, user_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="client">Cliente</SelectItem>
+                      <SelectItem value="professional">Professionista</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Categoria</label>
+                  <Select value={newTicket.category} onValueChange={(v) => setNewTicket((p) => ({ ...p, category: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="technical">Tecnico</SelectItem>
+                      <SelectItem value="billing">Pagamenti</SelectItem>
+                      <SelectItem value="service">Servizio</SelectItem>
+                      <SelectItem value="report">Segnalazione</SelectItem>
+                      <SelectItem value="other">Altro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Priorità</label>
+                <Select value={newTicket.priority} onValueChange={(v) => setNewTicket((p) => ({ ...p, priority: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Bassa</SelectItem>
+                    <SelectItem value="normal">Normale</SelectItem>
+                    <SelectItem value="high">Alta</SelectItem>
+                    <SelectItem value="urgent">Urgente</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Oggetto *</label>
+                <Input
+                  value={newTicket.subject}
+                  onChange={(e) => setNewTicket((p) => ({ ...p, subject: e.target.value }))}
+                  placeholder="Breve descrizione"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Descrizione *</label>
+                <Textarea
+                  value={newTicket.description}
+                  onChange={(e) => setNewTicket((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Descrizione dettagliata..."
+                  className="min-h-[100px]"
+                />
+              </div>
+              <Button onClick={handleCreateTicket} disabled={isCreating} className="w-full">
+                {isCreating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                Crea ticket
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {tickets.some((t) => t.priority === "urgent" && t.status !== "resolved" && t.status !== "closed") && (
