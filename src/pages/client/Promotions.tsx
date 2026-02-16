@@ -51,8 +51,8 @@ export default function Promotions() {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: "CasaFacile - Invita un amico",
-        text: "Registrati su CasaFacile con il mio link e ricevi 10€ di sconto!",
+        title: "MyCozyHome - Invita un amico",
+        text: "Registrati su MyCozyHome con il mio link e ricevi 10€ di sconto!",
         url: window.location.origin,
       });
     } else {
