@@ -164,7 +164,7 @@ export default function ProfessionalBookings() {
   // Filter bookings by status
   const pendingBookings = filteredBookings.filter((b) => b.status === "pending");
   const confirmedBookings = filteredBookings.filter(
-    (b) => b.status === "confirmed" && !isPast(parseISO(b.scheduled_date))
+    (b) => b.status === "confirmed" && (!isPast(parseISO(b.scheduled_date)) || isToday(parseISO(b.scheduled_date)))
   );
   const completedBookings = filteredBookings.filter((b) => b.status === "completed");
   const cancelledBookings = filteredBookings.filter((b) => b.status === "cancelled");
