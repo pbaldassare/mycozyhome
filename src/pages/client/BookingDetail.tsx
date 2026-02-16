@@ -34,6 +34,8 @@ import { useCreateReview, useCanReview } from "@/hooks/useReviews";
 import { ReviewForm } from "@/components/client/ReviewForm";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useBookingTracking } from "@/hooks/useBookingTracking";
+import { Navigation } from "lucide-react";
 
 const statusConfig = {
   pending: { label: "In attesa di conferma", className: "bg-warning/10 text-warning", icon: Clock },
@@ -59,6 +61,7 @@ export default function BookingDetail() {
   const cancelBooking = useCancelBooking();
   const createReview = useCreateReview();
   const { data: canReviewBooking } = useCanReview(id);
+  const { tracking } = useBookingTracking(id);
 
   const { data: booking, isLoading } = useQuery({
     queryKey: ["booking-detail", id],
@@ -212,6 +215,56 @@ export default function BookingDetail() {
             </Button>
           </div>
         </div>
+
+        {/* Tracking Status */}
+        {tracking && (
+          <div className="trust-card">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Navigation className="h-5 w-5" />
+              Stato presenza
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Check-in</span>
+                {tracking.check_in_at ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {format(new Date(tracking.check_in_at), "HH:mm")}
+                    </span>
+                    <Badge variant="secondary" className={tracking.check_in_in_range ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+                      {tracking.check_in_in_range ? "In zona" : "Fuori zona"}
+                    </Badge>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Non ancora</span>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Check-out</span>
+                {tracking.check_out_at ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">
+                      {format(new Date(tracking.check_out_at), "HH:mm")}
+                    </span>
+                    <Badge variant="secondary" className={tracking.check_out_in_range ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+                      {tracking.check_out_in_range ? "In zona" : "Fuori zona"}
+                    </Badge>
+                  </div>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Non ancora</span>
+                )}
+              </div>
+              {tracking.actual_hours != null && (
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <span className="text-sm font-medium">Ore effettive</span>
+                  <span className="text-sm font-bold text-primary">
+                    {Number(tracking.actual_hours).toFixed(1)}h
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Price Summary */}
         <div className="trust-card">

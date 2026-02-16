@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_tracking: {
+        Row: {
+          actual_hours: number | null
+          booking_id: string
+          check_in_at: string | null
+          check_in_distance_m: number | null
+          check_in_in_range: boolean | null
+          check_in_latitude: number | null
+          check_in_longitude: number | null
+          check_out_at: string | null
+          check_out_distance_m: number | null
+          check_out_in_range: boolean | null
+          check_out_latitude: number | null
+          check_out_longitude: number | null
+          created_at: string
+          id: string
+          professional_id: string
+          status: string
+        }
+        Insert: {
+          actual_hours?: number | null
+          booking_id: string
+          check_in_at?: string | null
+          check_in_distance_m?: number | null
+          check_in_in_range?: boolean | null
+          check_in_latitude?: number | null
+          check_in_longitude?: number | null
+          check_out_at?: string | null
+          check_out_distance_m?: number | null
+          check_out_in_range?: boolean | null
+          check_out_latitude?: number | null
+          check_out_longitude?: number | null
+          created_at?: string
+          id?: string
+          professional_id: string
+          status?: string
+        }
+        Update: {
+          actual_hours?: number | null
+          booking_id?: string
+          check_in_at?: string | null
+          check_in_distance_m?: number | null
+          check_in_in_range?: boolean | null
+          check_in_latitude?: number | null
+          check_in_longitude?: number | null
+          check_out_at?: string | null
+          check_out_distance_m?: number | null
+          check_out_in_range?: boolean | null
+          check_out_latitude?: number | null
+          check_out_longitude?: number | null
+          created_at?: string
+          id?: string
+          professional_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_tracking_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           address: string

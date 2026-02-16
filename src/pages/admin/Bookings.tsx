@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, Calendar, Clock, Euro, Eye } from "lucide-react";
+import { Search, Filter, Calendar, Clock, Euro, Eye, Navigation } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Booking {
   id: string;
@@ -24,6 +25,7 @@ interface Booking {
   duration: string;
   amount: number;
   status: "pending" | "confirmed" | "completed" | "cancelled";
+  tracking?: { status: string; check_in_in_range?: boolean; actual_hours?: number };
 }
 
 const bookings: Booking[] = [
@@ -182,6 +184,7 @@ export default function Bookings() {
                   <TableHead>Data/Ora</TableHead>
                   <TableHead className="text-right">Importo</TableHead>
                   <TableHead>Stato</TableHead>
+                  <TableHead>Tracking</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -220,6 +223,32 @@ export default function Bookings() {
                         <span className={cn("status-badge", status.className)}>
                           {status.label}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {booking.tracking ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Badge variant="secondary" className={cn(
+                                  booking.tracking.status === "completed" && "bg-success/10 text-success",
+                                  booking.tracking.status === "checked_in" && "bg-primary/10 text-primary",
+                                  !booking.tracking.check_in_in_range && "bg-warning/10 text-warning",
+                                )}>
+                                  <Navigation className="h-3 w-3 mr-1" />
+                                  {booking.tracking.status === "completed" ? "Completato" : "In corso"}
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {booking.tracking.actual_hours != null
+                                  ? `Ore effettive: ${Number(booking.tracking.actual_hours).toFixed(1)}h`
+                                  : "Check-in effettuato"}
+                                {!booking.tracking.check_in_in_range && " ⚠️ Fuori zona"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon">

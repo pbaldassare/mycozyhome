@@ -50,6 +50,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
 import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
 import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
+import { useBookingTracking, useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
+import { Loader2, Navigation } from "lucide-react";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -113,6 +115,15 @@ export default function ProfessionalBookings() {
   const createClientReview = useCreateClientReview();
   const { isFavorite, toggleFavorite } = useProfessionalFavorites();
 
+  // Get all booking IDs for tracking
+  const bookingIds = useMemo(() => (bookings || []).map((b) => b.id), [bookings]);
+  const { data: allTracking } = useBookingTrackingByBookingIds(bookingIds);
+  const trackingMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    (allTracking || []).forEach((t) => { map[t.booking_id] = t; });
+    return map;
+  }, [allTracking]);
+
   // Get unique service types from bookings
   const availableServiceTypes = useMemo(() => {
     if (!bookings) return [];
@@ -157,6 +168,98 @@ export default function ProfessionalBookings() {
   );
   const completedBookings = filteredBookings.filter((b) => b.status === "completed");
   const cancelledBookings = filteredBookings.filter((b) => b.status === "cancelled");
+
+  const TrackingActions = ({ booking }: { booking: any }) => {
+    const tracking = trackingMap[booking.id];
+    const isTodayBooking = isToday(parseISO(booking.scheduled_date));
+    const { checkIn, checkOut } = useBookingTracking(booking.id);
+
+    if (booking.status !== "confirmed" || !isTodayBooking) return null;
+
+    if (!tracking) {
+      return (
+        <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Navigation className="h-4 w-4" />
+            <span>Tracking presenza</span>
+          </div>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() =>
+              checkIn.mutate({
+                bookingId: booking.id,
+                professionalId: professional!.id,
+                bookingLat: booking.latitude,
+                bookingLng: booking.longitude,
+              })
+            }
+            disabled={checkIn.isPending}
+          >
+            {checkIn.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <Navigation className="h-4 w-4 mr-1" />
+            )}
+            Check-in - Sono arrivato
+          </Button>
+        </div>
+      );
+    }
+
+    if (tracking.status === "checked_in") {
+      return (
+        <div className="mt-3 p-3 bg-success/5 rounded-lg border border-success/20">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="flex items-center gap-1 text-success font-medium">
+              <CheckCircle className="h-4 w-4" />
+              Check-in effettuato
+            </span>
+            <Badge variant="secondary" className={tracking.check_in_in_range ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
+              {tracking.check_in_in_range ? "In zona" : "Fuori zona"}
+            </Badge>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full"
+            onClick={() =>
+              checkOut.mutate({
+                trackingId: tracking.id,
+                checkInAt: tracking.check_in_at,
+                bookingLat: booking.latitude,
+                bookingLng: booking.longitude,
+              })
+            }
+            disabled={checkOut.isPending}
+          >
+            {checkOut.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <CheckCircle className="h-4 w-4 mr-1" />
+            )}
+            Check-out - Ho finito
+          </Button>
+        </div>
+      );
+    }
+
+    if (tracking.status === "completed") {
+      return (
+        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+            <CheckCircle className="h-4 w-4 text-success" />
+            <span className="font-medium text-foreground">Presenza completata</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Ore effettive: {Number(tracking.actual_hours).toFixed(1)}h / {booking.total_hours}h previste
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   const renderBookingCard = (booking: any, showActions: boolean = false) => {
     const clientName = booking.client
@@ -315,6 +418,9 @@ export default function ProfessionalBookings() {
               </Button>
             </div>
           )}
+
+          {/* Tracking actions for confirmed bookings today */}
+          <TrackingActions booking={booking} />
 
           {/* Review button for completed bookings */}
           {booking.status === "completed" && (
