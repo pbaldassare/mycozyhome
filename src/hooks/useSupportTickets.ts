@@ -24,6 +24,7 @@ export interface SupportTicket {
   priority: string;
   created_at: string;
   updated_at: string;
+  last_read_at: string | null;
 }
 
 export function useUserTickets() {
