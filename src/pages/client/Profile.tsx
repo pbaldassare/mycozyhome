@@ -20,6 +20,7 @@ import { TrustIndicator } from "@/components/client/TrustIndicator";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadSupportCount } from "@/hooks/useUnreadSupport";
 import { toast } from "sonner";
 
 interface MenuItemProps {
@@ -78,6 +79,7 @@ function MenuItem({
 export default function ClientProfile() {
   const navigate = useNavigate();
   const { user, profile, loading, signOut } = useAuth();
+  const { data: unreadCount } = useUnreadSupportCount();
 
   const displayName = profile?.first_name && profile?.last_name
     ? `${profile.first_name} ${profile.last_name}`
@@ -202,6 +204,16 @@ export default function ClientProfile() {
               icon={HelpCircle}
               label="Centro assistenza"
               onClick={() => navigate("/client/support")}
+              rightContent={
+                unreadCount && unreadCount > 0 ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+                      {unreadCount}
+                    </span>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                ) : undefined
+              }
             />
             <Separator />
             <MenuItem

@@ -776,6 +776,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          last_read_at: string | null
           priority: string
           status: string
           subject: string
@@ -789,6 +790,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          last_read_at?: string | null
           priority?: string
           status?: string
           subject: string
@@ -802,6 +804,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          last_read_at?: string | null
           priority?: string
           status?: string
           subject?: string

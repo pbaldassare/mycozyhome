@@ -9,6 +9,8 @@ import { AppHeader } from "@/components/client/AppHeader";
 import { SupportTicketForm } from "@/components/support/SupportTicketForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserTickets, useTicketResponses, useSendTicketResponse } from "@/hooks/useSupportTickets";
+import { useTicketHasUnread, markTicketAsRead } from "@/hooks/useUnreadSupport";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -28,6 +30,42 @@ const statusColors: Record<string, string> = {
   closed: "bg-muted text-muted-foreground",
 };
 
+function TicketCard({ ticket, onClick }: { ticket: any; onClick: () => void }) {
+  const { data: hasUnread } = useTicketHasUnread(ticket.id, ticket.last_read_at);
+
+  return (
+    <Card
+      className={cn(
+        "cursor-pointer hover:border-primary/50 transition-colors",
+        hasUnread && "border-primary/30 bg-primary/5"
+      )}
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              {hasUnread && (
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive shrink-0" />
+              )}
+              <h3 className="font-semibold truncate">{ticket.subject}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+              {ticket.description}
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              {format(new Date(ticket.created_at), "d MMM yyyy, HH:mm", { locale: it })}
+            </p>
+          </div>
+          <Badge className={cn("shrink-0", statusColors[ticket.status])}>
+            {statusLabels[ticket.status] || ticket.status}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 interface SupportPageProps {
   userType: "client" | "professional";
   backPath: string;
@@ -37,8 +75,16 @@ export function SupportPage({ userType, backPath }: SupportPageProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: tickets, isLoading, refetch } = useUserTickets();
+  const queryClient = useQueryClient();
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [showNewTicket, setShowNewTicket] = useState(false);
+
+  const handleOpenTicket = async (ticketId: string) => {
+    setSelectedTicketId(ticketId);
+    await markTicketAsRead(ticketId);
+    queryClient.invalidateQueries({ queryKey: ["unread-support-count"] });
+    queryClient.invalidateQueries({ queryKey: ["ticket-unread", ticketId] });
+  };
 
   const selectedTicket = tickets?.find((t) => t.id === selectedTicketId);
 
@@ -96,28 +142,11 @@ export function SupportPage({ userType, backPath }: SupportPageProps) {
         ) : (
           <div className="space-y-3">
             {tickets.map((ticket) => (
-              <Card
+              <TicketCard
                 key={ticket.id}
-                className="cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => setSelectedTicketId(ticket.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold truncate">{ticket.subject}</h3>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {ticket.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {format(new Date(ticket.created_at), "d MMM yyyy, HH:mm", { locale: it })}
-                      </p>
-                    </div>
-                    <Badge className={cn("shrink-0", statusColors[ticket.status])}>
-                      {statusLabels[ticket.status] || ticket.status}
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                ticket={ticket}
+                onClick={() => handleOpenTicket(ticket.id)}
+              />
             ))}
           </div>
         )}

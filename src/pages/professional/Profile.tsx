@@ -19,45 +19,20 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useProfessionalProfile } from "@/hooks/useProfessionalData";
+import { useUnreadSupportCount } from "@/hooks/useUnreadSupport";
 
 interface MenuItem {
   icon: React.ElementType;
   label: string;
   path: string;
   external?: boolean;
+  badge?: number;
 }
 
 interface MenuSection {
   title: string;
   items: MenuItem[];
 }
-
-const menuSections: MenuSection[] = [
-  {
-    title: "Account",
-    items: [
-      { icon: User, label: "Dati personali", path: "/professional/profile/personal" },
-      { icon: Settings, label: "Preferenze", path: "/professional/profile/preferences" },
-      { icon: Bell, label: "Notifiche", path: "/professional/profile/preferences" },
-    ],
-  },
-  {
-    title: "Attività",
-    items: [
-      { icon: Wrench, label: "I miei servizi", path: "/professional/services" },
-      { icon: Star, label: "Le mie recensioni", path: "/professional/reviews" },
-      { icon: FileText, label: "Documenti", path: "/professional/onboarding/documents" },
-    ],
-  },
-  {
-    title: "Supporto",
-    items: [
-      { icon: HelpCircle, label: "Centro assistenza", path: "/professional/support" },
-      { icon: Shield, label: "Privacy", path: "/professional/profile/settings" },
-      { icon: Settings, label: "Impostazioni", path: "/professional/profile/settings" },
-    ],
-  },
-];
 
 const ProfileMenuItem = ({ item, onClick }: { item: MenuItem; onClick: () => void }) => {
   const Icon = item.icon;
@@ -70,7 +45,14 @@ const ProfileMenuItem = ({ item, onClick }: { item: MenuItem; onClick: () => voi
         <Icon className="w-5 h-5 text-muted-foreground" />
         <span className="font-medium">{item.label}</span>
       </div>
-      <ChevronRight className="w-5 h-5 text-muted-foreground" />
+      <div className="flex items-center gap-2">
+        {item.badge && item.badge > 0 ? (
+          <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+            {item.badge}
+          </span>
+        ) : null}
+        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+      </div>
     </button>
   );
 };
@@ -78,6 +60,34 @@ const ProfileMenuItem = ({ item, onClick }: { item: MenuItem; onClick: () => voi
 export default function ProfessionalProfile() {
   const navigate = useNavigate();
   const { data: professional, isLoading: loadingProfile } = useProfessionalProfile();
+  const { data: unreadCount } = useUnreadSupportCount();
+
+  const menuSections: MenuSection[] = [
+    {
+      title: "Account",
+      items: [
+        { icon: User, label: "Dati personali", path: "/professional/profile/personal" },
+        { icon: Settings, label: "Preferenze", path: "/professional/profile/preferences" },
+        { icon: Bell, label: "Notifiche", path: "/professional/profile/preferences" },
+      ],
+    },
+    {
+      title: "Attività",
+      items: [
+        { icon: Wrench, label: "I miei servizi", path: "/professional/services" },
+        { icon: Star, label: "Le mie recensioni", path: "/professional/reviews" },
+        { icon: FileText, label: "Documenti", path: "/professional/onboarding/documents" },
+      ],
+    },
+    {
+      title: "Supporto",
+      items: [
+        { icon: HelpCircle, label: "Centro assistenza", path: "/professional/support", badge: unreadCount || 0 },
+        { icon: Shield, label: "Privacy", path: "/professional/profile/settings" },
+        { icon: Settings, label: "Impostazioni", path: "/professional/profile/settings" },
+      ],
+    },
+  ];
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
