@@ -854,6 +854,15 @@ export type Database = {
         | "sanitization"
         | "babysitter"
         | "dog_sitter"
+        | "wardrobe_seasonal"
+        | "decluttering"
+        | "post_renovation"
+        | "seasonal_cleaning"
+        | "garden_care"
+        | "home_organizing"
+        | "dog_walking"
+        | "pet_care_travel"
+        | "pet_space_cleaning"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -997,6 +1006,15 @@ export const Constants = {
         "sanitization",
         "babysitter",
         "dog_sitter",
+        "wardrobe_seasonal",
+        "decluttering",
+        "post_renovation",
+        "seasonal_cleaning",
+        "garden_care",
+        "home_organizing",
+        "dog_walking",
+        "pet_care_travel",
+        "pet_space_cleaning",
       ],
     },
   },
