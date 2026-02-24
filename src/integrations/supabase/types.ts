@@ -17,6 +17,8 @@ export type Database = {
       booking_tracking: {
         Row: {
           actual_hours: number | null
+          auto_checked_in: boolean | null
+          auto_checked_out: boolean | null
           booking_id: string
           check_in_at: string | null
           check_in_distance_m: number | null
@@ -30,11 +32,16 @@ export type Database = {
           check_out_longitude: number | null
           created_at: string
           id: string
+          last_ping_at: string | null
+          left_zone_count: number | null
           professional_id: string
           status: string
+          total_out_of_range_minutes: number | null
         }
         Insert: {
           actual_hours?: number | null
+          auto_checked_in?: boolean | null
+          auto_checked_out?: boolean | null
           booking_id: string
           check_in_at?: string | null
           check_in_distance_m?: number | null
@@ -48,11 +55,16 @@ export type Database = {
           check_out_longitude?: number | null
           created_at?: string
           id?: string
+          last_ping_at?: string | null
+          left_zone_count?: number | null
           professional_id: string
           status?: string
+          total_out_of_range_minutes?: number | null
         }
         Update: {
           actual_hours?: number | null
+          auto_checked_in?: boolean | null
+          auto_checked_out?: boolean | null
           booking_id?: string
           check_in_at?: string | null
           check_in_distance_m?: number | null
@@ -66,8 +78,11 @@ export type Database = {
           check_out_longitude?: number | null
           created_at?: string
           id?: string
+          last_ping_at?: string | null
+          left_zone_count?: number | null
           professional_id?: string
           status?: string
+          total_out_of_range_minutes?: number | null
         }
         Relationships: [
           {
@@ -1090,6 +1105,57 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_pings: {
+        Row: {
+          booking_id: string
+          created_at: string
+          distance_m: number
+          id: string
+          in_range: boolean
+          latitude: number
+          longitude: number
+          professional_id: string
+          tracking_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          distance_m?: number
+          id?: string
+          in_range?: boolean
+          latitude: number
+          longitude: number
+          professional_id: string
+          tracking_id: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          distance_m?: number
+          id?: string
+          in_range?: boolean
+          latitude?: number
+          longitude?: number
+          professional_id?: string
+          tracking_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_pings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tracking_pings_tracking_id_fkey"
+            columns: ["tracking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_tracking"
             referencedColumns: ["id"]
           },
         ]
