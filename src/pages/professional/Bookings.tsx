@@ -50,8 +50,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
 import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
 import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
-import { useBookingTracking, useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
-import { Loader2, Navigation } from "lucide-react";
+import { useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
+import { useGeofenceTracking } from "@/hooks/useGeofenceTracking";
+import { Loader2, Navigation, Radio, AlertTriangle } from "lucide-react";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -170,96 +171,128 @@ export default function ProfessionalBookings() {
   const cancelledBookings = filteredBookings.filter((b) => b.status === "cancelled");
 
   const TrackingActions = ({ booking }: { booking: any }) => {
-    const tracking = trackingMap[booking.id];
+    const trackingRecord = trackingMap[booking.id];
     const isTodayBooking = isToday(parseISO(booking.scheduled_date));
-    const { checkIn, checkOut } = useBookingTracking(booking.id);
+    const isActiveTracking = booking.status === "confirmed" && isTodayBooking;
 
-    if (booking.status !== "confirmed" || !isTodayBooking) return null;
+    const geofence = useGeofenceTracking(
+      booking.id,
+      professional?.id,
+      booking.latitude,
+      booking.longitude,
+      isActiveTracking
+    );
 
-    if (!tracking) {
-      return (
-        <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Navigation className="h-4 w-4" />
-            <span>Tracking presenza</span>
+    if (booking.status !== "confirmed" || !isTodayBooking) {
+      // Show completed tracking info
+      if (trackingRecord?.status === "completed") {
+        return (
+          <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <CheckCircle className="h-4 w-4 text-success" />
+              <span className="font-medium text-foreground">Presenza completata</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Ore effettive: {Number(trackingRecord.actual_hours).toFixed(1)}h / {booking.total_hours}h previste
+            </p>
           </div>
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={() =>
-              checkIn.mutate({
-                bookingId: booking.id,
-                professionalId: professional!.id,
-                bookingLat: booking.latitude,
-                bookingLng: booking.longitude,
-              })
-            }
-            disabled={checkIn.isPending}
-          >
-            {checkIn.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <Navigation className="h-4 w-4 mr-1" />
-            )}
-            Check-in - Sono arrivato
-          </Button>
+        );
+      }
+      return null;
+    }
+
+    // GPS error
+    if (geofence.error) {
+      return (
+        <div className="mt-3 p-3 bg-destructive/5 rounded-lg border border-destructive/20">
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <span>GPS: {geofence.error}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Abilita la geolocalizzazione per il tracking automatico.
+          </p>
         </div>
       );
     }
 
-    if (tracking.status === "checked_in") {
+    // Waiting for GPS / not yet in zone
+    if (!geofence.autoCheckedIn) {
+      return (
+        <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Radio className="h-4 w-4 animate-pulse text-primary" />
+            <span>Tracking automatico attivo</span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Il check-in verrà registrato automaticamente quando entrerai nella zona del cliente (entro {GEOFENCE_RADIUS_M}m).
+            {geofence.distanceM != null && (
+              <span className="block mt-1 font-medium">
+                Distanza attuale: {geofence.distanceM}m
+              </span>
+            )}
+          </p>
+        </div>
+      );
+    }
+
+    // Checked in, tracking active
+    if (geofence.autoCheckedIn && !geofence.autoCheckedOut) {
       return (
         <div className="mt-3 p-3 bg-success/5 rounded-lg border border-success/20">
           <div className="flex items-center justify-between text-sm mb-2">
             <span className="flex items-center gap-1 text-success font-medium">
               <CheckCircle className="h-4 w-4" />
-              Check-in effettuato
+              Check-in automatico ✓
             </span>
-            <Badge variant="secondary" className={tracking.check_in_in_range ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}>
-              {tracking.check_in_in_range ? "In zona" : "Fuori zona"}
+            <Badge
+              variant="secondary"
+              className={geofence.isInZone ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}
+            >
+              {geofence.isInZone ? (
+                <><Radio className="h-3 w-3 mr-1 animate-pulse" /> In zona</>
+              ) : (
+                <><AlertTriangle className="h-3 w-3 mr-1" /> Fuori zona ({geofence.distanceM}m)</>
+              )}
             </Badge>
           </div>
+          {geofence.leftZoneCount > 0 && (
+            <p className="text-xs text-warning mb-2">
+              ⚠️ Uscite dalla zona: {geofence.leftZoneCount} | Tempo fuori: {geofence.totalOutOfRangeMinutes.toFixed(0)} min
+            </p>
+          )}
+          <p className="text-xs text-muted-foreground mb-2">
+            Il sistema monitora la tua posizione ogni aggiornamento GPS.
+          </p>
           <Button
             size="sm"
             variant="outline"
             className="w-full"
-            onClick={() =>
-              checkOut.mutate({
-                trackingId: tracking.id,
-                checkInAt: tracking.check_in_at,
-                bookingLat: booking.latitude,
-                bookingLng: booking.longitude,
-              })
-            }
-            disabled={checkOut.isPending}
+            onClick={geofence.manualCheckOut}
           >
-            {checkOut.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
-            ) : (
-              <CheckCircle className="h-4 w-4 mr-1" />
-            )}
-            Check-out - Ho finito
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Check-out manuale - Ho finito
           </Button>
         </div>
       );
     }
 
-    if (tracking.status === "completed") {
+    // Completed
+    if (geofence.autoCheckedOut) {
       return (
         <div className="mt-3 p-3 bg-muted/50 rounded-lg">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <CheckCircle className="h-4 w-4 text-success" />
-            <span className="font-medium text-foreground">Presenza completata</span>
+            <span className="font-medium text-foreground">Presenza completata (auto)</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Ore effettive: {Number(tracking.actual_hours).toFixed(1)}h / {booking.total_hours}h previste
-          </p>
         </div>
       );
     }
 
     return null;
   };
+
+  const GEOFENCE_RADIUS_M = 500;
 
   const renderBookingCard = (booking: any, showActions: boolean = false) => {
     const clientName = booking.client
