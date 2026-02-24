@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, Calendar, Clock, Euro, Eye, Navigation, MapPin, LogIn, LogOut } from "lucide-react";
+import { Search, Filter, Calendar, Clock, Euro, Eye, Navigation, MapPin, LogIn, LogOut, AlertTriangle, Radio } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending: { label: "In Attesa", className: "status-pending" },
@@ -54,6 +55,22 @@ export default function Bookings() {
       return data || [];
     },
     enabled: bookingIds.length > 0,
+  });
+
+  // Fetch pings for selected booking
+  const { data: selectedPings = [] } = useQuery({
+    queryKey: ["admin-tracking-pings", selectedBookingId],
+    queryFn: async () => {
+      if (!selectedBookingId) return [];
+      const { data, error } = await supabase
+        .from("tracking_pings")
+        .select("*")
+        .eq("booking_id", selectedBookingId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!selectedBookingId,
   });
 
   const trackingMap = new Map(trackingData.map((t) => [t.booking_id, t]));
@@ -268,23 +285,44 @@ export default function Bookings() {
                 </div>
               </div>
 
-              {/* Tracking Section */}
+                {/* Tracking Section */}
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-3 flex items-center gap-2">
                   <Navigation className="w-4 h-4" /> Tracking Geolocalizzato
                 </h4>
                 {selectedTracking ? (
                   <div className="space-y-3">
+                    {/* Auto tracking info */}
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {(selectedTracking as any).auto_checked_in && (
+                        <Badge variant="outline" className="border-primary/30 text-primary">🤖 Check-in automatico</Badge>
+                      )}
+                      {(selectedTracking as any).auto_checked_out && (
+                        <Badge variant="outline" className="border-primary/30 text-primary">🤖 Check-out automatico</Badge>
+                      )}
+                      {((selectedTracking as any).left_zone_count || 0) > 0 && (
+                        <Badge variant="outline" className="border-warning/50 text-warning">
+                          <AlertTriangle className="w-3 h-3 mr-1" />
+                          Uscite zona: {(selectedTracking as any).left_zone_count}
+                        </Badge>
+                      )}
+                      {((selectedTracking as any).total_out_of_range_minutes || 0) > 0 && (
+                        <Badge variant="outline" className="border-destructive/50 text-destructive">
+                          ⏱️ Fuori zona: {Number((selectedTracking as any).total_out_of_range_minutes).toFixed(0)} min
+                        </Badge>
+                      )}
+                    </div>
+
                     {/* Check-in */}
                     <div className="rounded-lg border p-3 space-y-1">
                       <div className="flex items-center gap-2 font-medium text-sm">
-                        <LogIn className="w-4 h-4 text-green-600" />
+                        <LogIn className="w-4 h-4 text-success" />
                         Check-in
                         {selectedTracking.check_in_in_range === false && (
-                          <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs ml-auto">⚠️ Fuori zona</Badge>
+                          <Badge variant="outline" className="text-warning border-warning/30 text-xs ml-auto">⚠️ Fuori zona</Badge>
                         )}
                         {selectedTracking.check_in_in_range === true && (
-                          <Badge variant="outline" className="text-green-600 border-green-300 text-xs ml-auto">✅ In zona</Badge>
+                          <Badge variant="outline" className="text-success border-success/30 text-xs ml-auto">✅ In zona</Badge>
                         )}
                       </div>
                       {selectedTracking.check_in_at && (
@@ -308,13 +346,13 @@ export default function Bookings() {
                     {selectedTracking.check_out_at ? (
                       <div className="rounded-lg border p-3 space-y-1">
                         <div className="flex items-center gap-2 font-medium text-sm">
-                          <LogOut className="w-4 h-4 text-red-600" />
+                          <LogOut className="w-4 h-4 text-destructive" />
                           Check-out
                           {selectedTracking.check_out_in_range === false && (
-                            <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs ml-auto">⚠️ Fuori zona</Badge>
+                            <Badge variant="outline" className="text-warning border-warning/30 text-xs ml-auto">⚠️ Fuori zona</Badge>
                           )}
                           {selectedTracking.check_out_in_range === true && (
-                            <Badge variant="outline" className="text-green-600 border-green-300 text-xs ml-auto">✅ In zona</Badge>
+                            <Badge variant="outline" className="text-success border-success/30 text-xs ml-auto">✅ In zona</Badge>
                           )}
                         </div>
                         <p className="text-sm">
@@ -332,12 +370,48 @@ export default function Bookings() {
                         )}
                         {selectedTracking.actual_hours != null && (
                           <p className="text-sm font-medium mt-1">
-                            ⏱️ Ore effettive: {Number(selectedTracking.actual_hours).toFixed(1)}h
+                            ⏱️ Ore effettive: {Number(selectedTracking.actual_hours).toFixed(1)}h / {selectedBooking.total_hours}h previste
                           </p>
                         )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground italic">Check-out non ancora effettuato</p>
+                    )}
+
+                    {/* GPS Pings */}
+                    {selectedPings.length > 0 && (
+                      <div className="border-t pt-3">
+                        <h5 className="text-sm font-medium mb-2 flex items-center gap-2">
+                          <Radio className="w-3.5 h-3.5" />
+                          Ping GPS ({selectedPings.length})
+                        </h5>
+                        <ScrollArea className="h-40">
+                          <div className="space-y-1">
+                            {selectedPings.map((ping: any) => (
+                              <div
+                                key={ping.id}
+                                className={cn(
+                                  "flex items-center justify-between text-xs p-2 rounded",
+                                  ping.in_range ? "bg-success/5" : "bg-destructive/5"
+                                )}
+                              >
+                                <span className="text-muted-foreground">
+                                  {format(new Date(ping.created_at), "HH:mm:ss", { locale: it })}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {Number(ping.latitude).toFixed(4)}, {Number(ping.longitude).toFixed(4)}
+                                </span>
+                                <Badge variant="outline" className={cn(
+                                  "text-xs",
+                                  ping.in_range ? "text-success border-success/30" : "text-destructive border-destructive/30"
+                                )}>
+                                  {Number(ping.distance_m).toFixed(0)}m {ping.in_range ? "✓" : "✗"}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
                     )}
                   </div>
                 ) : (
