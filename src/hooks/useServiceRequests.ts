@@ -183,6 +183,18 @@ export function useSendOffer() {
       estimated_hours?: number;
       message?: string;
     }) => {
+      // Blocco: verifica fatturato annuo del professionista
+      const { data: profData } = await supabase
+        .from("professionals")
+        .select("has_vat_number, revenue_blocked")
+        .eq("id", offer.professional_id)
+        .maybeSingle();
+      if (profData && !profData.has_vat_number && profData.revenue_blocked) {
+        throw new Error(
+          "Account bloccato: hai superato i 5.000€ annui senza P.IVA. Registra la Partita IVA per inviare offerte."
+        );
+      }
+
       const { data, error } = await supabase
         .from("service_offers")
         .insert(offer as any)

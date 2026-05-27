@@ -749,6 +749,7 @@ export type Database = {
           first_name: string
           fiscal_code: string | null
           formatted_address: string | null
+          has_vat_number: boolean
           id: string
           last_name: string
           latitude: number | null
@@ -758,10 +759,13 @@ export type Database = {
           postal_code: string | null
           profile_completed: boolean | null
           province: string | null
+          revenue_blocked: boolean
           review_count: number | null
           status: Database["public"]["Enums"]["professional_status"]
           updated_at: string
           user_id: string
+          vat_number: string | null
+          vat_registered_at: string | null
           years_experience: number | null
         }
         Insert: {
@@ -780,6 +784,7 @@ export type Database = {
           first_name: string
           fiscal_code?: string | null
           formatted_address?: string | null
+          has_vat_number?: boolean
           id?: string
           last_name: string
           latitude?: number | null
@@ -789,10 +794,13 @@ export type Database = {
           postal_code?: string | null
           profile_completed?: boolean | null
           province?: string | null
+          revenue_blocked?: boolean
           review_count?: number | null
           status?: Database["public"]["Enums"]["professional_status"]
           updated_at?: string
           user_id: string
+          vat_number?: string | null
+          vat_registered_at?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -811,6 +819,7 @@ export type Database = {
           first_name?: string
           fiscal_code?: string | null
           formatted_address?: string | null
+          has_vat_number?: boolean
           id?: string
           last_name?: string
           latitude?: number | null
@@ -820,10 +829,13 @@ export type Database = {
           postal_code?: string | null
           profile_completed?: boolean | null
           province?: string | null
+          revenue_blocked?: boolean
           review_count?: number | null
           status?: Database["public"]["Enums"]["professional_status"]
           updated_at?: string
           user_id?: string
+          vat_number?: string | null
+          vat_registered_at?: string | null
           years_experience?: number | null
         }
         Relationships: []
@@ -1186,6 +1198,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_professional_annual_revenue: {
+        Args: { _prof_id: string }
+        Returns: number
+      }
       get_professional_rating: {
         Args: { p_professional_id: string }
         Returns: {

@@ -1,85 +1,58 @@
-
-
-# Sistema di Geolocalizzazione per Verifica Presenze
+# Limite fatturato annuo senza P.IVA (5.000€)
 
 ## Obiettivo
-Aggiungere un sistema di check-in/check-out geolocalizzato per i professionisti, in modo da registrare che il professionista si sia effettivamente recato dal cliente e sia rimasto per le ore previste.
+Tracciare il fatturato annuo dei professionisti senza Partita IVA, avvisarli quando si avvicinano al limite di 5.000€/anno, e bloccare nuove prenotazioni se superano la soglia finché non registrano la P.IVA.
 
-## Come funziona
+## Modifiche al database
 
-### Lato Professionista
-Quando una prenotazione e' in stato "confermato" e il giorno della prenotazione e' oggi:
-1. Appare un pulsante **"Check-in - Sono arrivato"** sulla card della prenotazione
-2. Cliccando, l'app rileva la posizione GPS del professionista e la confronta con l'indirizzo del cliente
-3. Se la distanza e' entro un raggio accettabile (es. 500 metri), il check-in viene registrato con successo
-4. Se troppo lontano, viene mostrato un avviso ma il check-in viene comunque registrato (con flag "fuori zona")
-5. Al termine del lavoro, il professionista clicca **"Check-out - Ho finito"**, che registra di nuovo la posizione e l'orario
-6. Il sistema calcola automaticamente le ore effettive lavorate e le confronta con quelle previste
+**Tabella `professionals` — nuove colonne:**
+- `has_vat_number` (boolean, default false) — indica se il professionista ha P.IVA
+- `vat_number` (text, nullable) — numero P.IVA quando dichiarato
+- `vat_registered_at` (timestamp, nullable) — data dichiarazione P.IVA
+- `revenue_blocked` (boolean, default false) — flag di blocco automatico se supera 5k€ senza P.IVA
 
-### Lato Admin
-Nella sezione prenotazioni, l'admin puo' vedere:
-- Orario di check-in e check-out
-- Se il professionista era nella zona corretta
-- Ore effettive vs ore previste
-- Eventuali anomalie (check-in lontano, ore inferiori al previsto)
+**Nuova funzione SQL `get_professional_annual_revenue(prof_id)`:**
+- Somma `total_amount` dei `bookings` con status `completed` nell'anno solare corrente per quel professionista.
 
-### Lato Cliente
-Nel dettaglio prenotazione, il cliente vede lo stato di tracking (il professionista ha fatto check-in, ecc.)
+**Trigger su `bookings`:**
+- Al cambio status a `completed`, ricalcola il fatturato annuo del professionista.
+- Se professionista non ha P.IVA e fatturato ≥ 5.000€ → imposta `revenue_blocked = true`.
 
----
+## Logica applicativa
 
-## Dettagli Tecnici
+**Lato professionista:**
+- Banner in dashboard con barra di progresso fatturato annuo (es: "Hai fatturato 3.200€ / 5.000€ — 64%").
+- Soglie di avviso:
+  - ≥ 60% (3.000€): banner informativo giallo "Ti stai avvicinando al limite di 5k€/anno senza P.IVA"
+  - ≥ 80% (4.000€): banner arancione + suggerimento di registrare P.IVA
+  - ≥ 100% (5.000€): banner rosso bloccante — il professionista non può accettare nuove prenotazioni finché non dichiara la P.IVA
+- Nuova pagina/sezione **"Dati Fiscali"** in profilo professionista: form per dichiarare P.IVA (numero + checkbox conferma). Salvataggio sblocca l'account.
 
-### 1. Nuova tabella `booking_tracking`
+**Blocco operativo:**
+- In `useBookings` (accettazione prenotazione) e in `service_offers` (creazione offerta): se `revenue_blocked = true` e `has_vat_number = false`, blocca l'azione con toast esplicativo.
+- RLS aggiornata su `bookings` (INSERT lato client) per impedire prenotazioni verso professionisti bloccati.
 
-```text
-booking_tracking
-+---------------------+------------------+
-| Campo               | Tipo             |
-+---------------------+------------------+
-| id                  | uuid (PK)        |
-| booking_id          | uuid (FK)        |
-| professional_id     | uuid             |
-| check_in_at         | timestamptz      |
-| check_in_latitude   | numeric          |
-| check_in_longitude  | numeric          |
-| check_in_distance_m | numeric          |
-| check_in_in_range   | boolean          |
-| check_out_at        | timestamptz      |
-| check_out_latitude  | numeric          |
-| check_out_longitude | numeric          |
-| check_out_distance_m| numeric          |
-| check_out_in_range  | boolean          |
-| actual_hours        | numeric          |
-| status              | text             |
-| created_at          | timestamptz      |
-+---------------------+------------------+
-```
+**Lato admin:**
+- Nuova colonna nella pagina Professionisti che mostra: fatturato annuo, % della soglia, stato P.IVA, eventuale blocco.
+- Admin può sbloccare manualmente in caso di necessità.
 
-RLS: i professionisti possono inserire/aggiornare i propri record, admin puo' leggere tutto, i clienti possono leggere i record delle proprie prenotazioni.
+## File coinvolti
 
-### 2. Hook `useBookingTracking`
-- Gestisce la logica di check-in/check-out
-- Usa `navigator.geolocation` per ottenere la posizione corrente
-- Calcola la distanza dal punto della prenotazione (usando la formula Haversine gia' presente in `useGeolocation.ts`)
-- Inserisce/aggiorna i record nella tabella `booking_tracking`
+**Nuovi:**
+- `supabase/migrations/...sql` (colonne, funzione, trigger)
+- `src/hooks/useProfessionalRevenue.ts` (hook per leggere fatturato annuo + stato blocco)
+- `src/components/professional/RevenueLimitBanner.tsx` (banner con progress bar)
+- `src/pages/professional/profile/FiscalData.tsx` (form dichiarazione P.IVA)
 
-### 3. Modifiche UI - Professional Bookings
-- Nella card delle prenotazioni confermate di oggi: pulsanti "Check-in" / "Check-out"
-- Badge di stato del tracking (non ancora iniziato, in corso, completato)
-- Indicatore visivo se in zona o fuori zona
+**Modificati:**
+- `src/pages/professional/Dashboard.tsx` (mostra banner)
+- `src/pages/professional/Bookings.tsx` (blocco accettazione)
+- `src/pages/professional/ServiceBoard.tsx` (blocco creazione offerta)
+- `src/pages/professional/Profile.tsx` (link a Dati Fiscali)
+- `src/pages/admin/Professionals.tsx` (colonna fatturato + sblocco)
+- `src/App.tsx` (route nuova pagina)
 
-### 4. Modifiche UI - Client BookingDetail
-- Sezione "Stato presenza" che mostra check-in/check-out del professionista
-
-### 5. Modifiche UI - Admin Bookings
-- Colonna/badge con stato tracking
-- Dettaglio con orari e distanze
-
-### File coinvolti
-- **Nuovo**: migrazione SQL per tabella `booking_tracking`
-- **Nuovo**: `src/hooks/useBookingTracking.ts`
-- **Modifica**: `src/pages/professional/Bookings.tsx` (pulsanti check-in/check-out)
-- **Modifica**: `src/pages/client/BookingDetail.tsx` (stato tracking)
-- **Modifica**: `src/pages/admin/Bookings.tsx` (visibilita' tracking)
-
+## Conferme richieste
+1. **Soglia 5.000€**: confermi che è il limite annuo solare (1 gen – 31 dic)?
+2. **Validazione P.IVA**: basta dichiarazione testuale (numero + checkbox) o vuoi anche upload di un documento da approvare manualmente dall'admin?
+3. **Blocco**: blocchiamo SOLO le nuove prenotazioni/offerte, oppure anche quelle già confermate non ancora completate?

@@ -28,6 +28,7 @@ import {
 } from "@/hooks/useProfessionalData";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfessionalLevel } from "@/lib/professional-level";
+import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -161,6 +162,7 @@ export default function ProfessionalHome() {
       </header>
 
       <div className="p-4 space-y-6">
+        <RevenueLimitBanner professionalId={professional?.id} />
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-3">
           <Card>

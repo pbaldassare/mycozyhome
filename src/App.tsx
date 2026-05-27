@@ -32,6 +32,7 @@ import DocumentsUpload from "@/pages/professional/onboarding/Documents";
 import ProfessionalPersonalData from "@/pages/professional/profile/PersonalData";
 import ProfessionalSettings from "@/pages/professional/profile/Settings";
 import ProfessionalPreferences from "@/pages/professional/profile/Preferences";
+import ProfessionalFiscalData from "@/pages/professional/profile/FiscalData";
 import ClientHome from "@/pages/client/Home";
 import ClientSearch from "@/pages/client/Search";
 import ClientBookings from "@/pages/client/Bookings";
@@ -152,6 +153,7 @@ const App = () => (
           <Route path="/professional/profile/personal" element={<ProfessionalPersonalData />} />
           <Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
           <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
+          <Route path="/professional/profile/fiscal" element={<ProfessionalFiscalData />} />
            <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
           <Route path="/professional/support" element={<ProfessionalSupport />} />
           <Route path="/professional/profile/favorite-clients" element={<ProfessionalFavoriteClients />} />
