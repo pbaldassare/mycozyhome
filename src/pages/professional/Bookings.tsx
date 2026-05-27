@@ -52,6 +52,9 @@ import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientRevi
 import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
 import { useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
 import { useGeofenceTracking } from "@/hooks/useGeofenceTracking";
+import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
+import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
+import { toast } from "sonner";
 import { Loader2, Navigation, Radio, AlertTriangle } from "lucide-react";
 
 const serviceTypeLabels: Record<string, string> = {
@@ -108,6 +111,7 @@ export default function ProfessionalBookings() {
   const { data: professional } = useProfessionalProfile();
   const { data: bookings, isLoading } = useAllProfessionalBookings(professional?.id);
   const updateStatus = useUpdateBookingStatus();
+  const { data: revenue } = useProfessionalRevenue(professional?.id);
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
@@ -140,6 +144,13 @@ export default function ProfessionalBookings() {
   }, [bookings, serviceFilter]);
 
   const handleAccept = (bookingId: string) => {
+    if (revenue?.blocked || revenue?.exceededWithoutVat) {
+      toast.error(
+        "Account bloccato: hai superato i 5.000€ annui senza P.IVA. Registra la Partita IVA per accettare nuove prenotazioni."
+      );
+      navigate("/professional/profile/fiscal");
+      return;
+    }
     updateStatus.mutate({ bookingId, status: "confirmed" });
   };
 
