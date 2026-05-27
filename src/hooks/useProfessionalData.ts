@@ -160,8 +160,8 @@ export function useUpdateBookingStatus() {
       bookingId: string;
       status: "confirmed" | "cancelled";
     }) => {
-      const updateData: Record<string, unknown> = { status };
-      
+      const updateData: { status: "confirmed" | "cancelled"; cancelled_at?: string } = { status };
+
       if (status === "cancelled") {
         updateData.cancelled_at = new Date().toISOString();
       }

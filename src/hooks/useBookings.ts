@@ -80,8 +80,8 @@ export function useUpdateBookingStatus() {
 
   return useMutation({
     mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      const updates: Record<string, unknown> = { status };
-      
+      const updates: { status: string; completed_at?: string; cancelled_at?: string } = { status };
+
       if (status === "completed") {
         updates.completed_at = new Date().toISOString();
       } else if (status === "cancelled") {
