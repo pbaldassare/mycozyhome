@@ -521,6 +521,10 @@ export default function ProfessionalBookings() {
         </div>
       )}
 
+      <div className="px-4 pt-4">
+        <RevenueLimitBanner professionalId={professional?.id} />
+      </div>
+
       <Tabs defaultValue="pending" className="p-4">
         <TabsList className="grid w-full grid-cols-4 mb-4">
           <TabsTrigger value="pending" className="relative">
