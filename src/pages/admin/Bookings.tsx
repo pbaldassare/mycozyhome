@@ -265,8 +265,10 @@ export default function Bookings() {
                 </TableBody>
               </Table>
             )}
+          </div>
         </TabsContent>
       </Tabs>
+
 
 
       {/* Detail Dialog with Tracking */}
