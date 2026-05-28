@@ -14,9 +14,9 @@
    };
  
    return (
-     <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
        {/* Header */}
-       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-3">
+       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-3 flex-shrink-0">
          <div className="flex items-center gap-2">
            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
              <Home className="w-4 h-4" />
@@ -26,7 +26,7 @@
        </header>
  
        {/* Carousel */}
-       <div className="flex-1">
+       <div className="flex-1 min-h-0">
          <OnboardingCarousel
            onComplete={handleComplete}
            completeButtonText="Inizia"

@@ -38,33 +38,33 @@
      setCurrentIndex(index);
    };
  
-   return (
-     <div className="flex flex-col h-full">
-       {/* Skip button */}
-       {showSkip && !isLastSlide && (
-         <div className="flex justify-end p-4">
-           <Button variant="ghost" size="sm" onClick={onComplete}>
-             {skipButtonText}
-           </Button>
-         </div>
-       )}
- 
-       {/* Slides container */}
-       <div className="flex-1 overflow-hidden relative">
-         <div
-           className="flex h-full transition-transform duration-300 ease-out"
-           style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-         >
-           {children.map((child, index) => (
-             <div key={index} className="w-full flex-shrink-0 h-full overflow-y-auto">
-               {child}
-             </div>
-           ))}
-         </div>
-       </div>
- 
-       {/* Navigation */}
-       <div className="p-6 space-y-4">
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      {/* Skip button */}
+      {showSkip && !isLastSlide && (
+        <div className="flex justify-end p-4 flex-shrink-0">
+          <Button variant="ghost" size="sm" onClick={onComplete}>
+            {skipButtonText}
+          </Button>
+        </div>
+      )}
+
+      {/* Slides container */}
+      <div className="flex-1 min-h-0 overflow-hidden relative">
+        <div
+          className="flex h-full transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+        >
+          {children.map((child, index) => (
+            <div key={index} className="w-full flex-shrink-0 h-full overflow-y-auto">
+              {child}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Navigation - always visible at bottom */}
+      <div className="p-6 space-y-4 flex-shrink-0 bg-background border-t border-border/20 safe-area-pb">
          {/* Dots indicator */}
          <div className="flex justify-center gap-2">
            {Array.from({ length: totalSlides }).map((_, index) => (
