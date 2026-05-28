@@ -76,6 +76,27 @@ export function RevenueLimitBanner({ professionalId, className }: Props) {
         <Progress value={data.percentage} className="h-2" />
       </div>
 
+      {blocked && (
+        <div className="rounded-lg bg-background/60 border border-current/20 p-3 space-y-2 text-xs">
+          <div>
+            <p className="font-semibold uppercase tracking-wide opacity-80">Motivo del blocco</p>
+            <p className="mt-0.5">
+              <code className="px-1.5 py-0.5 rounded bg-current/10 text-[11px]">revenue_blocked = true</code>
+              {" "}— hai raggiunto €{data.annualRevenue.toLocaleString("it-IT")} di fatturato annuo
+              sulla piattaforma senza Partita IVA (limite: €{data.limit.toLocaleString("it-IT")}/anno).
+            </p>
+          </div>
+          <div>
+            <p className="font-semibold uppercase tracking-wide opacity-80">Come sbloccare l'account</p>
+            <ol className="mt-1 ml-4 list-decimal space-y-0.5">
+              <li>Apri la Partita IVA presso l'Agenzia delle Entrate (regime forfettario consigliato).</li>
+              <li>Vai su <strong>Profilo → Dati Fiscali</strong> e inserisci il numero di P.IVA.</li>
+              <li>L'account si sblocca automaticamente al salvataggio: potrai riprendere ad accettare prenotazioni e inviare offerte.</li>
+            </ol>
+          </div>
+        </div>
+      )}
+
       <Button
         size="sm"
         variant={blocked ? "default" : "outline"}
@@ -87,3 +108,4 @@ export function RevenueLimitBanner({ professionalId, className }: Props) {
     </div>
   );
 }
+
