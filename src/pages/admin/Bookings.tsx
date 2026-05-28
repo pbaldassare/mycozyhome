@@ -73,6 +73,27 @@ export default function Bookings() {
     enabled: !!selectedBookingId,
   });
 
+  // Fetch professional fiscal/revenue info for the selected booking
+  const selectedProfId = selectedBookingId
+    ? bookings.find((b) => b.id === selectedBookingId)?.professional_id
+    : null;
+  const { data: profRevenue } = useQuery({
+    queryKey: ["admin-prof-revenue", selectedProfId],
+    enabled: !!selectedProfId,
+    queryFn: async () => {
+      const [{ data: prof }, { data: rev }] = await Promise.all([
+        supabase
+          .from("professionals")
+          .select("first_name, last_name, has_vat_number, vat_number, revenue_blocked")
+          .eq("id", selectedProfId!)
+          .maybeSingle(),
+        supabase.rpc("get_professional_annual_revenue", { _prof_id: selectedProfId! }),
+      ]);
+      return { prof, annualRevenue: Number(rev ?? 0) };
+    },
+  });
+
+
   const trackingMap = new Map(trackingData.map((t) => [t.booking_id, t]));
 
   const filteredBookings = bookings.filter((b) => {
@@ -248,6 +269,8 @@ export default function Bookings() {
         </TabsContent>
       </Tabs>
 
+
+
       {/* Detail Dialog with Tracking */}
       <Dialog open={!!selectedBookingId} onOpenChange={(open) => !open && setSelectedBookingId(null)}>
         <DialogContent className="max-w-lg">
@@ -284,6 +307,60 @@ export default function Bookings() {
                   )}
                 </div>
               </div>
+
+              {/* Revenue / VAT block reason */}
+              {profRevenue?.prof && (() => {
+                const p = profRevenue.prof;
+                const rev = profRevenue.annualRevenue;
+                const limit = 5000;
+                const pct = Math.min(100, Math.round((rev / limit) * 100));
+                const blocked = p.revenue_blocked || (!p.has_vat_number && rev >= limit);
+                if (p.has_vat_number) {
+                  return (
+                    <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-xs space-y-1">
+                      <p className="font-semibold text-success">P.IVA registrata · nessun blocco fatturato</p>
+                      <p className="text-muted-foreground">
+                        P.IVA: <code className="text-foreground">{p.vat_number || "—"}</code> · Fatturato annuo piattaforma: €{rev.toLocaleString("it-IT")}
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className={cn(
+                    "rounded-lg border p-3 text-xs space-y-2",
+                    blocked ? "border-destructive/40 bg-destructive/5" : pct >= 60 ? "border-warning/40 bg-warning/5" : "border-muted bg-muted/30"
+                  )}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={cn("font-semibold uppercase tracking-wide text-[11px]", blocked && "text-destructive")}>
+                        {blocked ? "🔒 Account bloccato — limite 5k senza P.IVA" : "Fatturato annuo senza P.IVA"}
+                      </p>
+                      <span className="font-medium whitespace-nowrap">€{rev.toLocaleString("it-IT")} / €{limit.toLocaleString("it-IT")} ({pct}%)</span>
+                    </div>
+                    {blocked && (
+                      <>
+                        <div>
+                          <p className="font-semibold opacity-80">Motivo</p>
+                          <p>
+                            <code className="px-1.5 py-0.5 rounded bg-destructive/10 text-[11px]">revenue_blocked = true</code>
+                            {" "}— il professionista ha superato i €{limit.toLocaleString("it-IT")}/anno
+                            senza Partita IVA. Non può accettare nuove prenotazioni né inviare offerte.
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold opacity-80">Sblocco</p>
+                          <p>
+                            Il professionista deve inserire una P.IVA valida da{" "}
+                            <strong>Profilo → Dati Fiscali</strong>. Lo sblocco è automatico al salvataggio
+                            (imposta <code>has_vat_number=true</code> e <code>revenue_blocked=false</code>).
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
+
+
 
                 {/* Tracking Section */}
               <div className="border-t pt-4">
