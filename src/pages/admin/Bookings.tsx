@@ -73,6 +73,27 @@ export default function Bookings() {
     enabled: !!selectedBookingId,
   });
 
+  // Fetch professional fiscal/revenue info for the selected booking
+  const selectedProfId = selectedBookingId
+    ? bookings.find((b) => b.id === selectedBookingId)?.professional_id
+    : null;
+  const { data: profRevenue } = useQuery({
+    queryKey: ["admin-prof-revenue", selectedProfId],
+    enabled: !!selectedProfId,
+    queryFn: async () => {
+      const [{ data: prof }, { data: rev }] = await Promise.all([
+        supabase
+          .from("professionals")
+          .select("first_name, last_name, has_vat_number, vat_number, revenue_blocked")
+          .eq("id", selectedProfId!)
+          .maybeSingle(),
+        supabase.rpc("get_professional_annual_revenue", { _prof_id: selectedProfId! }),
+      ]);
+      return { prof, annualRevenue: Number(rev ?? 0) };
+    },
+  });
+
+
   const trackingMap = new Map(trackingData.map((t) => [t.booking_id, t]));
 
   const filteredBookings = bookings.filter((b) => {
