@@ -265,12 +265,9 @@ export default function Bookings() {
                 </TableBody>
               </Table>
             )}
-                </div>
-              </div>
-
-
         </TabsContent>
       </Tabs>
+
 
       {/* Detail Dialog with Tracking */}
       <Dialog open={!!selectedBookingId} onOpenChange={(open) => !open && setSelectedBookingId(null)}>
