@@ -58,6 +58,7 @@ import ClientPromotions from "@/pages/client/Promotions";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import ClientSupport from "@/pages/client/Support";
  import ClientOnboarding from "@/pages/client/Onboarding";
+import ClientNotificationsInbox from "@/pages/client/Notifications";
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
 import Install from "@/pages/Install";
@@ -116,6 +117,7 @@ const App = () => (
           <Route path="/client/safety" element={<SafetyCenter />} />
           <Route path="/client/support" element={<ClientSupport />} />
            <Route path="/client/onboarding" element={<ClientOnboarding />} />
+          <Route path="/client/notifications" element={<ClientNotificationsInbox />} />
           <Route path="/client/service-requests" element={<ClientServiceRequests />} />
           <Route path="/client/service-requests/new" element={<ServiceRequestNew />} />
           <Route path="/client/service-requests/:id" element={<ServiceRequestDetail />} />
