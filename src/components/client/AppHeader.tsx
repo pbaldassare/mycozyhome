@@ -49,6 +49,11 @@ export function AppHeader({
     };
   }, [showNotifications]);
 
+  const handleBack = () => {
+    if (onBack) onBack();
+    else navigate(-1);
+  };
+
   return (
     <header className={cn("app-header", className)}>
       <div className="flex items-center justify-between h-14 px-4">
