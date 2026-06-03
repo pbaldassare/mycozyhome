@@ -52,7 +52,13 @@ export function AppHeader({
         <div className="flex items-center gap-2">
           {rightAction}
           {showNotifications && (
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-xl relative"
+              onClick={() => navigate("/client/notifications")}
+              aria-label="Notifiche"
+            >
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
             </Button>
