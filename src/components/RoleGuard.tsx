@@ -23,6 +23,20 @@ export function RoleGuard({ allowedRole, children }: RoleGuardProps) {
     return <Navigate to="/login" replace />;
   }
 
+  // Role not yet loaded (e.g. just after signup, trigger still running).
+  // Show a loader instead of redirecting to avoid infinite loops.
+  if (role === null) {
+    // For client area, default to allowing access (signup metadata sets role=client)
+    if (allowedRole === "client") {
+      return <>{children}</>;
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   // Wrong role — redirect to the correct panel
   if (role !== allowedRole) {
     if (role === "admin") return <Navigate to="/admin" replace />;
