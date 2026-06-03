@@ -84,7 +84,9 @@ export function AppHeader({
               aria-label="Notifiche"
             >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
+              {unread && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full" />
+              )}
             </Button>
           )}
         </div>
