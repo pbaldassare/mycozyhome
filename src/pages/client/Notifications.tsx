@@ -45,6 +45,11 @@ export default function ClientNotifications() {
     setNotifications(
       mockNotifications.map((n) => ({ ...n, read: readIds.includes(n.id) }))
     );
+    // Auto-mark all known notifications as read when opening the inbox
+    const allIds = mockNotifications.map((n) => n.id);
+    const merged = Array.from(new Set([...readIds, ...allIds]));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    window.dispatchEvent(new Event("storage"));
   }, []);
 
   const markAllRead = () => {
