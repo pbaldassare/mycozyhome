@@ -13,9 +13,9 @@ import { isClientStorySeen, isProfessionalStorySeen } from "@/lib/onboarding-key
 const DEV_TEST_PASSWORD = "Leone123!";
 
 const DEV_TEST_ACCOUNTS = [
-  { label: "Admin", email: "admin@domesticdelight.app" },
-  { label: "Professionista", email: "professionista@domesticdelight.app" },
-  { label: "Cliente", email: "cliente@domesticdelight.app" },
+  { label: "Demo Admin", email: "admin@domesticdelight.app" },
+  { label: "Demo Professionista", email: "professionista@domesticdelight.app" },
+  { label: "Demo Cliente", email: "cliente@domesticdelight.app" },
 ] as const;
 
 export default function Login() {
@@ -202,28 +202,26 @@ export default function Login() {
             </Button>
           </form>
 
-          {import.meta.env.DEV && (
-            <div className="mt-6 pt-6 border-t border-dashed border-muted">
-              <p className="text-xs text-muted-foreground text-center mb-3">
-                Account di test
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {DEV_TEST_ACCOUNTS.map(({ label, email }) => (
-                  <Button
-                    key={email}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-xs text-muted-foreground"
-                    disabled={loading}
-                    onClick={() => handleDevQuickLogin(email)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+          <div className="mt-6 pt-6 border-t border-dashed border-muted">
+            <p className="text-xs text-muted-foreground text-center mb-3">
+              Account demo
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {DEV_TEST_ACCOUNTS.map(({ label, email }) => (
+                <Button
+                  key={email}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-muted-foreground"
+                  disabled={loading}
+                  onClick={() => handleDevQuickLogin(email)}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Register Links */}
           <div className="mt-8 text-center space-y-3">
