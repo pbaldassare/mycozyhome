@@ -26,7 +26,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 const disputeSchema = z.object({
-  reason: z.enum(["no_show", "poor_quality", "inappropriate_behavior", "payment_issue", "damage", "other"]),
+  reason: z.enum([
+    "no_show",
+    "poor_quality",
+    "inappropriate_behavior",
+    "payment_issue",
+    "damage",
+    "late_arrival",
+    "early_departure",
+    "other",
+  ]),
   description: z.string().min(50, "Descrizione troppo breve (min 50 caratteri)").max(2000, "Descrizione troppo lunga"),
 });
 
@@ -57,6 +66,8 @@ const reasonLabels = {
   inappropriate_behavior: "Comportamento inappropriato",
   payment_issue: "Problema con il pagamento",
   damage: "Danni causati",
+  late_arrival: "Ritardo nell'arrivo",
+  early_departure: "Uscita anticipata",
   other: "Altro",
 };
 

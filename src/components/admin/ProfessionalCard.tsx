@@ -1,4 +1,4 @@
-import { Check, X, Eye, FileText, MapPin, Star } from "lucide-react";
+import { Check, X, Eye, FileText, MapPin, Star, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ export interface Professional {
   rating?: number;
   reviewsCount?: number;
   submittedAt: string;
+  isBlocked?: boolean;
+  blockedReason?: string | null;
 }
 
 interface ProfessionalCardProps {
@@ -22,6 +24,7 @@ interface ProfessionalCardProps {
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
   onView?: (id: string) => void;
+  onBlock?: (id: string) => void;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -45,6 +48,7 @@ export function ProfessionalCard({
   onApprove,
   onReject,
   onView,
+  onBlock,
 }: ProfessionalCardProps) {
   const status = statusConfig[professional.status] || statusConfig.pending;
 
@@ -75,9 +79,16 @@ export function ProfessionalCard({
                 {professional.email}
               </p>
             </div>
-            <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-medium flex-shrink-0", status.className)}>
-              {status.label}
-            </span>
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-medium", status.className)}>
+                {status.label}
+              </span>
+              {professional.isBlocked && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blush/20 text-blush-dark border border-blush/50">
+                  Bloccato
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Services */}
@@ -146,15 +157,28 @@ export function ProfessionalCard({
       )}
 
       {professional.status !== "pending" && professional.status !== "in_review" && (
-        <div className="mt-5 pt-4 border-t border-border/30">
+        <div className="mt-5 pt-4 border-t border-border/30 flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="w-full rounded-xl border-border/50"
+            className="flex-1 rounded-xl border-border/50"
             onClick={() => onView?.(professional.id)}
           >
             <Eye className="w-4 h-4 mr-2" />
             Visualizza Dettagli
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(
+              "rounded-xl",
+              professional.isBlocked
+                ? "border-sage/50 text-sage-dark"
+                : "border-destructive/30 text-destructive"
+            )}
+            onClick={() => onBlock?.(professional.id)}
+          >
+            <Ban className="w-4 h-4" />
           </Button>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { assertNotPlatformBlocked } from "@/lib/platform-block";
 
 export interface ServiceRequest {
   id: string;
@@ -100,8 +101,10 @@ export function useOpenServiceRequests(filters?: { city?: string; service_type?:
 // Create a service request
 export function useCreateServiceRequest() {
   const queryClient = useQueryClient();
+  const { isBlocked } = useAuth();
   return useMutation({
     mutationFn: async (req: Omit<ServiceRequest, "id" | "status" | "offers_count" | "created_at" | "updated_at">) => {
+      assertNotPlatformBlocked(isBlocked);
       const { data, error } = await supabase
         .from("service_requests")
         .insert(req as any)
@@ -173,6 +176,7 @@ export function useMyOffers(professionalId: string | undefined) {
 // Professional: send an offer
 export function useSendOffer() {
   const queryClient = useQueryClient();
+  const { isBlocked } = useAuth();
   return useMutation({
     mutationFn: async (offer: {
       request_id: string;
@@ -183,6 +187,8 @@ export function useSendOffer() {
       estimated_hours?: number;
       message?: string;
     }) => {
+      assertNotPlatformBlocked(isBlocked);
+
       // Blocco: verifica fatturato annuo del professionista
       const { data: profData } = await supabase
         .from("professionals")
@@ -214,8 +220,10 @@ export function useSendOffer() {
 // Client: accept an offer
 export function useAcceptOffer() {
   const queryClient = useQueryClient();
+  const { isBlocked } = useAuth();
   return useMutation({
     mutationFn: async ({ offerId, requestId }: { offerId: string; requestId: string }) => {
+      assertNotPlatformBlocked(isBlocked);
       const { error } = await supabase
         .from("service_offers")
         .update({ status: "accepted", client_accepted_at: new Date().toISOString() } as any)
@@ -231,8 +239,10 @@ export function useAcceptOffer() {
 // Professional: confirm accepted offer
 export function useConfirmOffer() {
   const queryClient = useQueryClient();
+  const { isBlocked } = useAuth();
   return useMutation({
     mutationFn: async ({ offerId }: { offerId: string }) => {
+      assertNotPlatformBlocked(isBlocked);
       const { error } = await supabase
         .from("service_offers")
         .update({ status: "confirmed", professional_confirmed_at: new Date().toISOString() } as any)

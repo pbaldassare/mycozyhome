@@ -7,11 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Home, Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { loginSchema } from "@/lib/auth-schemas";
+import { isClientStorySeen, isProfessionalStorySeen } from "@/lib/onboarding-keys";
 
-const loginSchema = z.object({
-  email: z.string().email("Email non valida"),
-  password: z.string().min(6, "La password deve avere almeno 6 caratteri"),
-});
+const DEV_TEST_PASSWORD = "Leone123!";
+
+const DEV_TEST_ACCOUNTS = [
+  { label: "Admin", email: "admin@domesticdelight.app" },
+  { label: "Professionista", email: "professionista@domesticdelight.app" },
+  { label: "Cliente", email: "cliente@domesticdelight.app" },
+] as const;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,13 +33,13 @@ export default function Login() {
     setErrors({ ...errors, [e.target.name]: "" });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async (email: string, password: string) => {
     setLoading(true);
     setErrors({});
+    setFormData({ email, password });
 
     try {
-      const validated = loginSchema.parse(formData);
+      const validated = loginSchema.parse({ email, password });
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: validated.email,
@@ -54,7 +59,6 @@ export default function Login() {
 
       toast.success("Accesso effettuato!");
 
-      // Check user role from user_roles table
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -64,20 +68,25 @@ export default function Login() {
       const role = roleData?.role;
 
       if (role === "professional") {
-        // Check if professional has completed onboarding
         const { data: prof } = await supabase
           .from("professionals")
           .select("status, profile_completed")
           .eq("user_id", data.user.id)
           .maybeSingle();
 
-        if (prof?.profile_completed) {
+        if (!isProfessionalStorySeen()) {
+          navigate("/professional/tutorial", {
+            state: prof?.profile_completed ? { returnTo: "/professional" } : undefined,
+          });
+        } else if (prof?.profile_completed) {
           navigate("/professional");
         } else {
           navigate("/professional/onboarding/personal");
         }
       } else if (role === "admin") {
         navigate("/admin");
+      } else if (!isClientStorySeen()) {
+        navigate("/client/onboarding");
       } else {
         navigate("/client");
       }
@@ -94,6 +103,15 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await performLogin(formData.email, formData.password);
+  };
+
+  const handleDevQuickLogin = (email: string) => {
+    void performLogin(email, DEV_TEST_PASSWORD);
   };
 
   return (
@@ -184,6 +202,29 @@ export default function Login() {
             </Button>
           </form>
 
+          {import.meta.env.DEV && (
+            <div className="mt-6 pt-6 border-t border-dashed border-muted">
+              <p className="text-xs text-muted-foreground text-center mb-3">
+                Account di test
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {DEV_TEST_ACCOUNTS.map(({ label, email }) => (
+                  <Button
+                    key={email}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-muted-foreground"
+                    disabled={loading}
+                    onClick={() => handleDevQuickLogin(email)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Register Links */}
           <div className="mt-8 text-center space-y-3">
             <p className="text-muted-foreground">Non hai un account?</p>
@@ -191,14 +232,14 @@ export default function Login() {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate("/client/auth")}
+                onClick={() => navigate("/client/welcome")}
               >
                 Registrati come Cliente
               </Button>
               <Button
                 variant="ghost"
                 className="w-full text-primary"
-                onClick={() => navigate("/professional/auth")}
+                onClick={() => navigate("/professional/welcome")}
               >
                 Registrati come Professionista
               </Button>

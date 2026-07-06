@@ -14,6 +14,8 @@ interface ClientProfile {
   city: string | null;
   province: string | null;
   postal_code: string | null;
+  is_blocked?: boolean;
+  blocked_reason?: string | null;
 }
 
 type UserRole = "admin" | "professional" | "client" | null;
@@ -23,6 +25,8 @@ interface AuthContextType {
   session: Session | null;
   profile: ClientProfile | null;
   role: UserRole;
+  isBlocked: boolean;
+  blockedReason: string | null;
   loading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -35,6 +39,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [role, setRole] = useState<UserRole>(null);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
@@ -56,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data) {
       setProfile(data);
+      setIsBlocked(!!data.is_blocked);
+      setBlockedReason(data.blocked_reason ?? null);
     } else {
       // Create profile if it doesn't exist
       const { data: newProfile } = await supabase
@@ -66,21 +74,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (newProfile) {
         setProfile(newProfile);
+        setIsBlocked(!!newProfile.is_blocked);
+        setBlockedReason(newProfile.blocked_reason ?? null);
       }
     }
   };
 
+  const fetchProfessionalBlockStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from("professionals")
+      .select("is_blocked, blocked_reason")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    setIsBlocked(!!data?.is_blocked);
+    setBlockedReason(data?.blocked_reason ?? null);
+  };
+
   const fetchUserData = async (userId: string, userEmail?: string | null) => {
-    // First, fetch the user's role
     const userRole = await fetchUserRole(userId);
     setRole(userRole);
 
-    // Only fetch/create client profile if the user is a client (or has no role yet)
     if (userRole === "client" || userRole === null) {
       await fetchClientProfile(userId, userEmail);
-    } else {
-      // For professionals and admins, don't load/create client profile
+    } else if (userRole === "professional") {
       setProfile(null);
+      await fetchProfessionalBlockStatus(userId);
+    } else {
+      setProfile(null);
+      setIsBlocked(false);
+      setBlockedReason(null);
     }
   };
 
@@ -96,6 +119,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRole(null);
+    setIsBlocked(false);
+    setBlockedReason(null);
   };
 
   useEffect(() => {
@@ -113,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null);
           setRole(null);
+          setIsBlocked(false);
+          setBlockedReason(null);
         }
         setLoading(false);
       }
@@ -132,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, session, profile, role, isBlocked, blockedReason, loading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

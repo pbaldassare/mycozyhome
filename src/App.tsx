@@ -58,11 +58,13 @@ import ClientPromotions from "@/pages/client/Promotions";
 import SafetyCenter from "@/pages/client/SafetyCenter";
 import ClientSupport from "@/pages/client/Support";
  import ClientOnboarding from "@/pages/client/Onboarding";
+import ClientWelcomeStory from "@/pages/client/WelcomeStory";
 import ClientNotificationsInbox from "@/pages/client/Notifications";
 import Welcome from "@/pages/Welcome";
 import Login from "@/pages/Login";
 import Install from "@/pages/Install";
  import ProfessionalTutorial from "@/pages/professional/Tutorial";
+import ProfessionalWelcomeStory from "@/pages/professional/WelcomeStory";
 import ProfessionalSupport from "@/pages/professional/Support";
 import ProfessionalFavoriteClients from "@/pages/professional/FavoriteClients";
 import ServiceBoard from "@/pages/professional/ServiceBoard";
@@ -97,6 +99,7 @@ const App = () => (
             <Route path="profile" element={<ClientProfile />} />
           </Route>
           {/* Client routes outside layout (full screen) */}
+          <Route path="/client/welcome" element={<ClientWelcomeStory />} />
           <Route path="/client/auth" element={<ClientAuth />} />
           <Route path="/client/professional/:id" element={<ClientProfessionalDetail />} />
           <Route path="/client/booking/new" element={<ClientBookingNew />} />
@@ -146,6 +149,7 @@ const App = () => (
           </Route>
           {/* Professional routes outside layout (full screen) */}
           <Route path="/professional/chat/:conversationId" element={<ProfessionalChat />} />
+          <Route path="/professional/welcome" element={<ProfessionalWelcomeStory />} />
           <Route path="/professional/auth" element={<ProfessionalAuth />} />
           <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
           <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />

@@ -14,6 +14,7 @@ import {
   Phone,
   Mail,
   Loader2,
+  Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,6 +68,8 @@ interface ProfessionalData {
   createdAt: string;
   rating?: number;
   reviewCount?: number;
+  isBlocked?: boolean;
+  blockedReason?: string | null;
 }
 
 interface ProfessionalReviewPanelProps {
@@ -74,6 +77,7 @@ interface ProfessionalReviewPanelProps {
   onApprove: (id: string, notes: string) => void;
   onReject: (id: string, notes: string) => void;
   onClose: () => void;
+  onBlock?: () => void;
 }
 
 const documentTypeLabels: Record<string, string> = {
@@ -97,6 +101,7 @@ export function ProfessionalReviewPanel({
   onApprove,
   onReject,
   onClose,
+  onBlock,
 }: ProfessionalReviewPanelProps) {
   const [adminNotes, setAdminNotes] = useState("");
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -384,6 +389,25 @@ export function ProfessionalReviewPanel({
           >
             <Check className="h-4 w-4" />
             Approva
+          </Button>
+        </div>
+      )}
+
+      {professional.status === "approved" && onBlock && (
+        <div className="space-y-3">
+          {professional.isBlocked && professional.blockedReason && (
+            <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm">
+              <p className="font-medium text-destructive mb-1">Account bloccato</p>
+              <p className="text-muted-foreground">{professional.blockedReason}</p>
+            </div>
+          )}
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={onBlock}
+          >
+            <Ban className="h-4 w-4" />
+            {professional.isBlocked ? "Sblocca professionista" : "Blocca professionista"}
           </Button>
         </div>
       )}

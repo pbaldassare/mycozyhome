@@ -32,6 +32,9 @@ import { cn } from "@/lib/utils";
 import { useCancelBooking } from "@/hooks/useBookings";
 import { useCreateReview, useCanReview } from "@/hooks/useReviews";
 import { ReviewForm } from "@/components/client/ReviewForm";
+import { DisputeForm } from "@/components/dispute/DisputeForm";
+import { canDisputeBooking, getDisputeDeadlineLabel, PAYMENT_STATUS_LABELS } from "@/lib/payment-flow";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useBookingTracking } from "@/hooks/useBookingTracking";
@@ -58,7 +61,9 @@ export default function BookingDetail() {
   const navigate = useNavigate();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [showDisputeDialog, setShowDisputeDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
+  const { user } = useAuth();
   const cancelBooking = useCancelBooking();
   const createReview = useCreateReview();
   const { data: canReviewBooking } = useCanReview(id);
@@ -112,7 +117,7 @@ export default function BookingDetail() {
         .select(`
           *,
           professional:professionals(
-            id, first_name, last_name, avatar_url, phone, email
+            id, user_id, first_name, last_name, avatar_url, phone, email
           )
         `)
         .eq("id", id)
@@ -173,6 +178,8 @@ export default function BookingDetail() {
     booking.status !== "cancelled";
   const showReviewButton = booking.status === "completed" && canReviewBooking;
   const canCancel = booking.status === "pending" || booking.status === "confirmed";
+  const canDispute = user && canDisputeBooking(booking);
+  const paymentLabel = PAYMENT_STATUS_LABELS[booking.payment_status ?? "none"] ?? booking.payment_status;
 
   const handleReviewSubmit = async (rating: number, comment: string) => {
     if (!booking) return;
@@ -330,6 +337,14 @@ export default function BookingDetail() {
               <span>Totale</span>
               <span className="text-primary">€{Number(booking.total_amount).toFixed(2)}</span>
             </div>
+            {booking.payment_status && booking.payment_status !== "none" && (
+              <p className="text-xs text-muted-foreground pt-2">
+                Pagamento: <span className="font-medium">{paymentLabel}</span>
+                {booking.payment_status === "pending_release" && (
+                  <> — erogazione dopo il {getDisputeDeadlineLabel(booking)} se non contestato</>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
@@ -364,6 +379,18 @@ export default function BookingDetail() {
             </div>
           )}
 
+          {canDispute && (
+            <Button
+              variant="outline"
+              className="w-full border-warning text-warning hover:bg-warning/10"
+              size="lg"
+              onClick={() => setShowDisputeDialog(true)}
+            >
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Apri contestazione
+            </Button>
+          )}
+
           {canCancel && (
             <Button 
               variant="outline" 
@@ -395,7 +422,7 @@ export default function BookingDetail() {
           <DialogHeader>
             <DialogTitle>Annulla prenotazione</DialogTitle>
             <DialogDescription>
-              Sei sicuro di voler annullare questa prenotazione? Questa azione non può essere annullata.
+              Sei sicuro di voler annullare questa prenotazione? I crediti verranno rimborsati sul tuo wallet.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -419,6 +446,32 @@ export default function BookingDetail() {
               Conferma annullamento
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contestazione servizio</DialogTitle>
+            <DialogDescription>
+              Hai 5 giorni dalla data del servizio per contestare. Il pagamento al professionista verrà sospeso fino alla risoluzione.
+            </DialogDescription>
+          </DialogHeader>
+          {user && booking && (
+            <DisputeForm
+              reporterId={user.id}
+              reporterType="client"
+              reportedId={booking.professional?.user_id ?? booking.professional_id}
+              reportedType="professional"
+              reportedName={professionalName}
+              bookingId={booking.id}
+              onSuccess={() => {
+                setShowDisputeDialog(false);
+                toast.success("Contestazione inviata. Il pagamento è stato sospeso.");
+              }}
+              onCancel={() => setShowDisputeDialog(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 

@@ -1,5 +1,7 @@
  import { useState } from "react";
  import { Button } from "@/components/ui/button";
+ import { Checkbox } from "@/components/ui/checkbox";
+ import { Label } from "@/components/ui/label";
  import { ChevronLeft, ChevronRight } from "lucide-react";
  import { cn } from "@/lib/utils";
  
@@ -9,6 +11,9 @@
    completeButtonText?: string;
    skipButtonText?: string;
    showSkip?: boolean;
+   showDismissOption?: boolean;
+   dismissLabel?: string;
+   onDismiss?: () => void;
  }
  
  export function OnboardingCarousel({
@@ -17,14 +22,25 @@
    completeButtonText = "Inizia",
    skipButtonText = "Salta",
    showSkip = true,
+   showDismissOption = false,
+   dismissLabel = "Non mostrare più",
+   onDismiss,
  }: OnboardingCarouselProps) {
    const [currentIndex, setCurrentIndex] = useState(0);
+   const [dismissChecked, setDismissChecked] = useState(false);
    const totalSlides = children.length;
    const isLastSlide = currentIndex === totalSlides - 1;
  
+   const finish = () => {
+     if (dismissChecked && onDismiss) {
+       onDismiss();
+     }
+     onComplete();
+   };
+ 
    const goToNext = () => {
      if (isLastSlide) {
-       onComplete();
+       finish();
      } else {
        setCurrentIndex((prev) => Math.min(prev + 1, totalSlides - 1));
      }
@@ -41,9 +57,9 @@
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Skip button */}
-      {showSkip && !isLastSlide && (
+      {showSkip && (
         <div className="flex justify-end p-4 flex-shrink-0">
-          <Button variant="ghost" size="sm" onClick={onComplete}>
+          <Button variant="ghost" size="sm" onClick={finish}>
             {skipButtonText}
           </Button>
         </div>
@@ -82,6 +98,22 @@
            ))}
          </div>
  
+         {showDismissOption && (
+           <div className="flex items-center justify-center gap-2">
+             <Checkbox
+               id="dismiss-onboarding"
+               checked={dismissChecked}
+               onCheckedChange={(checked) => setDismissChecked(checked === true)}
+             />
+             <Label
+               htmlFor="dismiss-onboarding"
+               className="text-sm text-muted-foreground cursor-pointer"
+             >
+               {dismissLabel}
+             </Label>
+           </div>
+         )}
+
          {/* Navigation buttons */}
          <div className="flex gap-3">
            {currentIndex > 0 && (

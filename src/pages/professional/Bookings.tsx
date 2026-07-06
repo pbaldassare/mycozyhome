@@ -54,8 +54,18 @@ import { useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
 import { useGeofenceTracking } from "@/hooks/useGeofenceTracking";
 import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
+import { DisputeForm } from "@/components/dispute/DisputeForm";
+import { canDisputeBooking } from "@/lib/payment-flow";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Navigation, Radio, AlertTriangle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -108,6 +118,7 @@ function useAllProfessionalBookings(professionalId: string | undefined) {
 
 export default function ProfessionalBookings() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: professional } = useProfessionalProfile();
   const { data: bookings, isLoading } = useAllProfessionalBookings(professional?.id);
   const updateStatus = useUpdateBookingStatus();
@@ -116,6 +127,7 @@ export default function ProfessionalBookings() {
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
   const [reviewBooking, setReviewBooking] = useState<any>(null);
+  const [disputeBooking, setDisputeBooking] = useState<any>(null);
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const createClientReview = useCreateClientReview();
   const { isFavorite, toggleFavorite } = useProfessionalFavorites();
@@ -480,6 +492,18 @@ export default function ProfessionalBookings() {
               </Button>
             </div>
           )}
+
+          {user && canDisputeBooking(booking) && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full mt-2 border-warning text-warning hover:bg-warning/10"
+              onClick={() => setDisputeBooking(booking)}
+            >
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Contesta servizio
+            </Button>
+          )}
         </CardContent>
       </Card>
     );
@@ -659,6 +683,36 @@ export default function ProfessionalBookings() {
           }}
         />
       )}
+
+      <Dialog open={!!disputeBooking} onOpenChange={(open) => !open && setDisputeBooking(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contestazione servizio</DialogTitle>
+            <DialogDescription>
+              Hai 5 giorni per contestare. Il pagamento resterà sospeso fino alla risoluzione.
+            </DialogDescription>
+          </DialogHeader>
+          {user && disputeBooking && (
+            <DisputeForm
+              reporterId={user.id}
+              reporterType="professional"
+              reportedId={disputeBooking.client_id}
+              reportedType="client"
+              reportedName={
+                disputeBooking.client
+                  ? `${disputeBooking.client.first_name || ""} ${disputeBooking.client.last_name || ""}`.trim() || "Cliente"
+                  : "Cliente"
+              }
+              bookingId={disputeBooking.id}
+              onSuccess={() => {
+                setDisputeBooking(null);
+                toast.success("Contestazione inviata. Il pagamento è stato sospeso.");
+              }}
+              onCancel={() => setDisputeBooking(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

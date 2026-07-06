@@ -69,6 +69,8 @@ const reasonLabels: Record<string, string> = {
   inappropriate_behavior: "Comportamento inappropriato",
   payment_issue: "Problema pagamento",
   damage: "Danni causati",
+  late_arrival: "Ritardo nell'arrivo",
+  early_departure: "Uscita anticipata",
   other: "Altro",
 };
 

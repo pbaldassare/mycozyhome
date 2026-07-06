@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,23 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Home, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email("Email non valida"),
-  password: z.string().min(6, "La password deve avere almeno 6 caratteri"),
-});
-
-const signupSchema = loginSchema.extend({
-  firstName: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
-  lastName: z.string().min(2, "Il cognome deve avere almeno 2 caratteri"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Le password non corrispondono",
-  path: ["confirmPassword"],
-});
+import { loginSchema, signupSchema, SIGNUP_PASSWORD_HINT } from "@/lib/auth-schemas";
+import { isClientStorySeen } from "@/lib/onboarding-keys";
 
 export default function ClientAuth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,6 +24,20 @@ export default function ClientAuth() {
     lastName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if ((location.state as { signup?: boolean } | null)?.signup) {
+      setIsLogin(false);
+    }
+  }, [location.state]);
+
+  const redirectAfterAuth = () => {
+    if (!isClientStorySeen()) {
+      navigate("/client/onboarding");
+    } else {
+      navigate("/client");
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -70,7 +73,7 @@ export default function ClientAuth() {
         }
 
         toast.success("Accesso effettuato!");
-        navigate("/client");
+        redirectAfterAuth();
       } else {
         const validated = signupSchema.parse(formData);
 
@@ -97,13 +100,7 @@ export default function ClientAuth() {
         }
 
         toast.success("Registrazione completata!");
-         // Show onboarding for new users
-         const onboardingSeen = localStorage.getItem("client_onboarding_seen");
-         if (!onboardingSeen) {
-           navigate("/client/onboarding");
-         } else {
-           navigate("/client");
-         }
+        redirectAfterAuth();
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -229,6 +226,9 @@ export default function ClientAuth() {
               </div>
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password}</p>
+              )}
+              {!isLogin && !errors.password && (
+                <p className="text-xs text-muted-foreground">{SIGNUP_PASSWORD_HINT}</p>
               )}
             </div>
 

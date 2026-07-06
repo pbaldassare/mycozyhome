@@ -39,7 +39,7 @@ export default function Welcome() {
           <Button
             size="lg"
             className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/90"
-            onClick={() => navigate("/client/auth")}
+            onClick={() => navigate("/client/welcome")}
           >
             Registrati come Cliente
           </Button>
@@ -47,7 +47,7 @@ export default function Welcome() {
             size="lg"
             variant="outline"
             className="w-full h-14 text-lg rounded-2xl border-primary text-primary hover:bg-primary/5"
-            onClick={() => navigate("/professional/auth")}
+            onClick={() => navigate("/professional/welcome")}
           >
             Registrati come Professionista
           </Button>

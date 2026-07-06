@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/sheet";
 import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
 import { ProfessionalReviewPanel } from "@/components/admin/ProfessionalReviewPanel";
+import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
+import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,8 +35,11 @@ export default function Professionals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
   const [selectedProfessional, setSelectedProfessional] = useState<any | null>(null);
+  const [blockTarget, setBlockTarget] = useState<ProfessionalWithDocs | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const blockUser = useBlockUser();
+  const unblockUser = useUnblockUser();
 
   // Fetch professionals from database
   const { data: professionals = [], isLoading } = useQuery({
@@ -82,6 +87,8 @@ export default function Professionals() {
               month: "short",
               year: "numeric",
             }),
+            isBlocked: !!prof.is_blocked,
+            blockedReason: prof.blocked_reason,
             documents: (docs || []).map((doc) => ({
               id: doc.id,
               type: doc.document_type,
@@ -201,8 +208,26 @@ export default function Professionals() {
         createdAt: prof.submittedAt,
         rating: prof.rating,
         reviewCount: prof.reviewsCount,
+        isBlocked: prof.isBlocked,
+        blockedReason: prof.blockedReason,
       });
     }
+  };
+
+  const handleBlock = (id: string) => {
+    const prof = professionals.find((p) => p.id === id);
+    if (prof) setBlockTarget(prof);
+  };
+
+  const handleBlockConfirm = async (reason?: string) => {
+    if (!blockTarget) return;
+    if (blockTarget.isBlocked) {
+      await unblockUser.mutateAsync({ userType: "professional", id: blockTarget.id });
+    } else {
+      await blockUser.mutateAsync({ userType: "professional", id: blockTarget.id, reason });
+    }
+    setBlockTarget(null);
+    setSelectedProfessional(null);
   };
 
   return (
@@ -306,6 +331,7 @@ export default function Professionals() {
                   onApprove={handleCardApprove}
                   onReject={handleCardReject}
                   onView={handleView}
+                  onBlock={handleBlock}
                 />
               ))}
             </div>
@@ -328,10 +354,23 @@ export default function Professionals() {
               onApprove={handleApprove}
               onReject={handleReject}
               onClose={() => setSelectedProfessional(null)}
+              onBlock={() => handleBlock(selectedProfessional.id)}
             />
           )}
         </SheetContent>
       </Sheet>
+
+      {blockTarget && (
+        <BlockUserDialog
+          open={!!blockTarget}
+          onOpenChange={(open) => !open && setBlockTarget(null)}
+          userName={blockTarget.name}
+          isBlocked={!!blockTarget.isBlocked}
+          blockedReason={blockTarget.blockedReason}
+          onConfirm={handleBlockConfirm}
+          isLoading={blockUser.isPending || unblockUser.isPending}
+        />
+      )}
     </div>
   );
 }

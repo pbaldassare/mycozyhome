@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
 import { 
@@ -15,6 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { assertNotPlatformBlocked } from "@/lib/platform-block";
+import { useClientWallet } from "@/hooks/useWallet";
 import { z } from "zod";
 
 const serviceTypeLabels: Record<string, string> = {
@@ -32,6 +35,9 @@ const notesSchema = z.string().trim().max(500, "Note troppo lunghe").optional();
 export default function BookingConfirm() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isBlocked } = useAuth();
+  const { data: wallet } = useClientWallet();
   
   const professionalId = searchParams.get("professional");
   const serviceType = searchParams.get("service");
@@ -81,6 +87,8 @@ export default function BookingConfirm() {
 
   const totalAmount = service ? service.hourly_rate * duration : 0;
   const finalAmount = totalAmount - discount;
+  const walletBalance = wallet?.balance ?? 0;
+  const hasEnoughCredits = walletBalance >= finalAmount;
 
   // Calculate end time
   const getEndTime = () => {
@@ -117,6 +125,7 @@ export default function BookingConfirm() {
 
   const createBookingMutation = useMutation({
     mutationFn: async () => {
+      assertNotPlatformBlocked(isBlocked);
       // Validate inputs
       const addressResult = addressSchema.safeParse(address);
       if (!addressResult.success) {
@@ -156,6 +165,8 @@ export default function BookingConfirm() {
       return data;
     },
     onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
       toast({
         title: "Prenotazione confermata!",
         description: "Riceverai una conferma dal professionista",
@@ -163,9 +174,12 @@ export default function BookingConfirm() {
       navigate(`/client/bookings?new=${data.id}`);
     },
     onError: (error: Error) => {
+      const message = error.message.includes("Saldo crediti insufficiente")
+        ? "Saldo crediti insufficiente. Ricarica il wallet per continuare."
+        : error.message;
       toast({
         title: "Errore",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     },
@@ -359,11 +373,25 @@ export default function BookingConfirm() {
         {/* Payment Info */}
         <div className="trust-indicator">
           <CreditCard className="h-5 w-5 text-success flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-foreground">Pagamento sicuro</p>
-            <p className="text-xs text-muted-foreground">
-              Pagherai solo dopo che il servizio sarà completato
+          <div className="flex-1">
+            <p className="text-sm font-medium text-foreground">
+              Saldo wallet: €{walletBalance.toFixed(2)}
             </p>
+            <p className="text-xs text-muted-foreground">
+              Alla conferma verranno bloccati €{finalAmount.toFixed(2)}. Il professionista riceverà il pagamento solo a servizio completato (dopo 5 giorni senza contestazioni).
+            </p>
+            {!hasEnoughCredits && finalAmount > 0 && (
+              <p className="text-xs text-destructive mt-1 font-medium">
+                Crediti insufficienti —{" "}
+                <button
+                  type="button"
+                  className="underline"
+                  onClick={() => navigate("/client/profile/payments")}
+                >
+                  ricarica il wallet
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -373,7 +401,7 @@ export default function BookingConfirm() {
         <Button
           className="btn-trust-primary"
           onClick={() => createBookingMutation.mutate()}
-          disabled={!address.trim() || createBookingMutation.isPending}
+          disabled={!address.trim() || createBookingMutation.isPending || !hasEnoughCredits}
         >
           {createBookingMutation.isPending ? (
             <>

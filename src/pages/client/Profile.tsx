@@ -152,7 +152,8 @@ export default function ClientProfile() {
             <Separator />
             <MenuItem
               icon={CreditCard}
-              label="Metodi di pagamento"
+              label="Wallet e crediti"
+              description="Ricarica e gestisci il saldo"
               onClick={() => navigate("/client/profile/payments")}
             />
             <Separator />

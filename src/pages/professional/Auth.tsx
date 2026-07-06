@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,24 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Home, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useAuth } from "@/hooks/useAuth";
-
-const loginSchema = z.object({
-  email: z.string().email("Email non valida"),
-  password: z.string().min(6, "La password deve avere almeno 6 caratteri"),
-});
-
-const signupSchema = loginSchema.extend({
-  firstName: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
-  lastName: z.string().min(2, "Il cognome deve avere almeno 2 caratteri"),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Le password non corrispondono",
-  path: ["confirmPassword"],
-});
+import { loginSchema, signupSchema, SIGNUP_PASSWORD_HINT } from "@/lib/auth-schemas";
+import { isProfessionalStorySeen } from "@/lib/onboarding-keys";
 
 export default function ProfessionalAuth() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,6 +24,40 @@ export default function ProfessionalAuth() {
     lastName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if ((location.state as { signup?: boolean } | null)?.signup) {
+      setIsLogin(false);
+    }
+  }, [location.state]);
+
+  const redirectProfessionalAfterAuth = async (
+    userId: string,
+    profileCompleted?: boolean
+  ) => {
+    let completed = profileCompleted;
+    if (completed === undefined) {
+      const { data: prof } = await supabase
+        .from("professionals")
+        .select("profile_completed")
+        .eq("user_id", userId)
+        .maybeSingle();
+      completed = prof?.profile_completed ?? false;
+    }
+
+    if (!isProfessionalStorySeen()) {
+      navigate("/professional/tutorial", {
+        state: completed ? { returnTo: "/professional" } : undefined,
+      });
+      return;
+    }
+
+    if (completed) {
+      navigate("/professional");
+    } else {
+      navigate("/professional/onboarding/personal");
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -80,7 +102,6 @@ export default function ProfessionalAuth() {
         const role = roleData?.role;
 
         if (role === "professional") {
-          // Check if onboarding is completed
           const { data: prof } = await supabase
             .from("professionals")
             .select("profile_completed")
@@ -88,11 +109,10 @@ export default function ProfessionalAuth() {
             .maybeSingle();
 
           toast.success("Accesso effettuato!");
-          if (prof?.profile_completed) {
-            navigate("/professional");
-          } else {
-            navigate("/professional/onboarding/personal");
-          }
+          await redirectProfessionalAfterAuth(
+            data.user.id,
+            prof?.profile_completed ?? false
+          );
         } else if (role === "admin") {
           toast.success("Accesso effettuato!");
           navigate("/admin");
@@ -146,13 +166,11 @@ export default function ProfessionalAuth() {
         }
 
         toast.success("Registrazione completata!");
-         // Show tutorial for new professionals
-         const tutorialSeen = localStorage.getItem("professional_tutorial_seen");
-         if (!tutorialSeen) {
-           navigate("/professional/tutorial");
-         } else {
-           navigate("/professional/onboarding/personal");
-         }
+        if (signUpData.user) {
+          await redirectProfessionalAfterAuth(signUpData.user.id, false);
+        } else {
+          navigate("/professional/tutorial");
+        }
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -278,6 +296,9 @@ export default function ProfessionalAuth() {
               </div>
               {errors.password && (
                 <p className="text-xs text-destructive">{errors.password}</p>
+              )}
+              {!isLogin && !errors.password && (
+                <p className="text-xs text-muted-foreground">{SIGNUP_PASSWORD_HINT}</p>
               )}
             </div>
 

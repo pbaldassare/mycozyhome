@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { assertNotPlatformBlocked } from "@/lib/platform-block";
 
 interface ProfessionalStats {
   todayBookings: number;
@@ -151,6 +153,7 @@ export function useProfessionalBookings(professionalId: string | undefined) {
 export function useUpdateBookingStatus() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isBlocked } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -160,6 +163,7 @@ export function useUpdateBookingStatus() {
       bookingId: string;
       status: "confirmed" | "cancelled";
     }) => {
+      assertNotPlatformBlocked(isBlocked);
       const updateData: { status: "confirmed" | "cancelled"; cancelled_at?: string } = { status };
 
       if (status === "cancelled") {
@@ -176,6 +180,9 @@ export function useUpdateBookingStatus() {
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ["professional-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["professional-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["professional-wallet"] });
       toast({
         title: status === "confirmed" ? "Prenotazione confermata" : "Prenotazione rifiutata",
         description: status === "confirmed" 

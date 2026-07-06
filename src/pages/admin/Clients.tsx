@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, MoreHorizontal, Mail, Phone, MapPin, Calendar, Ban } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, MoreHorizontal, Mail, Phone, MapPin, Calendar, Ban, MessageCircle, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,79 +19,78 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
+import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 
-interface Client {
+interface ClientRow {
   id: string;
+  userId: string;
   name: string;
   email: string;
   phone: string;
   city: string;
   bookingsCount: number;
   totalSpent: number;
-  status: "active" | "blocked";
+  isBlocked: boolean;
+  blockedReason: string | null;
   registeredAt: string;
 }
 
-const clients: Client[] = [
-  {
-    id: "1",
-    name: "Paolo Colombo",
-    email: "paolo.colombo@email.com",
-    phone: "+39 333 1234567",
-    city: "Milano",
-    bookingsCount: 12,
-    totalSpent: 580,
-    status: "active",
-    registeredAt: "15 Gen 2026",
-  },
-  {
-    id: "2",
-    name: "Giulia Romano",
-    email: "g.romano@email.com",
-    phone: "+39 347 9876543",
-    city: "Roma",
-    bookingsCount: 8,
-    totalSpent: 320,
-    status: "active",
-    registeredAt: "20 Gen 2026",
-  },
-  {
-    id: "3",
-    name: "Alessandro Ferrari",
-    email: "a.ferrari@email.com",
-    phone: "+39 320 5551234",
-    city: "Torino",
-    bookingsCount: 3,
-    totalSpent: 120,
-    status: "blocked",
-    registeredAt: "5 Feb 2026",
-  },
-  {
-    id: "4",
-    name: "Chiara Ricci",
-    email: "chiara.ricci@email.com",
-    phone: "+39 338 7778899",
-    city: "Napoli",
-    bookingsCount: 15,
-    totalSpent: 890,
-    status: "active",
-    registeredAt: "1 Dic 2025",
-  },
-  {
-    id: "5",
-    name: "Matteo Conti",
-    email: "m.conti@email.com",
-    phone: "+39 349 2223344",
-    city: "Bologna",
-    bookingsCount: 6,
-    totalSpent: 240,
-    status: "active",
-    registeredAt: "28 Gen 2026",
-  },
-];
-
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [blockDialog, setBlockDialog] = useState<ClientRow | null>(null);
+  const navigate = useNavigate();
+  const blockUser = useBlockUser();
+  const unblockUser = useUnblockUser();
+
+  const { data: clients = [], isLoading } = useQuery({
+    queryKey: ["admin-clients"],
+    queryFn: async (): Promise<ClientRow[]> => {
+      const [{ data: profiles, error: profilesError }, { data: bookings }] = await Promise.all([
+        supabase.from("client_profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("bookings").select("client_id, total_amount, status"),
+      ]);
+
+      if (profilesError) {
+        console.error("Error fetching clients:", profilesError);
+        return [];
+      }
+
+      const bookingStats = new Map<string, { count: number; spent: number }>();
+      (bookings || []).forEach((b) => {
+        const current = bookingStats.get(b.client_id) || { count: 0, spent: 0 };
+        current.count += 1;
+        if (b.status === "completed") {
+          current.spent += Number(b.total_amount || 0);
+        }
+        bookingStats.set(b.client_id, current);
+      });
+
+      return (profiles || []).map((p) => {
+        const stats = bookingStats.get(p.user_id) || { count: 0, spent: 0 };
+        const name = [p.first_name, p.last_name].filter(Boolean).join(" ") || "Cliente senza nome";
+        return {
+          id: p.id,
+          userId: p.user_id,
+          name,
+          email: p.email || "—",
+          phone: p.phone || "—",
+          city: p.city || "—",
+          bookingsCount: stats.count,
+          totalSpent: stats.spent,
+          isBlocked: !!p.is_blocked,
+          blockedReason: p.blocked_reason,
+          registeredAt: new Date(p.created_at).toLocaleDateString("it-IT", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+        };
+      });
+    },
+  });
 
   const filteredClients = clients.filter(
     (c) =>
@@ -99,9 +99,20 @@ export default function Clients() {
       c.city.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const blockedCount = clients.filter((c) => c.isBlocked).length;
+
+  const handleBlockConfirm = async (reason?: string) => {
+    if (!blockDialog) return;
+    if (blockDialog.isBlocked) {
+      await unblockUser.mutateAsync({ userType: "client", id: blockDialog.id });
+    } else {
+      await blockUser.mutateAsync({ userType: "client", id: blockDialog.id, reason });
+    }
+    setBlockDialog(null);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Clienti</h1>
         <p className="text-muted-foreground mt-1">
@@ -109,7 +120,6 @@ export default function Clients() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
@@ -118,7 +128,7 @@ export default function Clients() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">Totale Clienti</p>
-          <p className="text-2xl font-bold text-primary">2,847</p>
+          <p className="text-2xl font-bold text-primary">{clients.length}</p>
         </div>
         <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
@@ -126,8 +136,8 @@ export default function Clients() {
               <Calendar className="w-4 h-4 text-sage-dark" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Attivi Questo Mese</p>
-          <p className="text-2xl font-bold text-sage-dark">1,234</p>
+          <p className="text-sm text-muted-foreground">Attivi</p>
+          <p className="text-2xl font-bold text-sage-dark">{clients.length - blockedCount}</p>
         </div>
         <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
@@ -135,8 +145,10 @@ export default function Clients() {
               <Calendar className="w-4 h-4 text-straw-dark" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">Nuovi Questa Settimana</p>
-          <p className="text-2xl font-bold text-straw-dark">89</p>
+          <p className="text-sm text-muted-foreground">Con prenotazioni</p>
+          <p className="text-2xl font-bold text-straw-dark">
+            {clients.filter((c) => c.bookingsCount > 0).length}
+          </p>
         </div>
         <div className="bg-card rounded-xl border border-border/30 p-5 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3 mb-2">
@@ -145,11 +157,10 @@ export default function Clients() {
             </div>
           </div>
           <p className="text-sm text-muted-foreground">Bloccati</p>
-          <p className="text-2xl font-bold text-blush-dark">12</p>
+          <p className="text-2xl font-bold text-blush-dark">{blockedCount}</p>
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
@@ -160,95 +171,129 @@ export default function Clients() {
         />
       </div>
 
-      {/* Table */}
       <div className="bg-card rounded-xl border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Contatti</TableHead>
-              <TableHead>Città</TableHead>
-              <TableHead className="text-center">Prenotazioni</TableHead>
-              <TableHead className="text-right">Speso</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="w-12"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClients.map((client) => (
-              <TableRow key={client.id} className="group">
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-sage-dark font-semibold">
-                      {client.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-medium">{client.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {client.registeredAt}
-                      </p>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="space-y-1">
-                    <p className="text-sm flex items-center gap-1">
-                      <Mail className="w-3 h-3 text-muted-foreground" />
-                      {client.email}
-                    </p>
-                    <p className="text-sm flex items-center gap-1">
-                      <Phone className="w-3 h-3 text-muted-foreground" />
-                      {client.phone}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-muted-foreground" />
-                    {client.city}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge variant="secondary">{client.bookingsCount}</Badge>
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  €{client.totalSpent}
-                </TableCell>
-                <TableCell>
-                  {client.status === "active" ? (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sage/20 text-sage-dark border border-sage/50">Attivo</span>
-                  ) : (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blush/20 text-blush-dark border border-blush/50">Bloccato</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Visualizza Profilo</DropdownMenuItem>
-                      <DropdownMenuItem>Storico Prenotazioni</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">
-                        <Ban className="w-4 h-4 mr-2" />
-                        {client.status === "active" ? "Blocca" : "Sblocca"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Contatti</TableHead>
+                <TableHead>Città</TableHead>
+                <TableHead className="text-center">Prenotazioni</TableHead>
+                <TableHead className="text-right">Speso</TableHead>
+                <TableHead>Stato</TableHead>
+                <TableHead className="w-12"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredClients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                    Nessun cliente trovato
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredClients.map((client) => (
+                  <TableRow key={client.id} className="group">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-sage/20 flex items-center justify-center text-sage-dark font-semibold">
+                          {client.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium">{client.name}</p>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {client.registeredAt}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <p className="text-sm flex items-center gap-1">
+                          <Mail className="w-3 h-3 text-muted-foreground" />
+                          {client.email}
+                        </p>
+                        <p className="text-sm flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-muted-foreground" />
+                          {client.phone}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-muted-foreground" />
+                        {client.city}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="secondary">{client.bookingsCount}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      €{client.totalSpent.toFixed(0)}
+                    </TableCell>
+                    <TableCell>
+                      {!client.isBlocked ? (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-sage/20 text-sage-dark border border-sage/50">
+                          Attivo
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blush/20 text-blush-dark border border-blush/50">
+                          Bloccato
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate("/admin/support")}>
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Contatta assistenza
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className={client.isBlocked ? "text-sage-dark" : "text-destructive"}
+                            onClick={() => setBlockDialog(client)}
+                          >
+                            <Ban className="w-4 h-4 mr-2" />
+                            {client.isBlocked ? "Sblocca" : "Blocca"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
+
+      {blockDialog && (
+        <BlockUserDialog
+          open={!!blockDialog}
+          onOpenChange={(open) => !open && setBlockDialog(null)}
+          userName={blockDialog.name}
+          isBlocked={blockDialog.isBlocked}
+          blockedReason={blockDialog.blockedReason}
+          onConfirm={handleBlockConfirm}
+          isLoading={blockUser.isPending || unblockUser.isPending}
+        />
+      )}
     </div>
   );
 }

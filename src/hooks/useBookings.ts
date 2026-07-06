@@ -98,6 +98,8 @@ export function useUpdateBookingStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["professional-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
     },
   });
 }
@@ -123,6 +125,8 @@ export function useCancelBooking() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-bookings"] });
       queryClient.invalidateQueries({ queryKey: ["professional-bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
     },
   });
 }

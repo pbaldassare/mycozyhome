@@ -57,6 +57,8 @@ const reasonLabels: Record<string, string> = {
   inappropriate_behavior: "Comportamento inappropriato",
   payment_issue: "Problema pagamento",
   damage: "Danni causati",
+  late_arrival: "Ritardo nell'arrivo",
+  early_departure: "Uscita anticipata",
   other: "Altro",
 };
 
@@ -111,6 +113,8 @@ export default function Disputes() {
   }
 
   async function handleResolve(disputeId: string, resolution: "reporter" | "reported", notes: string) {
+    const dispute = disputes.find((d) => d.id === disputeId);
+
     const { error } = await supabase
       .from("disputes")
       .update({
@@ -119,6 +123,14 @@ export default function Disputes() {
         resolved_at: new Date().toISOString(),
       })
       .eq("id", disputeId);
+
+    if (!error && dispute?.booking_id) {
+      const favor = resolution === "reporter" ? dispute.reporter_type : dispute.reported_type;
+      await supabase.rpc("resolve_dispute_payment", {
+        p_dispute_id: disputeId,
+        p_favor: favor,
+      });
+    }
 
     if (!error) {
       toast({ title: "Disputa risolta" });
