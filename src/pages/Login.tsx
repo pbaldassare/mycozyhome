@@ -13,9 +13,9 @@ import { isClientStorySeen, isProfessionalStorySeen } from "@/lib/onboarding-key
 const DEV_TEST_PASSWORD = "Leone123!";
 
 const DEV_TEST_ACCOUNTS = [
-  { label: "Admin", email: "admin@domesticdelight.app" },
-  { label: "Professionista", email: "professionista@domesticdelight.app" },
-  { label: "Cliente", email: "cliente@domesticdelight.app" },
+  { label: "Demo Admin", email: "admin@domesticdelight.app" },
+  { label: "Demo Professionista", email: "professionista@domesticdelight.app" },
+  { label: "Demo Cliente", email: "cliente@domesticdelight.app" },
 ] as const;
 
 export default function Login() {
