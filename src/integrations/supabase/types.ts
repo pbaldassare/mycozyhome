@@ -185,11 +185,15 @@ export type Database = {
           address: string | null
           avatar_url: string | null
           average_rating: number | null
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           city: string | null
           created_at: string
           email: string | null
           first_name: string | null
           id: string
+          is_blocked: boolean
           last_name: string | null
           latitude: number | null
           longitude: number | null
@@ -204,11 +208,15 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           average_rating?: number | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
+          is_blocked?: boolean
           last_name?: string | null
           latitude?: number | null
           longitude?: number | null
@@ -223,11 +231,15 @@ export type Database = {
           address?: string | null
           avatar_url?: string | null
           average_rating?: number | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
+          is_blocked?: boolean
           last_name?: string | null
           latitude?: number | null
           longitude?: number | null
@@ -742,6 +754,9 @@ export type Database = {
           average_rating: number | null
           bio: string | null
           birth_date: string | null
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           city: string
           created_at: string
           documents_submitted: boolean | null
@@ -751,6 +766,7 @@ export type Database = {
           formatted_address: string | null
           has_vat_number: boolean
           id: string
+          is_blocked: boolean
           last_name: string
           latitude: number | null
           longitude: number | null
@@ -777,6 +793,9 @@ export type Database = {
           average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city: string
           created_at?: string
           documents_submitted?: boolean | null
@@ -786,6 +805,7 @@ export type Database = {
           formatted_address?: string | null
           has_vat_number?: boolean
           id?: string
+          is_blocked?: boolean
           last_name: string
           latitude?: number | null
           longitude?: number | null
@@ -812,6 +832,9 @@ export type Database = {
           average_rating?: number | null
           bio?: string | null
           birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city?: string
           created_at?: string
           documents_submitted?: boolean | null
@@ -821,6 +844,7 @@ export type Database = {
           formatted_address?: string | null
           has_vat_number?: boolean
           id?: string
+          is_blocked?: boolean
           last_name?: string
           latitude?: number | null
           longitude?: number | null
@@ -1341,6 +1365,11 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: never; Returns: boolean }
+      is_client_blocked: { Args: { _user_id: string }; Returns: boolean }
+      is_professional_user_blocked: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "professional" | "client"
