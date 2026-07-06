@@ -104,11 +104,15 @@ export type Database = {
           completed_at: string | null
           created_at: string
           discount_amount: number | null
+          dispute_deadline_at: string | null
           hourly_rate: number
           id: string
           latitude: number | null
           longitude: number | null
           notes: string | null
+          payment_held_amount: number | null
+          payment_released_at: string | null
+          payment_status: string
           professional_id: string
           promo_code: string | null
           scheduled_date: string
@@ -129,11 +133,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           discount_amount?: number | null
+          dispute_deadline_at?: string | null
           hourly_rate: number
           id?: string
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
+          payment_held_amount?: number | null
+          payment_released_at?: string | null
+          payment_status?: string
           professional_id: string
           promo_code?: string | null
           scheduled_date: string
@@ -154,11 +162,15 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           discount_amount?: number | null
+          dispute_deadline_at?: string | null
           hourly_rate?: number
           id?: string
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
+          payment_held_amount?: number | null
+          payment_released_at?: string | null
+          payment_status?: string
           professional_id?: string
           promo_code?: string | null
           scheduled_date?: string
@@ -299,6 +311,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      client_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       conversations: {
         Row: {
@@ -739,6 +772,38 @@ export type Database = {
             foreignKeyName: "professional_services_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          professional_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          professional_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          professional_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_wallets_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: true
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -1337,11 +1402,68 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          description: string | null
+          direction: string
+          id: string
+          professional_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          description?: string | null
+          direction: string
+          id?: string
+          professional_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          description?: string | null
+          direction?: string
+          id?: string
+          professional_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      ensure_client_wallet: { Args: { p_user_id: string }; Returns: undefined }
+      ensure_professional_wallet: {
+        Args: { p_professional_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      get_client_wallet_balance: { Args: never; Returns: number }
       get_professional_annual_revenue: {
         Args: { _prof_id: string }
         Returns: number
@@ -1370,6 +1492,16 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      process_pending_payment_releases: { Args: never; Returns: number }
+      release_booking_payment: {
+        Args: { p_booking_id: string }
+        Returns: boolean
+      }
+      resolve_dispute_payment: {
+        Args: { p_dispute_id: string; p_favor: string }
+        Returns: boolean
+      }
+      simulate_wallet_top_up: { Args: { p_amount: number }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "professional" | "client"
