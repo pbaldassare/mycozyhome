@@ -202,28 +202,26 @@ export default function Login() {
             </Button>
           </form>
 
-          {import.meta.env.DEV && (
-            <div className="mt-6 pt-6 border-t border-dashed border-muted">
-              <p className="text-xs text-muted-foreground text-center mb-3">
-                Account di test
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {DEV_TEST_ACCOUNTS.map(({ label, email }) => (
-                  <Button
-                    key={email}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-xs text-muted-foreground"
-                    disabled={loading}
-                    onClick={() => handleDevQuickLogin(email)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+          <div className="mt-6 pt-6 border-t border-dashed border-muted">
+            <p className="text-xs text-muted-foreground text-center mb-3">
+              Account demo
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {DEV_TEST_ACCOUNTS.map(({ label, email }) => (
+                <Button
+                  key={email}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-muted-foreground"
+                  disabled={loading}
+                  onClick={() => handleDevQuickLogin(email)}
+                >
+                  {label}
+                </Button>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Register Links */}
           <div className="mt-8 text-center space-y-3">
