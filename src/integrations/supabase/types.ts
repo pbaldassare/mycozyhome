@@ -104,15 +104,11 @@ export type Database = {
           completed_at: string | null
           created_at: string
           discount_amount: number | null
-          dispute_deadline_at: string | null
           hourly_rate: number
           id: string
           latitude: number | null
           longitude: number | null
           notes: string | null
-          payment_held_amount: number | null
-          payment_released_at: string | null
-          payment_status: string
           professional_id: string
           promo_code: string | null
           scheduled_date: string
@@ -133,15 +129,11 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           discount_amount?: number | null
-          dispute_deadline_at?: string | null
           hourly_rate: number
           id?: string
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
-          payment_held_amount?: number | null
-          payment_released_at?: string | null
-          payment_status?: string
           professional_id: string
           promo_code?: string | null
           scheduled_date: string
@@ -162,15 +154,11 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           discount_amount?: number | null
-          dispute_deadline_at?: string | null
           hourly_rate?: number
           id?: string
           latitude?: number | null
           longitude?: number | null
           notes?: string | null
-          payment_held_amount?: number | null
-          payment_released_at?: string | null
-          payment_status?: string
           professional_id?: string
           promo_code?: string | null
           scheduled_date?: string
@@ -191,87 +179,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      client_wallets: {
-        Row: {
-          user_id: string
-          balance: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          user_id: string
-          balance?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          user_id?: string
-          balance?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      professional_wallets: {
-        Row: {
-          professional_id: string
-          user_id: string
-          balance: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          professional_id: string
-          user_id: string
-          balance?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          professional_id?: string
-          user_id?: string
-          balance?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      wallet_transactions: {
-        Row: {
-          id: string
-          user_id: string
-          professional_id: string | null
-          booking_id: string | null
-          type: string
-          amount: number
-          direction: string
-          description: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          professional_id?: string | null
-          booking_id?: string | null
-          type: string
-          amount: number
-          direction: string
-          description?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          professional_id?: string | null
-          booking_id?: string | null
-          type?: string
-          amount?: number
-          direction?: string
-          description?: string | null
-          created_at?: string
-        }
-        Relationships: []
       }
       client_profiles: {
         Row: {
