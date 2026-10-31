@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Home, Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 import { toast } from "sonner";
 import { z } from "zod";
 import { loginSchema } from "@/lib/auth-schemas";
@@ -123,7 +124,7 @@ export default function Login() {
         </button>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <Home className="w-4 h-4" />
+            <BrandMark className="w-5 h-5" heartColor="hsl(var(--blush-dark))" />
           </div>
           <span className="font-display font-semibold">MyCozyHome</span>
         </div>

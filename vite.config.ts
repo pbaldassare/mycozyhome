@@ -16,12 +16,12 @@ export default defineConfig(() => ({
     react(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: ["favicon.ico", "favicon.svg", "apple-touch-icon.png", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "CasaFacile",
-        short_name: "CasaFacile",
+        name: "MyCozyHome",
+        short_name: "MyCozyHome",
         description: "Trova professionisti per la tua casa",
-        theme_color: "#8BB8D0",
+        theme_color: "#8DB8E2",
         background_color: "#FAFAFA",
         display: "standalone",
         orientation: "portrait",
