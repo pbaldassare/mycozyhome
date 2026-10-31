@@ -44,7 +44,7 @@ export interface MatchResult {
 
 // Geocode an address to coordinates
 export async function geocodeAddress(address: string): Promise<GeocodeResult> {
-  const { data, error } = await supabase.functions.invoke("geo-service/geocode", {
+  const { data, error } = await supabase.functions.invoke("mycozyhome-geo-service/geocode", {
     body: { address },
   });
 
@@ -57,7 +57,7 @@ export async function calculateDistance(
   origin: { lat: number; lng: number },
   destination: { lat: number; lng: number }
 ): Promise<DistanceResult> {
-  const { data, error } = await supabase.functions.invoke("geo-service/distance", {
+  const { data, error } = await supabase.functions.invoke("mycozyhome-geo-service/distance", {
     body: { origin, destination },
   });
 
@@ -71,7 +71,7 @@ export async function findMatchingProfessionals(
   clientLongitude: number,
   filters: MatchFilters
 ): Promise<MatchResult> {
-  const { data, error } = await supabase.functions.invoke("match-professionals", {
+  const { data, error } = await supabase.functions.invoke("mycozyhome-match-professionals", {
     body: {
       client_latitude: clientLatitude,
       client_longitude: clientLongitude,

@@ -118,14 +118,14 @@ export function ProfessionalReviewPanel({
       // or it might just be the path
       let filePath = fileUrl;
       if (fileUrl.includes('/storage/v1/object/')) {
-        const match = fileUrl.match(/\/storage\/v1\/object\/(?:public|authenticated)\/professional-documents\/(.+)/);
+        const match = fileUrl.match(/\/storage\/v1\/object\/(?:public|authenticated)\/mycozyhome-professional-documents\/(.+)/);
         if (match) {
           filePath = match[1];
         }
       }
       
       const { data, error } = await supabase.storage
-        .from('professional-documents')
+        .from('mycozyhome-professional-documents')
         .createSignedUrl(filePath, 3600); // 1 hour expiry
       
       if (error) {

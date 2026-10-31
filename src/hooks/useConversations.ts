@@ -135,7 +135,7 @@ export function useConversations(userType: "client" | "professional" = "client")
         "postgres_changes",
         {
           event: "*",
-          schema: "public",
+          schema: "mycozyhome",
           table: "conversations",
         },
         () => {
@@ -146,7 +146,7 @@ export function useConversations(userType: "client" | "professional" = "client")
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "mycozyhome",
           table: "messages",
         },
         () => {

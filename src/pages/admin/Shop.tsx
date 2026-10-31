@@ -65,14 +65,14 @@ function ProductDialog({
     setUploading(true);
     const path = `${Date.now()}-${file.name.replace(/[^a-z0-9.\-_]/gi, "_")}`;
     const { error } = await supabase.storage
-      .from("shop-products")
+      .from("mycozyhome-shop-products")
       .upload(path, file, { upsert: true });
     if (error) {
       toast.error("Upload fallito: " + error.message);
       setUploading(false);
       return;
     }
-    const { data } = supabase.storage.from("shop-products").getPublicUrl(path);
+    const { data } = supabase.storage.from("mycozyhome-shop-products").getPublicUrl(path);
     setImageUrl(data.publicUrl);
     setUploading(false);
   };

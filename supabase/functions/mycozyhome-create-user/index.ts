@@ -24,11 +24,25 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      db: { schema: "mycozyhome" },
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
     });
+
+    // Only MyCozyHome admins can create users (the auth instance is shared with other apps)
+    const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
+    const { data: isAdmin } = caller
+      ? await supabaseAdmin.rpc("has_role", { _user_id: caller.id, _role: "admin" })
+      : { data: false };
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     const { email, password, role, firstName, lastName }: CreateUserRequest = await req.json();
 

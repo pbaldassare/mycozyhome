@@ -86,6 +86,7 @@ export default function ClientAuth() {
               first_name: validated.firstName,
               last_name: validated.lastName,
               role: "client",
+              app: "mycozyhome",
             },
           },
         });

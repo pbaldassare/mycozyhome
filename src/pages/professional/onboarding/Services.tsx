@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
-type ServiceType = Database["public"]["Enums"]["service_type"];
+type ServiceType = Database["mycozyhome"]["Enums"]["service_type"];
 
 interface ServiceOption {
   id: ServiceType;

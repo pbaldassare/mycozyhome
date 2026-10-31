@@ -64,7 +64,7 @@ export function AddressAutocomplete({
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("geo-service/autocomplete", {
+      const { data, error } = await supabase.functions.invoke("mycozyhome-geo-service/autocomplete", {
         body: { input: query, country: "it" },
       });
 
@@ -99,7 +99,7 @@ export function AddressAutocomplete({
     setShowDropdown(false);
 
     try {
-      const { data, error } = await supabase.functions.invoke("geo-service/place-details", {
+      const { data, error } = await supabase.functions.invoke("mycozyhome-geo-service/place-details", {
         body: { place_id: prediction.place_id },
       });
 

@@ -87,12 +87,12 @@ export function useSendTicketResponse() {
       if (attachmentFile) {
         const filePath = `${ticketId}/${Date.now()}_${attachmentFile.name}`;
         const { error: uploadError } = await supabase.storage
-          .from("support-attachments")
+          .from("mycozyhome-support-attachments")
           .upload(filePath, attachmentFile);
         if (uploadError) throw uploadError;
 
         const { data: urlData } = await supabase.storage
-          .from("support-attachments")
+          .from("mycozyhome-support-attachments")
           .createSignedUrl(filePath, 60 * 60 * 24 * 365);
 
         attachment_url = urlData?.signedUrl || null;

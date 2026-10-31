@@ -157,7 +157,7 @@ export function DisputeForm({
         const fileName = `${reporterId}/${dispute.id}/${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("dispute-evidence")
+          .from("mycozyhome-dispute-evidence")
           .upload(fileName, uploadedFile.file);
 
         if (uploadError) {
@@ -166,7 +166,7 @@ export function DisputeForm({
         }
 
         const { data: urlData } = supabase.storage
-          .from("dispute-evidence")
+          .from("mycozyhome-dispute-evidence")
           .getPublicUrl(fileName);
 
         await supabase.from("dispute_evidence").insert({

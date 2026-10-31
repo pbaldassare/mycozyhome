@@ -27,7 +27,7 @@ export function useGoogleMapsApiKey() {
         }
 
         // Otherwise fetch from edge function
-        const { data, error } = await supabase.functions.invoke("get-maps-key");
+        const { data, error } = await supabase.functions.invoke("mycozyhome-get-maps-key");
         
         if (error) {
           throw error;

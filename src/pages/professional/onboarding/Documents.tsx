@@ -121,13 +121,13 @@ export default function DocumentsUpload() {
       const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("professional-documents")
+        .from("mycozyhome-professional-documents")
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from("professional-documents")
+        .from("mycozyhome-professional-documents")
         .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase
@@ -160,7 +160,7 @@ export default function DocumentsUpload() {
       const urlParts = fileUrl.split("/");
       const filePath = urlParts.slice(-2).join("/");
 
-      await supabase.storage.from("professional-documents").remove([filePath]);
+      await supabase.storage.from("mycozyhome-professional-documents").remove([filePath]);
       await supabase.from("professional_documents").delete().eq("id", docId);
 
       toast.success("Documento eliminato");

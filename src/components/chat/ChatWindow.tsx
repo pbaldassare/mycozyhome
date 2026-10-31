@@ -52,7 +52,7 @@ export function ChatWindow({
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "mycozyhome",
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },

@@ -92,7 +92,7 @@ export function useChat(conversationId: string | undefined) {
       if (imageFile) {
         const fileName = `${conversationId}/${Date.now()}-${imageFile.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("chat-attachments")
+          .from("mycozyhome-chat-attachments")
           .upload(fileName, imageFile);
 
         if (uploadError) {
@@ -104,7 +104,7 @@ export function useChat(conversationId: string | undefined) {
           });
         } else {
           const { data: urlData } = supabase.storage
-            .from("chat-attachments")
+            .from("mycozyhome-chat-attachments")
             .getPublicUrl(uploadData.path);
           fileUrl = urlData.publicUrl;
         }
@@ -163,7 +163,7 @@ export function useChat(conversationId: string | undefined) {
         "postgres_changes",
         {
           event: "INSERT",
-          schema: "public",
+          schema: "mycozyhome",
           table: "messages",
           filter: `conversation_id=eq.${conversationId}`,
         },

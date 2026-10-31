@@ -133,6 +133,7 @@ export default function ProfessionalAuth() {
               first_name: validated.firstName,
               last_name: validated.lastName,
               role: "professional",
+              app: "mycozyhome",
             },
           },
         });

@@ -80,7 +80,7 @@ export default function BookingDetail() {
         'postgres_changes',
         {
           event: '*',
-          schema: 'public',
+          schema: 'mycozyhome',
           table: 'booking_tracking',
           filter: `booking_id=eq.${id}`,
         },
