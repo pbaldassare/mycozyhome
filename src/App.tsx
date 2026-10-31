@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RoleGuard } from "@/components/RoleGuard";
@@ -94,6 +95,15 @@ const queryClient = new QueryClient({
   },
 });
 
+/** Segna l'area (admin o app) sull'html: su desktop l'app è una colonna centrata. */
+function AreaMarker() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    document.documentElement.dataset.area = pathname.startsWith("/admin") ? "admin" : "app";
+  }, [pathname]);
+  return null;
+}
+
 function PageLoader() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-label="Caricamento">
@@ -109,6 +119,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+        <AreaMarker />
         <AppErrorBoundary>
         <Suspense fallback={<PageLoader />}>
         <Routes>

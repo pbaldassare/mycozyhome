@@ -79,7 +79,7 @@ export default function FiscalData() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 bg-background border-b">
         <div className="flex items-center gap-3 h-14 px-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Indietro">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Dati fiscali</h1>

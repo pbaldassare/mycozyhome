@@ -92,7 +92,7 @@ export default function ServiceBoard() {
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 bg-background z-10 border-b px-4 py-3">
         <div className="flex items-center gap-3 mb-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Indietro">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-xl font-bold">Bacheca richieste</h1>

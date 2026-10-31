@@ -97,8 +97,7 @@ export function InstallBanner() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-full -mt-1 -mr-1"
-            onClick={handleDismiss}
-          >
+            onClick={handleDismiss} aria-label="Rimuovi">
             <X className="w-4 h-4" />
           </Button>
         </div>

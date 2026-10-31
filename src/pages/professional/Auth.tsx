@@ -175,7 +175,7 @@ export default function ProfessionalAuth() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-3">
-        <button onClick={() => navigate("/")} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+        <button onClick={() => navigate("/")} className="p-2 hover:bg-white/10 rounded-lg transition-colors" aria-label="Indietro">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -273,8 +273,7 @@ export default function ProfessionalAuth() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Nascondi password" : "Mostra password"}>
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>

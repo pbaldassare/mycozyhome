@@ -93,7 +93,7 @@ export default function AdminDashboard() {
                     to={to}
                     className="flex items-center gap-4 bg-card rounded-2xl border border-border/30 p-5 hover:border-primary transition-colors"
                   >
-                    <Icon className="w-6 h-6 text-primary-dark shrink-0" />
+                    <Icon className="w-6 h-6 text-primary shrink-0" />
                     <span className="text-2xl font-bold tabular-nums">{count}</span>
                     <span className="text-muted-foreground">{label}</span>
                   </Link>

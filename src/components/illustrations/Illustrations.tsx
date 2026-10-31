@@ -192,35 +192,6 @@ export function PromoCleaningIllustration(props: IllustrationProps) {
   );
 }
 
-export function ReferralIllustration(props: IllustrationProps) {
-  return (
-    <Frame {...props}>
-      <rect width="200" height="200" fill={t("sage-light")} />
-      <circle cx="100" cy="112" r="72" fill={t("sage", 0.3)} />
-      <Ground rx={80} />
-      {/* Collegamento tra le due case */}
-      <path
-        d="M58 78Q100 18 142 78"
-        stroke={t("sage-dark")}
-        strokeWidth="3"
-        strokeDasharray="1 8"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <Heart x={100} y={50} size={30} fill={t("blush-dark")} />
-      {/* Casa di sinistra */}
-      <rect x="30" y="112" width="56" height="56" rx="6" fill={t("primary")} />
-      <path d="M26 114 58 86l32 28Z" fill={t("primary-dark")} stroke={t("primary-dark")} strokeWidth="6" strokeLinejoin="round" />
-      <rect x="50" y="138" width="16" height="30" rx="4" fill={t("illustration-paper")} />
-      {/* Casa di destra */}
-      <rect x="114" y="112" width="56" height="56" rx="6" fill={t("blush")} />
-      <path d="M110 114l32-28 32 28Z" fill={t("blush-dark")} stroke={t("blush-dark")} strokeWidth="6" strokeLinejoin="round" />
-      <rect x="134" y="138" width="16" height="30" rx="4" fill={t("illustration-paper")} />
-      <Sparkle x={24} y={64} size={6} fill={t("straw-dark")} />
-      <Sparkle x={178} y={60} size={8} fill={t("primary-dark")} />
-    </Frame>
-  );
-}
 
 export function WelcomeIllustration(props: IllustrationProps) {
   return (

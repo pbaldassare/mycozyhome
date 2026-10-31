@@ -40,8 +40,7 @@ export function AppHeader({
               variant="ghost"
               size="icon"
               className="h-9 w-9 rounded-xl -ml-2"
-              onClick={handleBack}
-            >
+              onClick={handleBack} aria-label="Indietro">
               <ChevronLeft className="h-5 w-5" />
             </Button>
           )}

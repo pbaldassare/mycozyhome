@@ -132,8 +132,7 @@ export function ChatInput({
           size="icon"
           className="h-10 w-10 rounded-xl flex-shrink-0"
           onClick={handleSend}
-          disabled={disabled || (!message.trim() && !imageFile)}
-        >
+          disabled={disabled || (!message.trim() && !imageFile)} aria-label="Invia">
           <Send className="h-5 w-5" />
         </Button>
       </div>

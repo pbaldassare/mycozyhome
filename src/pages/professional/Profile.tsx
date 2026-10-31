@@ -122,8 +122,7 @@ export default function ProfessionalProfile() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/professional/profile/settings")}
-          >
+            onClick={() => navigate("/professional/profile/settings")} aria-label="Impostazioni">
             <Settings className="h-5 w-5" />
           </Button>
         </div>

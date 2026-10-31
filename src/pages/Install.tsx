@@ -48,8 +48,7 @@ export default function Install() {
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-xl -ml-2"
-            onClick={() => navigate(-1)}
-          >
+            onClick={() => navigate(-1)} aria-label="Indietro">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold ml-2">Installa App</h1>

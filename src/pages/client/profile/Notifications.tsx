@@ -12,8 +12,7 @@ export default function Notifications() {
         <div className="flex items-center justify-between">
           <button
             onClick={() => navigate("/client/profile")}
-            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors"
-          >
+            className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors" aria-label="Indietro">
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </button>
           <h1 className="font-semibold text-lg">Notifiche</h1>

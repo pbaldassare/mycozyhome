@@ -117,7 +117,7 @@
          {/* Navigation buttons */}
          <div className="flex gap-3">
            {currentIndex > 0 && (
-             <Button variant="outline" onClick={goToPrev} className="flex-1">
+             <Button variant="outline" onClick={goToPrev} className="flex-1" aria-label="Indietro">
                <ChevronLeft className="w-4 h-4 mr-1" />
                Indietro
              </Button>

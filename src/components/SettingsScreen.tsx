@@ -61,7 +61,7 @@ export function SettingsScreen({ backPath, showAccountData = false }: { backPath
                 className={cn(
                   "flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all",
                   theme === id
-                    ? "bg-primary/10 border-primary text-primary-dark"
+                    ? "bg-primary/10 border-primary text-primary"
                     : "bg-card border-border/30 hover:border-border",
                 )}
               >
@@ -80,7 +80,7 @@ export function SettingsScreen({ backPath, showAccountData = false }: { backPath
               className="w-full flex items-center justify-between p-4 bg-card rounded-2xl border border-border/30 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Download className="w-5 h-5 text-primary-dark" />
+                <Download className="w-5 h-5 text-primary" />
                 <div className="text-left">
                   <span className="font-medium block">Installa l'app</span>
                   <span className="text-xs text-muted-foreground">
@@ -88,7 +88,7 @@ export function SettingsScreen({ backPath, showAccountData = false }: { backPath
                   </span>
                 </div>
               </div>
-              <span className="text-primary-dark text-sm font-medium">
+              <span className="text-primary text-sm font-medium">
                 {isInstallable ? "Installa" : "Scopri come"}
               </span>
             </button>

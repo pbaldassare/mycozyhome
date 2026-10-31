@@ -60,6 +60,9 @@
     --info-foreground: 210 40% 20%;
 
     /* Illustrazioni: carta e inchiostro restano chiari/scuri in entrambi i temi */
+    /* Testo azzurro leggibile su fondo chiaro (contrasto circa 6:1) */
+    --primary-text: 210 55% 36%;
+
     --illustration-paper: 0 0% 100%;
     --illustration-ink: 222 47% 11%;
 
@@ -128,6 +131,8 @@
 
     --info: 210 55% 60%;
     --info-foreground: 210 40% 10%;
+
+    --primary-text: 210 65% 75%;
 
     --illustration-paper: 210 25% 90%;
     --illustration-ink: 222 40% 10%;
@@ -256,5 +261,34 @@
 
   .btn-trust-secondary {
     @apply w-full py-4 rounded-xl bg-accent text-accent-foreground font-semibold text-base shadow-md hover:shadow-lg transition-all duration-200;
+  }
+}
+
+/* Il testo azzurro usa la variante scura: l'azzurro pastello resta per sfondi e bordi. */
+.text-primary,
+.hover\:text-primary:hover {
+  color: hsl(var(--primary-text));
+}
+
+/* Su schermi larghi l'app di cliente e professionista è una colonna centrata;
+   le barre fisse in basso seguono la stessa colonna. L'admin resta a tutta larghezza. */
+@media (min-width: 768px) {
+  html[data-area="app"] body {
+    background: hsl(var(--muted));
+  }
+  html[data-area="app"] #root {
+    max-width: 32rem;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: hsl(var(--background));
+    box-shadow: 0 0 0 1px hsl(var(--border));
+  }
+  html[data-area="app"] .bottom-nav,
+  html[data-area="app"] .fixed.bottom-0.left-0.right-0 {
+    left: 50%;
+    right: auto;
+    width: 100%;
+    max-width: 32rem;
+    transform: translateX(-50%);
   }
 }

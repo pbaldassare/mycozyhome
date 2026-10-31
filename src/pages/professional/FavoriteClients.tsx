@@ -78,8 +78,7 @@ export default function FavoriteClients() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/professional/profile")}
-          >
+            onClick={() => navigate("/professional/profile")} aria-label="Indietro">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Clienti preferiti</h1>

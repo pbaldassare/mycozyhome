@@ -120,8 +120,7 @@ export default function ProfessionalHome() {
             variant="ghost"
             size="icon"
             className="text-primary-foreground hover:bg-white/10 relative"
-            onClick={() => navigate("/professional/messages")}
-          >
+            onClick={() => navigate("/professional/messages")} aria-label="Notifiche">
             <Bell className="h-5 w-5" />
             {(stats?.pendingRequests || 0) > 0 && (
               <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
@@ -223,7 +222,7 @@ export default function ProfessionalHome() {
                 <span className="text-xs text-muted-foreground">
                   {stats?.totalCompletedBookings || 0} servizi completati
                 </span>
-                <span className="block text-xs font-medium text-primary-dark mt-1">Incassi e prelievi →</span>
+                <span className="block text-xs font-medium text-primary mt-1">Incassi e prelievi →</span>
               </div>
             </div>
           </CardContent>

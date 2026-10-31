@@ -223,7 +223,7 @@ export function ProfessionalReviewPanel({
             </div>
           </div>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose}>
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Rimuovi">
           <X className="h-5 w-5" />
         </Button>
       </div>

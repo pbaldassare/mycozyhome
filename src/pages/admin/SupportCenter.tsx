@@ -352,7 +352,7 @@ export default function SupportCenter() {
                     ))
                   )}
                 </div>
-                <Button variant="ghost" className="w-full" onClick={() => setChatStep("type")}>
+                <Button variant="ghost" className="w-full" onClick={() => setChatStep("type")} aria-label="Indietro">
                   <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
                 </Button>
               </div>
@@ -405,7 +405,7 @@ export default function SupportCenter() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1" onClick={() => setChatStep("user")}>
+                  <Button variant="outline" className="flex-1" onClick={() => setChatStep("user")} aria-label="Indietro">
                     <ArrowLeft className="w-4 h-4 mr-2" /> Indietro
                   </Button>
                   <Button onClick={handleCreateChat} disabled={isCreating} className="flex-1">
@@ -588,7 +588,7 @@ function AdminTicketChat({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={onBack}>
+        <Button variant="ghost" size="icon" onClick={onBack} aria-label="Indietro">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

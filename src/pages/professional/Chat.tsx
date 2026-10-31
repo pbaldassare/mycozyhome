@@ -122,8 +122,7 @@ export default function ProfessionalChat() {
             variant="ghost"
             size="icon"
             className="h-9 w-9"
-            onClick={() => navigate("/professional/messages")}
-          >
+            onClick={() => navigate("/professional/messages")} aria-label="Indietro">
             <ArrowLeft className="h-5 w-5" />
           </Button>
 
@@ -142,7 +141,7 @@ export default function ProfessionalChat() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" aria-label="Altre azioni">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>

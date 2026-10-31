@@ -163,7 +163,7 @@ export default function ClientChat() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" aria-label="Altre azioni">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>

@@ -34,7 +34,7 @@ export default function ClientServiceRequests() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 bg-background z-10 border-b px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Indietro">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-xl font-bold flex-1">Le mie inserzioni</h1>

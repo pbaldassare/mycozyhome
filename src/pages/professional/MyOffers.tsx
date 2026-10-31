@@ -34,7 +34,7 @@ export default function MyOffers() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="sticky top-0 bg-background z-10 border-b px-4 py-3 flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Indietro">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-xl font-bold">Le mie offerte</h1>

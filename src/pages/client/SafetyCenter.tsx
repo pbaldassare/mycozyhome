@@ -189,7 +189,7 @@ export default function SafetyCenter() {
               Scrivici dal centro assistenza: ti rispondiamo il prima possibile
             </p>
             <button
-              className="mt-4 text-primary-dark font-medium text-sm"
+              className="mt-4 text-primary font-medium text-sm"
               onClick={() => navigate("/client/support")}
             >
               Contatta l'assistenza →

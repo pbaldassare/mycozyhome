@@ -112,7 +112,7 @@ export default function Settings() {
 
       <section className="bg-card rounded-xl border border-border p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <CreditCard className="w-5 h-5 text-primary-dark" />
+          <CreditCard className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Crediti</h2>
         </div>
         <div className="flex items-start justify-between gap-6">
@@ -138,7 +138,7 @@ export default function Settings() {
 
       <section className="bg-card rounded-xl border border-border p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <Tag className="w-5 h-5 text-primary-dark" />
+          <Tag className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-semibold">Codici promozionali</h2>
         </div>
         <p className="text-sm text-muted-foreground">

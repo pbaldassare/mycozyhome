@@ -38,7 +38,7 @@ export default function ReceivedReviews() {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-background border-b border-border px-4 py-3 flex items-center gap-3">
-        <button onClick={() => navigate(-1)}>
+        <button onClick={() => navigate(-1)} aria-label="Indietro">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-bold">Recensioni ricevute</h1>

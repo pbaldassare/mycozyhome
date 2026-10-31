@@ -494,8 +494,7 @@ export default function ProfessionalBookings() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/professional")}
-          >
+            onClick={() => navigate("/professional")} aria-label="Indietro">
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold">Le mie prenotazioni</h1>

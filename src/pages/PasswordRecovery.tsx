@@ -146,7 +146,7 @@ export function ResetPassword() {
       {!ready ? (
         <p className="text-center text-muted-foreground">
           Apri questa pagina dal link ricevuto via email. Se il link è scaduto,{" "}
-          <button className="text-primary-dark underline" onClick={() => navigate("/forgot-password")}>
+          <button className="text-primary underline" onClick={() => navigate("/forgot-password")}>
             richiedine uno nuovo
           </button>
           .

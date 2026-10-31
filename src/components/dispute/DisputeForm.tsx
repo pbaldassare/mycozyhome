@@ -304,8 +304,7 @@ export function DisputeForm({
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeFile(index)}
-                    >
+                      onClick={() => removeFile(index)} aria-label="Rimuovi">
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
