@@ -59,6 +59,10 @@
     --info: 210 60% 65%;
     --info-foreground: 210 40% 20%;
 
+    /* Illustrazioni: carta e inchiostro restano chiari/scuri in entrambi i temi */
+    --illustration-paper: 0 0% 100%;
+    --illustration-ink: 222 47% 11%;
+
     --border: 210 25% 88%;
     --input: 210 25% 88%;
     --ring: 210 60% 72%;
@@ -124,6 +128,9 @@
 
     --info: 210 55% 60%;
     --info-foreground: 210 40% 10%;
+
+    --illustration-paper: 210 25% 90%;
+    --illustration-ink: 222 40% 10%;
 
     --border: 210 20% 20%;
     --input: 210 20% 20%;

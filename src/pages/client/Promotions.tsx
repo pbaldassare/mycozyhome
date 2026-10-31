@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import promoCleaningImg from "@/assets/promo-cleaning.png";
-import promoReferralImg from "@/assets/promo-referral.png";
+import {
+  PromoCleaningIllustration,
+  ReferralIllustration,
+} from "@/components/illustrations/Illustrations";
 
 interface Promotion {
   id: string;
@@ -15,7 +17,7 @@ interface Promotion {
   code?: string;
   expiresIn: string;
   type: "discount" | "referral";
-  image: string;
+  Illustration: typeof PromoCleaningIllustration;
 }
 
 const promotions: Promotion[] = [
@@ -26,7 +28,7 @@ const promotions: Promotion[] = [
     code: "PULITO15",
     expiresIn: "Scade tra 3 giorni",
     type: "discount",
-    image: promoCleaningImg,
+    Illustration: PromoCleaningIllustration,
   },
   {
     id: "2",
@@ -34,7 +36,7 @@ const promotions: Promotion[] = [
     description: "Condividi il tuo link referral e guadagna crediti",
     expiresIn: "Scade tra 1 settimana",
     type: "referral",
-    image: promoReferralImg,
+    Illustration: ReferralIllustration,
   },
 ];
 
@@ -140,11 +142,7 @@ export default function Promotions() {
                       )}
                     </div>
                     <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                      <img
-                        src={promo.image}
-                        alt={promo.title}
-                        className="w-full h-full object-cover"
-                      />
+                      <promo.Illustration className="w-full h-full" />
                     </div>
                   </div>
                 </CardContent>

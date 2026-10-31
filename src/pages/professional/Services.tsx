@@ -23,17 +23,24 @@ import {
   useDeleteService,
 } from "@/hooks/useProfessionalData";
 import { ServiceFormDialog } from "@/components/professional/ServiceFormDialog";
-import serviceCleaningImg from "@/assets/service-cleaning.png";
-import serviceIroningImg from "@/assets/service-ironing.png";
-import servicePetsitterImg from "@/assets/service-petsitter.png";
+import {
+  CleaningIllustration,
+  IroningIllustration,
+  PetSittingIllustration,
+} from "@/components/illustrations/Illustrations";
 
-const serviceImages: Record<string, string> = {
-  cleaning: serviceCleaningImg,
-  office_cleaning: serviceCleaningImg,
-  ironing: serviceIroningImg,
-  sanitization: serviceCleaningImg,
-  dog_sitter: servicePetsitterImg,
+const serviceIllustrations: Record<string, typeof CleaningIllustration> = {
+  cleaning: CleaningIllustration,
+  office_cleaning: CleaningIllustration,
+  ironing: IroningIllustration,
+  sanitization: CleaningIllustration,
+  dog_sitter: PetSittingIllustration,
 };
+
+function ServiceIllustration({ type }: { type: string }) {
+  const Illustration = serviceIllustrations[type] ?? CleaningIllustration;
+  return <Illustration className="w-full h-full" />;
+}
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -181,11 +188,7 @@ export default function ProfessionalServices() {
                       className="rounded-xl overflow-hidden bg-card border"
                     >
                       <div className="aspect-square relative">
-                        <img
-                          src={serviceImages[service.service_type] || serviceCleaningImg}
-                          alt={serviceTypeLabels[service.service_type]}
-                          className="w-full h-full object-cover"
-                        />
+                        <ServiceIllustration type={service.service_type} />
                       </div>
                       <div className="p-2 text-center">
                         <p className="text-xs font-medium truncate">
@@ -210,11 +213,7 @@ export default function ProfessionalServices() {
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0">
-                          <img
-                            src={serviceImages[service.service_type] || serviceCleaningImg}
-                            alt={serviceTypeLabels[service.service_type]}
-                            className="w-full h-full object-cover"
-                          />
+                          <ServiceIllustration type={service.service_type} />
                         </div>
                         <div className="min-w-0">
                           <p className="font-medium">

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import welcomeIllustration from "@/assets/welcome-illustration.png";
+import { WelcomeIllustration } from "@/components/illustrations/Illustrations";
 
 export default function Welcome() {
   const navigate = useNavigate();
@@ -8,12 +8,8 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Hero Image Section */}
-      <div className="w-full bg-[#d4e4d9] flex items-center justify-center py-8">
-        <img
-          src={welcomeIllustration}
-          alt="Illustrazione pulizia casa"
-          className="w-full max-w-md h-auto object-contain"
-        />
+      <div className="w-full bg-primary-light flex items-center justify-center">
+        <WelcomeIllustration className="w-full max-w-lg h-auto aspect-[4/3]" />
       </div>
 
       {/* Content Section */}
