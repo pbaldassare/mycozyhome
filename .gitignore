@@ -31,3 +31,6 @@ supabase/.temp
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code: permessi locali
+.claude/settings.local.json
