@@ -13,6 +13,14 @@ dist-ssr
 *.local
 test-accounts.local.md
 
+# Environment
+.env
+.env.*
+!.env.example
+
+# Supabase CLI
+supabase/.temp
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

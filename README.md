@@ -1,73 +1,42 @@
-# Welcome to your Lovable project
+# MyCozyHome
 
-## Project info
+Web app (PWA) che mette in contatto clienti e professionisti per i servizi per la casa: pulizie, stiro, babysitter e altro. Ha tre aree: cliente, professionista e admin, con prenotazioni, chat, wallet a crediti, dispute e shop.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Stack
 
-## How can I edit this code?
+- React 18 + TypeScript, Vite, Tailwind CSS e shadcn/ui
+- TanStack Query, React Router, PWA con `vite-plugin-pwa`
+- Supabase (auth, Postgres, storage, edge functions) tramite `@supabase/supabase-js`
+- Test con Vitest
 
-There are several ways of editing your application.
+## Avvio in locale
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```bash
+cp .env.example .env   # poi compila i valori
+npm install
+npm run dev            # http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+Altri comandi:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build      # build di produzione in dist/
+npm run lint       # ESLint
+npm test           # Vitest
+npx tsc --noEmit -p tsconfig.app.json   # typecheck
+```
 
-**Use GitHub Codespaces**
+## Supabase
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+L'app usa il progetto Supabase condiviso `yjzeujiozbgrlqwwycik`, dove tutti i dati di MyCozyHome stanno nello schema dedicato `mycozyhome` (il client lo imposta in `src/integrations/supabase/client.ts`). Gli altri schemi del progetto appartengono ad altre app: non vanno toccati.
 
-## What technologies are used for this project?
+- Migrazioni: `supabase/migrations/`. Da `20261031150000_mycozyhome_schema.sql` in poi lavorano sullo schema `mycozyhome`; le precedenti sono la storia dello schema originale in `public` e servono solo come riferimento.
+- Edge functions: `supabase/functions/`, con prefisso `mycozyhome-` (`create-user`, `geo-service`, `get-maps-key`, `match-professionals`). Deploy:
 
-This project is built with:
+  ```bash
+  supabase functions deploy mycozyhome-geo-service --project-ref yjzeujiozbgrlqwwycik --use-api
+  ```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Bucket storage con prefisso `mycozyhome-`.
+- Il segreto `GOOGLE_MAPS_API_KEY` delle edge functions si imposta nella dashboard Supabase.
+- Tipi TypeScript: `supabase gen types typescript --project-id yjzeujiozbgrlqwwycik --schema mycozyhome > src/integrations/supabase/types.ts`, poi nella riga `type DefaultSchema` sostituisci `"public"` con `"mycozyhome"`.
