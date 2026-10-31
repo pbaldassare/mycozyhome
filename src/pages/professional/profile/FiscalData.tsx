@@ -13,6 +13,7 @@ import { useProfessionalProfile } from "@/hooks/useProfessionalData";
 import { useProfessionalRevenue, REVENUE_LIMIT } from "@/hooks/useProfessionalRevenue";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { toUserMessage } from "@/lib/errors";
 // P.IVA italiana: 11 cifre numeriche
 const vatSchema = z.object({
   vatNumber: z
@@ -64,7 +65,7 @@ export default function FiscalData() {
     setSaving(false);
 
     if (error) {
-      toast.error("Errore nel salvataggio: " + error.message);
+      toast.error(toUserMessage(error, "Salvataggio non riuscito. Riprova."));
       return;
     }
 

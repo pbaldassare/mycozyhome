@@ -32,6 +32,7 @@ import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner
 
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
+import { LoadError } from "@/components/LoadError";
 function formatBookingDate(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return "Oggi";
@@ -44,7 +45,7 @@ export default function ProfessionalHome() {
   const { user, loading: authLoading, role } = useAuth();
   const { data: professional, isLoading: loadingProfile } = useProfessionalProfile();
   const { data: stats, isLoading: loadingStats } = useProfessionalStats(professional?.id);
-  const { data: bookings, isLoading: loadingBookings } = useProfessionalBookings(professional?.id);
+  const { data: bookings, isLoading: loadingBookings, isError: bookingsError, refetch: refetchBookings } = useProfessionalBookings(professional?.id);
   const updateStatus = useUpdateBookingStatus();
 
   useEffect(() => {
@@ -250,6 +251,8 @@ export default function ProfessionalHome() {
                   </CardContent>
                 </Card>
               ))
+            ) : bookingsError ? (
+              <LoadError onRetry={() => refetchBookings()} message="Impossibile caricare gli appuntamenti." />
             ) : !bookings || bookings.length === 0 ? (
               <Card>
                 <CardContent className="p-6 text-center">

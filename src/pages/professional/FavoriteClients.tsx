@@ -32,25 +32,25 @@ export default function FavoriteClients() {
       // Get unique client IDs that have bookings
       const clientIds = [...new Set(data.map((b) => b.client_id))];
 
-      // For each client, get their info from the most recent booking
-      const clientProfiles = await Promise.all(
-        clientIds.map(async (clientId) => {
-          const { data: clientData } = await supabase
-            .from("client_profiles")
-            .select("first_name, last_name, avatar_url, average_rating, review_count")
-            .eq("user_id", clientId)
-            .single();
-
-          return {
-            id: clientId,
-            first_name: clientData?.first_name || "",
-            last_name: clientData?.last_name || "",
-            avatar_url: clientData?.avatar_url || "",
-            average_rating: clientData?.average_rating || 0,
-            review_count: clientData?.review_count || 0,
-          };
-        })
-      );
+      // Dati minimi dei clienti in una sola richiesta.
+      const { data: clientRows } = clientIds.length
+        ? await supabase
+            .from("client_public")
+            .select("user_id, first_name, last_name, avatar_url, average_rating, review_count")
+            .in("user_id", clientIds)
+        : { data: [] };
+      const byId = new Map((clientRows ?? []).map((c) => [c.user_id, c]));
+      const clientProfiles = clientIds.map((clientId) => {
+        const clientData = byId.get(clientId);
+        return {
+          id: clientId,
+          first_name: clientData?.first_name || "",
+          last_name: clientData?.last_name || "",
+          avatar_url: clientData?.avatar_url || "",
+          average_rating: clientData?.average_rating || 0,
+          review_count: clientData?.review_count || 0,
+        };
+      });
 
       // Also include favorites without bookings (just show client_id)
       const missingIds = favorites.filter((id) => !clientIds.includes(id));

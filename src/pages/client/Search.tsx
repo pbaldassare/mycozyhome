@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, PackageOpen, LayoutGrid, Truck, Snowflake, TreePine, Leaf, Dog, PawPrint, Trash2, Loader2, List, Map, MapPin, Building2, SprayCan } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -6,13 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
-import { ProfessionalsMap } from "@/components/maps/ProfessionalsMap";
 import { MapErrorBoundary } from "@/components/maps/MapErrorBoundary";
 import { SearchFilters, SearchFiltersState } from "@/components/client/SearchFilters";
 import { cn } from "@/lib/utils";
 import { useSearchProfessionals } from "@/hooks/useProfessionals";
 import { useGeolocation } from "@/hooks/useGeolocation";
 
+
+import { LoadError } from "@/components/LoadError";
+// La mappa (Google Maps) pesa circa 150 KB: si carica solo se si apre la vista mappa.
+const ProfessionalsMap = lazy(() =>
+  import("@/components/maps/ProfessionalsMap").then((m) => ({ default: m.ProfessionalsMap })),
+);
 const serviceFilters = [
   { id: "all", label: "Tutti", icon: null },
   { id: "cleaning", label: "Pulizie", icon: HomeIcon },
@@ -51,7 +56,7 @@ export default function ClientSearch() {
   
   const { latitude: userLat, longitude: userLon, loading: geoLoading } = useGeolocation();
 
-  const { data: professionals, isLoading } = useSearchProfessionals(
+  const { data: professionals, isLoading, isError, refetch } = useSearchProfessionals(
     selectedService,
     searchQuery,
     {
@@ -175,13 +180,23 @@ export default function ClientSearch() {
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
+        ) : isError ? (
+          <LoadError onRetry={() => refetch()} message="Impossibile caricare i risultati della ricerca." />
         ) : viewMode === "map" ? (
           <div className="h-[calc(100vh-280px)] min-h-[400px]">
             <MapErrorBoundary fallbackMessage="Errore durante il caricamento della mappa. Prova a tornare alla lista o riprova.">
-              <ProfessionalsMap
-                professionals={professionals || []}
-                onProfessionalClick={(id) => navigate(`/client/professional/${id}`)}
-              />
+              <Suspense
+                fallback={
+                  <div className="h-full flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }
+              >
+                <ProfessionalsMap
+                  professionals={professionals || []}
+                  onProfessionalClick={(id) => navigate(`/client/professional/${id}`)}
+                />
+              </Suspense>
             </MapErrorBoundary>
           </div>
         ) : (

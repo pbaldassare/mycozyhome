@@ -7,6 +7,7 @@ import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
 import { useAuth } from "@/hooks/useAuth";
 
+import { LoadError } from "@/components/LoadError";
 const serviceCategories = [
   {
     title: "🏠 Cura della casa",
@@ -37,7 +38,7 @@ const serviceCategories = [
 export default function ClientHome() {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { data: professionals, isLoading } = useFeaturedProfessionals(5);
+  const { data: professionals, isLoading, isError, refetch } = useFeaturedProfessionals(5);
 
   const userName = profile?.first_name || "Utente";
 
@@ -141,6 +142,8 @@ export default function ClientHome() {
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
+          ) : isError ? (
+            <LoadError onRetry={() => refetch()} message="Impossibile caricare i professionisti." />
           ) : professionals && professionals.length > 0 ? (
             <div className="space-y-3">
               {professionals.map((pro) => (

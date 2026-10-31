@@ -10,6 +10,7 @@ import { format, isPast, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
+import { LoadError } from "@/components/LoadError";
 const statusConfig = {
   pending: { label: "In attesa", className: "bg-warning/10 text-warning" },
   confirmed: { label: "Confermato", className: "bg-success/10 text-success" },
@@ -91,7 +92,7 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
 
 export default function ClientBookings() {
   const navigate = useNavigate();
-  const { data: bookings, isLoading } = useClientBookings();
+  const { data: bookings, isLoading, isError, refetch } = useClientBookings();
 
   const upcomingBookings = bookings?.filter(b => 
     !isPast(parseISO(b.scheduled_date)) && 
@@ -104,6 +105,15 @@ export default function ClientBookings() {
     b.status === "completed" || 
     b.status === "cancelled"
   ) || [];
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader title="Prenotazioni" showNotifications />
+        <LoadError onRetry={() => refetch()} message="Impossibile caricare le prenotazioni." />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

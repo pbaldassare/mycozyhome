@@ -54,8 +54,8 @@ export default function ProfessionalChat() {
     queryFn: async () => {
       if (!conversation?.client_id) return null;
       const { data } = await supabase
-        .from("client_profiles")
-        .select("first_name, last_name, avatar_url, phone")
+        .from("client_public")
+        .select("first_name, last_name, avatar_url")
         .eq("user_id", conversation.client_id)
         .single();
       return data;
@@ -147,11 +147,6 @@ export default function ProfessionalChat() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              {client?.phone && (
-                <DropdownMenuItem onClick={() => window.open(`tel:${client.phone}`)}>
-                  📞 Chiama cliente
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem onClick={handleReport} className="text-destructive">
                 <Flag className="h-4 w-4 mr-2" />
                 Segnala

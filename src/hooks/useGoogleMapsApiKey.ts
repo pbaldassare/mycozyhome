@@ -41,7 +41,7 @@ export function useGoogleMapsApiKey() {
         }
       } catch (err) {
         console.error("Failed to fetch Google Maps API key:", err);
-        setError(err instanceof Error ? err.message : "Failed to load maps");
+        setError("Impossibile caricare la mappa. Riprova più tardi.");
       } finally {
         setLoading(false);
       }

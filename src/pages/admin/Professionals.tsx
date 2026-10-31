@@ -56,18 +56,18 @@ export default function Professionals() {
         return [];
       }
 
-      // Fetch documents for each professional
+      // Documenti e servizi di tutti i professionisti in due richieste.
+      const ids = (profs || []).map((p) => p.id);
+      const [{ data: allDocs }, { data: allServices }] = ids.length
+        ? await Promise.all([
+            supabase.from("professional_documents").select("*").in("professional_id", ids),
+            supabase.from("professional_services").select("professional_id, service_type").in("professional_id", ids),
+          ])
+        : [{ data: [] }, { data: [] }];
       const professionalsWithDocs = await Promise.all(
         (profs || []).map(async (prof) => {
-          const { data: docs } = await supabase
-            .from("professional_documents")
-            .select("*")
-            .eq("professional_id", prof.id);
-
-          const { data: services } = await supabase
-            .from("professional_services")
-            .select("service_type")
-            .eq("professional_id", prof.id);
+          const docs = (allDocs ?? []).filter((d) => d.professional_id === prof.id);
+          const services = (allServices ?? []).filter((x) => x.professional_id === prof.id);
 
           return {
             id: prof.id,

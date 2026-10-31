@@ -1688,6 +1688,33 @@ export type Database = {
       }
     }
     Views: {
+      client_public: {
+        Row: {
+          avatar_url: string | null
+          average_rating: number | null
+          first_name: string | null
+          last_name: string | null
+          review_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          first_name?: string | null
+          last_name?: never
+          review_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          first_name?: string | null
+          last_name?: never
+          review_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       professional_private: {
         Row: {
           address: string | null
@@ -1880,7 +1907,32 @@ export type Database = {
       }
       join_as_client: { Args: never; Returns: undefined }
       leave_mycozyhome: { Args: never; Returns: undefined }
+      my_conversations: {
+        Args: never
+        Returns: {
+          booking_id: string
+          client_avatar_url: string
+          client_first_name: string
+          client_id: string
+          client_last_name: string
+          created_at: string
+          id: string
+          last_content: string
+          last_created_at: string
+          last_message_at: string
+          last_sender_id: string
+          professional_avatar_url: string
+          professional_first_name: string
+          professional_id: string
+          professional_last_name: string
+          status: string
+          unread_count_client: number
+          unread_count_professional: number
+          updated_at: string
+        }[]
+      }
       my_professional_id: { Args: never; Returns: string }
+      my_unread_support_count: { Args: never; Returns: number }
       owns_booking_as_professional: {
         Args: { p_booking_id: string; p_professional_id: string }
         Returns: boolean

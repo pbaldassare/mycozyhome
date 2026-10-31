@@ -1,3 +1,6 @@
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,78 +12,95 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { BlockedUserGuard } from "@/components/BlockedUserGuard";
 import { ClientLayout } from "@/components/client/ClientLayout";
 import { ProfessionalLayout } from "@/components/professional/ProfessionalLayout";
-import AdminDashboard from "@/pages/admin/Dashboard";
-import Professionals from "@/pages/admin/Professionals";
-import Clients from "@/pages/admin/Clients";
-import Services from "@/pages/admin/Services";
-import Bookings from "@/pages/admin/Bookings";
-import SupportCenter from "@/pages/admin/SupportCenter";
-import Payments from "@/pages/admin/Payments";
-import Settings from "@/pages/admin/Settings";
-import Disputes from "@/pages/admin/Disputes";
-import { ForgotPassword, ResetPassword } from "@/pages/PasswordRecovery";
-import ProfessionalAuth from "@/pages/professional/Auth";
-import ProfessionalDashboard from "@/pages/professional/Dashboard";
-import ProfessionalHome from "@/pages/professional/Home";
-import ProfessionalServices from "@/pages/professional/Services";
-import ProfessionalReviews from "@/pages/professional/Reviews";
-import ProfessionalProfile from "@/pages/professional/Profile";
-import ProfessionalBookings from "@/pages/professional/Bookings";
-import ProfessionalAvailability from "@/pages/professional/Availability";
-import PersonalInfo from "@/pages/professional/onboarding/PersonalInfo";
-import ServicesSetup from "@/pages/professional/onboarding/Services";
-import AvailabilitySetup from "@/pages/professional/onboarding/Availability";
-import ProfessionalMessages from "@/pages/professional/Messages";
-import ProfessionalChat from "@/pages/professional/Chat";
-import DocumentsUpload from "@/pages/professional/onboarding/Documents";
-import ProfessionalPersonalData from "@/pages/professional/profile/PersonalData";
-import ProfessionalSettings from "@/pages/professional/profile/Settings";
-import ProfessionalPreferences from "@/pages/professional/profile/Preferences";
-import ProfessionalFiscalData from "@/pages/professional/profile/FiscalData";
-import ProfessionalEarnings from "@/pages/professional/Earnings";
-import ClientHome from "@/pages/client/Home";
-import ClientSearch from "@/pages/client/Search";
-import ClientBookings from "@/pages/client/Bookings";
-import ClientMessages from "@/pages/client/Messages";
-import ClientProfile from "@/pages/client/Profile";
-import ClientChat from "@/pages/client/Chat";
-import ClientDispute from "@/pages/client/Dispute";
-import ClientAuth from "@/pages/client/Auth";
-import ClientProfessionalDetail from "@/pages/client/ProfessionalDetail";
-import ClientBookingNew from "@/pages/client/BookingNew";
-import ClientBookingConfirm from "@/pages/client/BookingConfirm";
-import ClientPersonalData from "@/pages/client/profile/PersonalData";
-import ClientBookingDetail from "@/pages/client/BookingDetail";
-import ClientPaymentMethods from "@/pages/client/profile/PaymentMethods";
-import ClientNotifications from "@/pages/client/profile/Notifications";
-import ClientPaymentHistory from "@/pages/client/profile/PaymentHistory";
-import ClientMyReviews from "@/pages/client/profile/MyReviews";
-import ClientPrivacy from "@/pages/client/profile/Privacy";
-import ClientSettings from "@/pages/client/profile/Settings";
-import ClientFavorites from "@/pages/client/profile/Favorites";
-import ClientReceivedReviews from "@/pages/client/profile/ReceivedReviews";
-import ClientPromotions from "@/pages/client/Promotions";
-import SafetyCenter from "@/pages/client/SafetyCenter";
-import ClientSupport from "@/pages/client/Support";
+const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const Professionals = lazy(() => import("@/pages/admin/Professionals"));
+const Clients = lazy(() => import("@/pages/admin/Clients"));
+const Services = lazy(() => import("@/pages/admin/Services"));
+const Bookings = lazy(() => import("@/pages/admin/Bookings"));
+const SupportCenter = lazy(() => import("@/pages/admin/SupportCenter"));
+const Payments = lazy(() => import("@/pages/admin/Payments"));
+const Settings = lazy(() => import("@/pages/admin/Settings"));
+const Disputes = lazy(() => import("@/pages/admin/Disputes"));
+const ForgotPassword = lazy(() => import("@/pages/PasswordRecovery").then((m) => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import("@/pages/PasswordRecovery").then((m) => ({ default: m.ResetPassword })));
+const ProfessionalAuth = lazy(() => import("@/pages/professional/Auth"));
+const ProfessionalDashboard = lazy(() => import("@/pages/professional/Dashboard"));
+const ProfessionalHome = lazy(() => import("@/pages/professional/Home"));
+const ProfessionalServices = lazy(() => import("@/pages/professional/Services"));
+const ProfessionalReviews = lazy(() => import("@/pages/professional/Reviews"));
+const ProfessionalProfile = lazy(() => import("@/pages/professional/Profile"));
+const ProfessionalBookings = lazy(() => import("@/pages/professional/Bookings"));
+const ProfessionalAvailability = lazy(() => import("@/pages/professional/Availability"));
+const PersonalInfo = lazy(() => import("@/pages/professional/onboarding/PersonalInfo"));
+const ServicesSetup = lazy(() => import("@/pages/professional/onboarding/Services"));
+const AvailabilitySetup = lazy(() => import("@/pages/professional/onboarding/Availability"));
+const ProfessionalMessages = lazy(() => import("@/pages/professional/Messages"));
+const ProfessionalChat = lazy(() => import("@/pages/professional/Chat"));
+const DocumentsUpload = lazy(() => import("@/pages/professional/onboarding/Documents"));
+const ProfessionalPersonalData = lazy(() => import("@/pages/professional/profile/PersonalData"));
+const ProfessionalSettings = lazy(() => import("@/pages/professional/profile/Settings"));
+const ProfessionalPreferences = lazy(() => import("@/pages/professional/profile/Preferences"));
+const ProfessionalFiscalData = lazy(() => import("@/pages/professional/profile/FiscalData"));
+const ProfessionalEarnings = lazy(() => import("@/pages/professional/Earnings"));
+const ClientHome = lazy(() => import("@/pages/client/Home"));
+const ClientSearch = lazy(() => import("@/pages/client/Search"));
+const ClientBookings = lazy(() => import("@/pages/client/Bookings"));
+const ClientMessages = lazy(() => import("@/pages/client/Messages"));
+const ClientProfile = lazy(() => import("@/pages/client/Profile"));
+const ClientChat = lazy(() => import("@/pages/client/Chat"));
+const ClientDispute = lazy(() => import("@/pages/client/Dispute"));
+const ClientAuth = lazy(() => import("@/pages/client/Auth"));
+const ClientProfessionalDetail = lazy(() => import("@/pages/client/ProfessionalDetail"));
+const ClientBookingNew = lazy(() => import("@/pages/client/BookingNew"));
+const ClientBookingConfirm = lazy(() => import("@/pages/client/BookingConfirm"));
+const ClientPersonalData = lazy(() => import("@/pages/client/profile/PersonalData"));
+const ClientBookingDetail = lazy(() => import("@/pages/client/BookingDetail"));
+const ClientPaymentMethods = lazy(() => import("@/pages/client/profile/PaymentMethods"));
+const ClientNotifications = lazy(() => import("@/pages/client/profile/Notifications"));
+const ClientPaymentHistory = lazy(() => import("@/pages/client/profile/PaymentHistory"));
+const ClientMyReviews = lazy(() => import("@/pages/client/profile/MyReviews"));
+const ClientPrivacy = lazy(() => import("@/pages/client/profile/Privacy"));
+const ClientSettings = lazy(() => import("@/pages/client/profile/Settings"));
+const ClientFavorites = lazy(() => import("@/pages/client/profile/Favorites"));
+const ClientReceivedReviews = lazy(() => import("@/pages/client/profile/ReceivedReviews"));
+const ClientPromotions = lazy(() => import("@/pages/client/Promotions"));
+const SafetyCenter = lazy(() => import("@/pages/client/SafetyCenter"));
+const ClientSupport = lazy(() => import("@/pages/client/Support"));
  import ClientOnboarding from "@/pages/client/Onboarding";
-import ClientWelcomeStory from "@/pages/client/WelcomeStory";
-import ClientNotificationsInbox from "@/pages/client/Notifications";
-import Welcome from "@/pages/Welcome";
-import Login from "@/pages/Login";
-import Install from "@/pages/Install";
+const ClientWelcomeStory = lazy(() => import("@/pages/client/WelcomeStory"));
+const ClientNotificationsInbox = lazy(() => import("@/pages/client/Notifications"));
+const Welcome = lazy(() => import("@/pages/Welcome"));
+const Login = lazy(() => import("@/pages/Login"));
+const Install = lazy(() => import("@/pages/Install"));
  import ProfessionalTutorial from "@/pages/professional/Tutorial";
-import ProfessionalWelcomeStory from "@/pages/professional/WelcomeStory";
-import ProfessionalSupport from "@/pages/professional/Support";
-import ProfessionalFavoriteClients from "@/pages/professional/FavoriteClients";
-import ServiceBoard from "@/pages/professional/ServiceBoard";
-import MyOffers from "@/pages/professional/MyOffers";
-import ClientServiceRequests from "@/pages/client/ServiceRequests";
-import ServiceRequestNew from "@/pages/client/ServiceRequestNew";
-import ServiceRequestDetail from "@/pages/client/ServiceRequestDetail";
+const ProfessionalWelcomeStory = lazy(() => import("@/pages/professional/WelcomeStory"));
+const ProfessionalSupport = lazy(() => import("@/pages/professional/Support"));
+const ProfessionalFavoriteClients = lazy(() => import("@/pages/professional/FavoriteClients"));
+const ServiceBoard = lazy(() => import("@/pages/professional/ServiceBoard"));
+const MyOffers = lazy(() => import("@/pages/professional/MyOffers"));
+const ClientServiceRequests = lazy(() => import("@/pages/client/ServiceRequests"));
+const ServiceRequestNew = lazy(() => import("@/pages/client/ServiceRequestNew"));
+const ServiceRequestDetail = lazy(() => import("@/pages/client/ServiceRequestDetail"));
 import NotFound from "./pages/NotFound";
 import { InstallBanner } from "@/components/pwa/InstallBanner";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background" role="status" aria-label="Caricamento">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -89,6 +109,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+        <AppErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Welcome/Landing Page */}
           <Route path="/" element={<Welcome />} />
@@ -182,6 +204,8 @@ const App = () => (
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
+        </AppErrorBoundary>
         <InstallBanner />
       </BrowserRouter>
     </TooltipProvider>

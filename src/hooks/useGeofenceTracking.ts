@@ -4,6 +4,7 @@ import { calculateDistance } from "@/hooks/useGeolocation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { toUserMessage } from "@/lib/errors";
 export const GEOFENCE_RADIUS_M = 500;
 const PING_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -346,7 +347,7 @@ export function useGeofenceTracking(
         }
       }
     } catch (e: any) {
-      toast.error("Errore durante il check-out: " + (e.message || ""));
+      toast.error(toUserMessage(e, "Check-out non riuscito. Riprova."));
     }
   }, [getDistanceM, performCheckOut]);
 

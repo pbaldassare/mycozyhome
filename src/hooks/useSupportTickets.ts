@@ -60,7 +60,7 @@ export function useTicketResponses(ticketId: string | undefined) {
       return (data || []) as TicketResponse[];
     },
     enabled: !!ticketId,
-    refetchInterval: 10000,
+    refetchInterval: 30_000,
   });
 }
 

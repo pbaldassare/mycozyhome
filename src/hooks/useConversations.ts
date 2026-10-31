@@ -45,75 +45,35 @@ export function useConversations(userType: "client" | "professional" = "client")
     try {
       setIsLoading(true);
 
-      // For professionals, we need to get the professional.id first
-      // because conversations.professional_id references professionals.id, not user_id
-      let queryId = user.id;
-      
-      if (userType === "professional") {
-        const { data: professional, error: profError } = await supabase
-          .from("professionals")
-          .select("id")
-          .eq("user_id", user.id)
-          .single();
-        
-        if (profError || !professional) {
-          console.error("Error fetching professional profile:", profError);
-          setConversations([]);
-          setIsLoading(false);
-          return;
-        }
-        
-        queryId = professional.id;
-      }
+      // Una sola richiesta: conversazioni, ultimo messaggio e nomi delle parti.
+      const { data, error } = await supabase.rpc("my_conversations");
+      if (error) throw error;
 
-      // Query conversations based on user type
-      const column = userType === "client" ? "client_id" : "professional_id";
-      
-      const { data: convData, error: convError } = await supabase
-        .from("conversations")
-        .select(`
-          *,
-          professionals:professional_id (
-            first_name,
-            last_name,
-            avatar_url
-          )
-        `)
-        .eq(column, queryId)
-        .eq("status", "active")
-        .order("last_message_at", { ascending: false, nullsFirst: false });
-
-      if (convError) throw convError;
-
-      // Fetch last message for each conversation
-      const conversationsWithMessages = await Promise.all(
-        (convData || []).map(async (conv) => {
-          const { data: messages } = await supabase
-            .from("messages")
-            .select("content, created_at, sender_id")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          // Get client profile if we're a professional viewing the conversation
-          let clientData = null;
-          if (userType === "professional") {
-            const { data } = await supabase
-              .from("client_profiles")
-              .select("first_name, last_name, avatar_url")
-              .eq("user_id", conv.client_id)
-              .single();
-            clientData = data;
-          }
-
-          return {
-            ...conv,
-            professional: conv.professionals,
-            client: clientData,
-            lastMessage: messages?.[0] || null,
-          };
-        })
-      );
+      const conversationsWithMessages: ConversationWithDetails[] = (data ?? [])
+        .filter((row) => (userType === "client" ? row.client_id === user.id : row.client_id !== user.id))
+        .map((row) => ({
+          id: row.id,
+          professional_id: row.professional_id,
+          client_id: row.client_id,
+          status: row.status,
+          last_message_at: row.last_message_at,
+          booking_id: row.booking_id,
+          unread_count_client: row.unread_count_client,
+          unread_count_professional: row.unread_count_professional,
+          professional: {
+            first_name: row.professional_first_name,
+            last_name: row.professional_last_name,
+            avatar_url: row.professional_avatar_url,
+          },
+          client: {
+            first_name: row.client_first_name,
+            last_name: row.client_last_name,
+            avatar_url: row.client_avatar_url,
+          },
+          lastMessage: row.last_created_at
+            ? { content: row.last_content, created_at: row.last_created_at, sender_id: row.last_sender_id }
+            : undefined,
+        }));
 
       setConversations(conversationsWithMessages);
     } catch (err) {

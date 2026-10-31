@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
+import { toUserMessage } from "@/lib/errors";
 export interface ReviewWithDetails {
   id: string;
   rating: number;
@@ -125,7 +126,7 @@ export function useCreateReview() {
     onError: (error: Error) => {
       toast({
         title: "Errore",
-        description: error.message || "Impossibile inviare la recensione",
+        description: toUserMessage(error, "Impossibile inviare la recensione"),
         variant: "destructive",
       });
     },

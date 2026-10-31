@@ -91,20 +91,17 @@ function useAllProfessionalBookings(professionalId: string | undefined) {
 
       if (error) throw error;
 
-      // Fetch client details separately
-      const bookingsWithClients = await Promise.all(
-        (data || []).map(async (booking) => {
-          const { data: client } = await supabase
-            .from("client_profiles")
-            .select("first_name, last_name, avatar_url, phone, average_rating, review_count")
-            .eq("user_id", booking.client_id)
-            .single();
+      // Dati minimi dei clienti in una sola richiesta.
+      const clientIds = [...new Set((data || []).map((b) => b.client_id))];
+      const { data: clients } = clientIds.length
+        ? await supabase
+            .from("client_public")
+            .select("user_id, first_name, last_name, avatar_url, average_rating, review_count")
+            .in("user_id", clientIds)
+        : { data: [] };
+      const byId = new Map((clients ?? []).map((c) => [c.user_id, c]));
 
-          return { ...booking, client };
-        })
-      );
-
-      return bookingsWithClients;
+      return (data || []).map((booking) => ({ ...booking, client: byId.get(booking.client_id) ?? null }));
     },
     enabled: !!professionalId,
   });
@@ -454,28 +451,6 @@ export default function ProfessionalBookings() {
           )}
 
           {/* Contact actions for confirmed bookings */}
-          {booking.status === "confirmed" && booking.client?.phone && (
-            <div className="flex gap-2 mt-4">
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => window.open(`tel:${booking.client.phone}`)}
-              >
-                <Phone className="h-4 w-4 mr-1" />
-                Chiama
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => navigate(`/professional/messages`)}
-              >
-                <MessageCircle className="h-4 w-4 mr-1" />
-                Messaggia
-              </Button>
-            </div>
-          )}
 
           {/* Tracking actions for confirmed bookings today */}
           <TrackingActions booking={booking} trackingRecord={trackingMap[booking.id]} professionalId={professional?.id} />

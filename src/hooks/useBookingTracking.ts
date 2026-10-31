@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calculateDistance } from "@/hooks/useGeolocation";
 import { toast } from "sonner";
 
+import { toUserMessage } from "@/lib/errors";
 const MAX_RANGE_METERS = 500;
 
 interface BookingTracking {
@@ -114,7 +115,7 @@ export function useBookingTracking(bookingId: string | undefined) {
       if (error?.code === 1) {
         toast.error("Permesso di geolocalizzazione negato. Abilita il GPS.");
       } else {
-        toast.error("Errore durante il check-in: " + (error.message || ""));
+        toast.error(toUserMessage(error, "Check-in non riuscito. Riprova."));
       }
     },
   });
@@ -174,7 +175,7 @@ export function useBookingTracking(bookingId: string | undefined) {
       if (error?.code === 1) {
         toast.error("Permesso di geolocalizzazione negato. Abilita il GPS.");
       } else {
-        toast.error("Errore durante il check-out: " + (error.message || ""));
+        toast.error(toUserMessage(error, "Check-out non riuscito. Riprova."));
       }
     },
   });

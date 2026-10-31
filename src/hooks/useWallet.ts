@@ -101,9 +101,7 @@ export function useSimulateTopUp() {
       const { data, error } = await supabase.rpc("simulate_wallet_top_up", {
         p_amount: amount,
       });
-      if (error) {
-        throw new Error(formatWalletError(error));
-      }
+      if (error) throw error;
       return Number(data);
     },
     onSuccess: () => {

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useClientWallet, useSimulateTopUp, useWalletTransactions } from "@/hooks/useWallet";
 import { WALLET_NOT_ACTIVE_MESSAGE } from "@/lib/wallet-errors";
 
+import { toUserMessage } from "@/lib/errors";
 const QUICK_AMOUNTS = [20, 50, 100, 200];
 
 const typeLabels: Record<string, string> = {
@@ -40,7 +41,7 @@ export default function PaymentMethods() {
       toast.success(`Ricarica di €${amount.toFixed(2)} completata. Saldo: €${newBalance.toFixed(2)}`);
       setCustomAmount("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Errore durante la ricarica");
+      toast.error(toUserMessage(err, "Ricarica non riuscita. Riprova."));
     }
   };
 

@@ -10,33 +10,13 @@ export function useUnreadSupportCount() {
     queryFn: async () => {
       if (!user?.id) return 0;
 
-      // Get all user tickets with their last_read_at
-      const { data: tickets, error: ticketsError } = await supabase
-        .from("support_tickets")
-        .select("id, last_read_at")
-        .eq("user_id", user.id);
-
-      if (ticketsError || !tickets?.length) return 0;
-
-      let unreadCount = 0;
-
-      for (const ticket of tickets) {
-        const { count, error } = await supabase
-          .from("ticket_responses")
-          .select("id", { count: "exact", head: true })
-          .eq("ticket_id", ticket.id)
-          .eq("responder_type", "admin")
-          .gt("created_at", ticket.last_read_at || "1970-01-01");
-
-        if (!error && count && count > 0) {
-          unreadCount++;
-        }
-      }
-
-      return unreadCount;
+      // Un solo conteggio nel DB invece di una query per ticket.
+      const { data, error } = await supabase.rpc("my_unread_support_count");
+      if (error) return 0;
+      return data ?? 0;
     },
     enabled: !!user?.id,
-    refetchInterval: 30000,
+    refetchInterval: 60_000,
   });
 }
 
@@ -57,13 +37,13 @@ export function useTicketHasUnread(ticketId: string | undefined, lastReadAt: str
       return (count || 0) > 0;
     },
     enabled: !!ticketId,
-    refetchInterval: 15000,
+    refetchInterval: 60_000,
   });
 }
 
 export async function markTicketAsRead(ticketId: string) {
   await supabase
     .from("support_tickets")
-    .update({ last_read_at: new Date().toISOString() } as any)
+    .update({ last_read_at: new Date().toISOString() })
     .eq("id", ticketId);
 }
