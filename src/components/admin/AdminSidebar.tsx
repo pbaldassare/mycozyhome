@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   HelpCircle,
+  Scale,
   Shield,
 } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +26,7 @@ const navItems = [
   { icon: Briefcase, label: "Servizi", path: "/admin/services" },
   { icon: Calendar, label: "Prenotazioni", path: "/admin/bookings" },
   { icon: HelpCircle, label: "Assistenza", path: "/admin/support" },
+  { icon: Scale, label: "Contestazioni", path: "/admin/disputes" },
   { icon: CreditCard, label: "Pagamenti", path: "/admin/payments" },
   { icon: Settings, label: "Impostazioni", path: "/admin/settings" },
 ];

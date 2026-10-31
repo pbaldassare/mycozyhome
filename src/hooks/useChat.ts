@@ -103,10 +103,8 @@ export function useChat(conversationId: string | undefined) {
             variant: "destructive",
           });
         } else {
-          const { data: urlData } = supabase.storage
-            .from("mycozyhome-chat-attachments")
-            .getPublicUrl(uploadData.path);
-          fileUrl = urlData.publicUrl;
+          // Bucket privato: si salva il percorso, l'URL firmato si crea in lettura.
+          fileUrl = uploadData.path;
         }
       }
 

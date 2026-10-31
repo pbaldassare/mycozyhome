@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSignedUrl } from "@/lib/storage";
 import {
   AlertTriangle,
   User,
@@ -176,31 +177,7 @@ export function DisputeDetail({ dispute, onResolve, onReject, onEscalate }: Disp
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {dispute.evidence.map((evidence) => (
-              <a
-                key={evidence.id}
-                href={evidence.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative aspect-square rounded-lg overflow-hidden border bg-muted hover:border-primary transition-colors"
-              >
-                {evidence.file_type === "image" ? (
-                  <img
-                    src={evidence.file_url}
-                    alt={evidence.file_name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full p-3">
-                    <FileText className="w-8 h-8 text-muted-foreground mb-2" />
-                    <span className="text-xs text-center text-muted-foreground truncate w-full">
-                      {evidence.file_name}
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <Download className="w-6 h-6 text-white" />
-                </div>
-              </a>
+              <EvidenceTile key={evidence.id} evidence={evidence} />
             ))}
           </div>
         </div>
@@ -287,5 +264,36 @@ export function DisputeDetail({ dispute, onResolve, onReject, onEscalate }: Disp
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/** Prova allegata: il file sta in un bucket privato e si apre con un URL firmato. */
+function EvidenceTile({ evidence }: { evidence: { id: string; file_url: string; file_type: string; file_name: string } }) {
+  const { data: signedUrl } = useSignedUrl("mycozyhome-dispute-evidence", evidence.file_url);
+  return (
+    <a
+      href={signedUrl ?? undefined}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative aspect-square rounded-lg overflow-hidden border bg-muted hover:border-primary transition-colors"
+    >
+      {evidence.file_type === "image" ? (
+        <img
+          src={signedUrl ?? undefined}
+          alt={evidence.file_name}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full p-3">
+          <FileText className="w-8 h-8 text-muted-foreground mb-2" />
+          <span className="text-xs text-center text-muted-foreground truncate w-full">
+            {evidence.file_name}
+          </span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <Download className="w-6 h-6 text-white" />
+      </div>
+    </a>
   );
 }

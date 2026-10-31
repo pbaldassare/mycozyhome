@@ -2,9 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { AdminLayout } from "@/components/admin/AdminLayout";
+import { RoleGuard } from "@/components/RoleGuard";
+import { BlockedUserGuard } from "@/components/BlockedUserGuard";
 import { ClientLayout } from "@/components/client/ClientLayout";
 import { ProfessionalLayout } from "@/components/professional/ProfessionalLayout";
 import AdminDashboard from "@/pages/admin/Dashboard";
@@ -15,6 +17,8 @@ import Bookings from "@/pages/admin/Bookings";
 import SupportCenter from "@/pages/admin/SupportCenter";
 import Payments from "@/pages/admin/Payments";
 import Settings from "@/pages/admin/Settings";
+import Disputes from "@/pages/admin/Disputes";
+import { ForgotPassword, ResetPassword } from "@/pages/PasswordRecovery";
 import ProfessionalAuth from "@/pages/professional/Auth";
 import ProfessionalDashboard from "@/pages/professional/Dashboard";
 import ProfessionalHome from "@/pages/professional/Home";
@@ -88,6 +92,8 @@ const App = () => (
           {/* Welcome/Landing Page */}
           <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/install" element={<Install />} />
           
           {/* Client Routes */}
@@ -102,28 +108,30 @@ const App = () => (
           <Route path="/client/welcome" element={<ClientWelcomeStory />} />
           <Route path="/client/auth" element={<ClientAuth />} />
           <Route path="/client/professional/:id" element={<ClientProfessionalDetail />} />
-          <Route path="/client/booking/new" element={<ClientBookingNew />} />
-          <Route path="/client/booking/:id" element={<ClientBookingDetail />} />
-          <Route path="/client/booking/confirm" element={<ClientBookingConfirm />} />
-          <Route path="/client/profile/personal" element={<ClientPersonalData />} />
-          <Route path="/client/profile/payments" element={<ClientPaymentMethods />} />
-          <Route path="/client/profile/notifications" element={<ClientNotifications />} />
-          <Route path="/client/profile/payment-history" element={<ClientPaymentHistory />} />
-          <Route path="/client/profile/reviews" element={<ClientMyReviews />} />
-          <Route path="/client/profile/privacy" element={<ClientPrivacy />} />
-          <Route path="/client/profile/settings" element={<ClientSettings />} />
-          <Route path="/client/profile/favorites" element={<ClientFavorites />} />
-          <Route path="/client/profile/received-reviews" element={<ClientReceivedReviews />} />
-          <Route path="/client/chat/:conversationId" element={<ClientChat />} />
-          <Route path="/client/dispute" element={<ClientDispute />} />
-          <Route path="/client/promotions" element={<ClientPromotions />} />
-          <Route path="/client/safety" element={<SafetyCenter />} />
-          <Route path="/client/support" element={<ClientSupport />} />
-           <Route path="/client/onboarding" element={<ClientOnboarding />} />
-          <Route path="/client/notifications" element={<ClientNotificationsInbox />} />
-          <Route path="/client/service-requests" element={<ClientServiceRequests />} />
-          <Route path="/client/service-requests/new" element={<ServiceRequestNew />} />
-          <Route path="/client/service-requests/:id" element={<ServiceRequestDetail />} />
+          <Route path="/client/onboarding" element={<ClientOnboarding />} />
+          <Route element={<RoleGuard allowedRole="client"><BlockedUserGuard userType="client"><Outlet /></BlockedUserGuard></RoleGuard>}>
+            <Route path="/client/booking/new" element={<ClientBookingNew />} />
+            <Route path="/client/booking/:id" element={<ClientBookingDetail />} />
+            <Route path="/client/booking/confirm" element={<ClientBookingConfirm />} />
+            <Route path="/client/profile/personal" element={<ClientPersonalData />} />
+            <Route path="/client/profile/payments" element={<ClientPaymentMethods />} />
+            <Route path="/client/profile/notifications" element={<ClientNotifications />} />
+            <Route path="/client/profile/payment-history" element={<ClientPaymentHistory />} />
+            <Route path="/client/profile/reviews" element={<ClientMyReviews />} />
+            <Route path="/client/profile/privacy" element={<ClientPrivacy />} />
+            <Route path="/client/profile/settings" element={<ClientSettings />} />
+            <Route path="/client/profile/favorites" element={<ClientFavorites />} />
+            <Route path="/client/profile/received-reviews" element={<ClientReceivedReviews />} />
+            <Route path="/client/chat/:conversationId" element={<ClientChat />} />
+            <Route path="/client/dispute" element={<ClientDispute />} />
+            <Route path="/client/promotions" element={<ClientPromotions />} />
+            <Route path="/client/safety" element={<SafetyCenter />} />
+            <Route path="/client/support" element={<ClientSupport />} />
+            <Route path="/client/notifications" element={<ClientNotificationsInbox />} />
+            <Route path="/client/service-requests" element={<ClientServiceRequests />} />
+            <Route path="/client/service-requests/new" element={<ServiceRequestNew />} />
+            <Route path="/client/service-requests/:id" element={<ServiceRequestDetail />} />
+          </Route>
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
@@ -133,6 +141,7 @@ const App = () => (
             <Route path="services" element={<Services />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="support" element={<SupportCenter />} />
+            <Route path="disputes" element={<Disputes />} />
             <Route path="payments" element={<Payments />} />
             <Route path="settings" element={<Settings />} />
           </Route>
@@ -148,23 +157,25 @@ const App = () => (
             <Route path="profile" element={<ProfessionalProfile />} />
           </Route>
           {/* Professional routes outside layout (full screen) */}
-          <Route path="/professional/chat/:conversationId" element={<ProfessionalChat />} />
           <Route path="/professional/welcome" element={<ProfessionalWelcomeStory />} />
           <Route path="/professional/auth" element={<ProfessionalAuth />} />
-          <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
-          <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />
-          <Route path="/professional/onboarding/services" element={<ServicesSetup />} />
-          <Route path="/professional/onboarding/availability" element={<AvailabilitySetup />} />
-          <Route path="/professional/onboarding/documents" element={<DocumentsUpload />} />
-          <Route path="/professional/profile/personal" element={<ProfessionalPersonalData />} />
-          <Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
-          <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
-          <Route path="/professional/profile/fiscal" element={<ProfessionalFiscalData />} />
-           <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
-          <Route path="/professional/support" element={<ProfessionalSupport />} />
-          <Route path="/professional/profile/favorite-clients" element={<ProfessionalFavoriteClients />} />
-          <Route path="/professional/service-board" element={<ServiceBoard />} />
-          <Route path="/professional/my-offers" element={<MyOffers />} />
+          <Route path="/professional/tutorial" element={<ProfessionalTutorial />} />
+          <Route element={<RoleGuard allowedRole="professional"><BlockedUserGuard userType="professional"><Outlet /></BlockedUserGuard></RoleGuard>}>
+            <Route path="/professional/chat/:conversationId" element={<ProfessionalChat />} />
+            <Route path="/professional/dashboard" element={<ProfessionalDashboard />} />
+            <Route path="/professional/onboarding/personal" element={<PersonalInfo />} />
+            <Route path="/professional/onboarding/services" element={<ServicesSetup />} />
+            <Route path="/professional/onboarding/availability" element={<AvailabilitySetup />} />
+            <Route path="/professional/onboarding/documents" element={<DocumentsUpload />} />
+            <Route path="/professional/profile/personal" element={<ProfessionalPersonalData />} />
+            <Route path="/professional/profile/settings" element={<ProfessionalSettings />} />
+            <Route path="/professional/profile/preferences" element={<ProfessionalPreferences />} />
+            <Route path="/professional/profile/fiscal" element={<ProfessionalFiscalData />} />
+            <Route path="/professional/support" element={<ProfessionalSupport />} />
+            <Route path="/professional/profile/favorite-clients" element={<ProfessionalFavoriteClients />} />
+            <Route path="/professional/service-board" element={<ServiceBoard />} />
+            <Route path="/professional/my-offers" element={<MyOffers />} />
+          </Route>
           
           {/* Catch-all */}
           <Route path="*" element={<NotFound />} />

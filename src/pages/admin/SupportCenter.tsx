@@ -35,6 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { SignedAttachmentLink } from "@/components/SignedAttachmentLink";
 import { format, formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
@@ -650,10 +651,9 @@ function AdminTicketChat({
                   </p>
                   <p className="text-sm">{resp.content}</p>
                   {resp.attachment_url && (
-                    <a
-                      href={resp.attachment_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <SignedAttachmentLink
+                      bucket="mycozyhome-support-attachments"
+                      value={resp.attachment_url}
                       className={cn(
                         "flex items-center gap-1 text-xs mt-2 underline",
                         isAdmin ? "text-primary-foreground/80" : "text-primary"
@@ -661,7 +661,7 @@ function AdminTicketChat({
                     >
                       <Paperclip className="h-3 w-3" />
                       {resp.attachment_name || "Allegato"}
-                    </a>
+                    </SignedAttachmentLink>
                   )}
                   <p className={cn("text-xs mt-1", isAdmin ? "opacity-70" : "text-muted-foreground")}>
                     {format(new Date(resp.created_at), "d MMM, HH:mm", { locale: it })}

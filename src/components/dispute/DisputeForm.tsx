@@ -165,15 +165,11 @@ export function DisputeForm({
           continue;
         }
 
-        const { data: urlData } = supabase.storage
-          .from("mycozyhome-dispute-evidence")
-          .getPublicUrl(fileName);
-
         await supabase.from("dispute_evidence").insert({
           dispute_id: dispute.id,
           uploader_id: reporterId,
           file_type: uploadedFile.type,
-          file_url: urlData.publicUrl,
+          file_url: fileName,
           file_name: uploadedFile.name,
         });
       }

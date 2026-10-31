@@ -182,7 +182,7 @@ export default function Login() {
               <button
                 type="button"
                 className="text-sm text-primary hover:underline"
-                onClick={() => toast.info("Funzione in arrivo!")}
+                onClick={() => navigate("/forgot-password")}
               >
                 Password dimenticata?
               </button>

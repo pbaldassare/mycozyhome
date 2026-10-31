@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { storagePath } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -126,17 +127,13 @@ export default function DocumentsUpload() {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("mycozyhome-professional-documents")
-        .getPublicUrl(filePath);
-
       const { error: dbError } = await supabase
         .from("professional_documents")
         .insert({
           professional_id: professionalId,
           document_type: docType,
           document_name: file.name,
-          file_url: urlData.publicUrl,
+          file_url: filePath,
           file_size: file.size,
           status: "pending",
         });
@@ -157,8 +154,7 @@ export default function DocumentsUpload() {
     if (!confirm("Sei sicuro di voler eliminare questo documento?")) return;
 
     try {
-      const urlParts = fileUrl.split("/");
-      const filePath = urlParts.slice(-2).join("/");
+      const filePath = storagePath("mycozyhome-professional-documents", fileUrl);
 
       await supabase.storage.from("mycozyhome-professional-documents").remove([filePath]);
       await supabase.from("professional_documents").delete().eq("id", docId);

@@ -91,11 +91,8 @@ export function useSendTicketResponse() {
           .upload(filePath, attachmentFile);
         if (uploadError) throw uploadError;
 
-        const { data: urlData } = await supabase.storage
-          .from("mycozyhome-support-attachments")
-          .createSignedUrl(filePath, 60 * 60 * 24 * 365);
-
-        attachment_url = urlData?.signedUrl || null;
+        // Bucket privato: si salva il percorso, l'URL firmato si crea in lettura.
+        attachment_url = filePath;
         attachment_name = attachmentFile.name;
       }
 

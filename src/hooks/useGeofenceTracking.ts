@@ -4,7 +4,7 @@ import { calculateDistance } from "@/hooks/useGeolocation";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
-const GEOFENCE_RADIUS_M = 500;
+export const GEOFENCE_RADIUS_M = 500;
 const PING_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 interface GeofenceState {
@@ -235,6 +235,10 @@ export function useGeofenceTracking(
       return;
     }
 
+    // L'effetto può essere pulito prima che la query finisca: in quel caso
+    // il watch GPS non va più aperto.
+    let cancelled = false;
+
     // Check if already tracked
     const checkExisting = async () => {
       const { data } = await supabase
@@ -242,6 +246,8 @@ export function useGeofenceTracking(
         .select("*")
         .eq("booking_id", bookingId)
         .maybeSingle();
+
+      if (cancelled) return;
 
       if (data) {
         setState((prev) => ({
@@ -283,6 +289,7 @@ export function useGeofenceTracking(
     checkExisting();
 
     return () => {
+      cancelled = true;
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;

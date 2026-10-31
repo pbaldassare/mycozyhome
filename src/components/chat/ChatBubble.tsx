@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Check, CheckCheck, AlertTriangle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSignedUrl } from "@/lib/storage";
 
 interface ChatBubbleProps {
   content: string;
@@ -24,6 +25,8 @@ export function ChatBubble({
   senderName,
   showAvatar = false,
 }: ChatBubbleProps) {
+  const { data: signedImageUrl } = useSignedUrl("mycozyhome-chat-attachments", imageUrl);
+
   return (
     <div
       className={cn(
@@ -59,10 +62,10 @@ export function ChatBubble({
             </div>
           )}
           
-          {imageUrl && (
+          {imageUrl && signedImageUrl && (
             <div className="mb-2 rounded-lg overflow-hidden">
               <img
-                src={imageUrl}
+                src={signedImageUrl}
                 alt="Immagine allegata"
                 className="max-w-full h-auto rounded-lg"
                 loading="lazy"
