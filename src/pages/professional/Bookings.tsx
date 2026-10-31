@@ -59,6 +59,7 @@ import { canDisputeBooking } from "@/lib/payment-flow";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Navigation, Radio, AlertTriangle } from "lucide-react";
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 import {
   Dialog,
   DialogContent,
@@ -67,13 +68,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
 function formatBookingDate(dateStr: string): string {
   const date = parseISO(dateStr);

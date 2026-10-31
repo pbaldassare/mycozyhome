@@ -19,21 +19,9 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
-const allServiceTypes = [
-  "cleaning",
-  "office_cleaning",
-  "ironing",
-  "sanitization",
-  "dog_sitter",
-] as const;
+import { SERVICE_CATALOG, SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
+const allServiceTypes = SERVICE_CATALOG.map((s) => s.id);
 
 interface ServiceData {
   id?: string;

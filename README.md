@@ -1,6 +1,6 @@
 # MyCozyHome
 
-Web app (PWA) che mette in contatto clienti e professionisti per i servizi per la casa: pulizie, stiro, babysitter e altro. Ha tre aree: cliente, professionista e admin, con prenotazioni, chat, wallet a crediti, dispute e shop.
+Web app (PWA) che mette in contatto clienti e professionisti per i servizi per la casa: pulizie, stiratura, riordino, cura di piante e animali. Ha tre aree: cliente, professionista e admin, con prenotazioni, chat, wallet a crediti, dispute e shop.
 
 ## Stack
 

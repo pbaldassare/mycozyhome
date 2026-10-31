@@ -16,22 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCreateServiceRequest } from "@/hooks/useServiceRequests";
 import { toast } from "@/hooks/use-toast";
 
-const serviceOptions = [
-  { value: "cleaning", label: "Pulizie" },
-  { value: "office_cleaning", label: "Pulizie ufficio" },
-  { value: "ironing", label: "Stiro e lavanderia" },
-  { value: "sanitization", label: "Sanificazione" },
-  { value: "dog_sitter", label: "Dog sitter" },
-  { value: "dog_walking", label: "Passeggiate cani" },
-  { value: "pet_care_travel", label: "Pet care viaggio" },
-  { value: "pet_space_cleaning", label: "Pulizia spazi animali" },
-  { value: "wardrobe_seasonal", label: "Cambio stagione armadio" },
-  { value: "decluttering", label: "Riordino / Decluttering" },
-  { value: "post_renovation", label: "Pulizia post ristrutturazione" },
-  { value: "seasonal_cleaning", label: "Pulizie stagionali" },
-  { value: "garden_care", label: "Cura del giardino" },
-  { value: "home_organizing", label: "Organizzazione casa" },
-];
+import { SERVICE_CATALOG } from "@/lib/services";
+const serviceOptions = SERVICE_CATALOG.map((s) => ({ value: s.id, label: s.label }));
 
 export default function ServiceRequestNew() {
   const navigate = useNavigate();

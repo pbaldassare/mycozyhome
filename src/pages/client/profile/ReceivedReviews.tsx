@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
+import { SERVICE_LABELS } from "@/lib/services";
 export default function ReceivedReviews() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -32,22 +33,7 @@ export default function ReceivedReviews() {
     enabled: !!user?.id,
   });
 
-  const serviceLabels: Record<string, string> = {
-    cleaning: "Pulizie casa",
-    office_cleaning: "Pulizie ufficio",
-    ironing: "Stiraggio",
-    sanitization: "Sanificazione",
-    dog_sitter: "Dog sitting",
-    wardrobe_seasonal: "Cambio stagione armadi",
-    decluttering: "Riordino e decluttering",
-    post_renovation: "Post ristrutturazione",
-    seasonal_cleaning: "Pulizie stagionali",
-    garden_care: "Cura piante e giardino",
-    home_organizing: "Home organizing",
-    dog_walking: "Dog walking",
-    pet_care_travel: "Cura animali in viaggio",
-    pet_space_cleaning: "Pulizia spazi animali",
-  };
+  const serviceLabels = SERVICE_LABELS;
 
   return (
     <div className="min-h-screen bg-background">

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 export interface Professional {
   id: string;
   first_name: string;
@@ -22,13 +23,6 @@ export interface ProfessionalWithServices extends Professional {
   }[];
 }
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
 export function useFeaturedProfessionals(limit = 5) {
   return useQuery({

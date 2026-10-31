@@ -41,6 +41,7 @@ import { useBookingTracking } from "@/hooks/useBookingTracking";
 import { useQueryClient } from "@tanstack/react-query";
 import { Navigation } from "lucide-react";
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 const statusConfig = {
   pending: { label: "In attesa di conferma", className: "bg-warning/10 text-warning", icon: Clock },
   confirmed: { label: "Confermato", className: "bg-success/10 text-success", icon: CheckCircle },
@@ -48,13 +49,6 @@ const statusConfig = {
   cancelled: { label: "Annullato", className: "bg-destructive/10 text-destructive", icon: X },
 };
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
 export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();

@@ -11,8 +11,7 @@ import {
   Bell,
   FileText,
   Heart,
-  Loader2,
-} from "lucide-react";
+  Loader2, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -132,11 +131,13 @@ export default function ClientProfile() {
         </div>
 
         {/* Verification Status */}
-        <TrustIndicator
-          type="verified"
-          title="Account verificato"
-          description="Il tuo profilo è completo e verificato"
-        />
+        {user?.email_confirmed_at && (
+          <TrustIndicator
+            type="verified"
+            title="Email confermata"
+            description="Riceverai le comunicazioni sulle tue prenotazioni a questo indirizzo"
+          />
+        )}
 
         {/* Menu Sections */}
         <div className="space-y-2">
@@ -174,6 +175,12 @@ export default function ClientProfile() {
               icon={Heart}
               label="I miei preferiti"
               onClick={() => navigate("/client/profile/favorites")}
+            />
+            <Separator />
+            <MenuItem
+              icon={Gift}
+              label="Promozioni"
+              onClick={() => navigate("/client/promotions")}
             />
             <Separator />
             <MenuItem

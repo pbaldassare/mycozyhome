@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+import { SERVICE_LABELS as serviceLabels } from "@/lib/services";
 export interface Professional {
   id: string;
   name: string;
@@ -35,13 +36,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   suspended: { label: "Sospeso", className: "bg-muted text-muted-foreground" },
 };
 
-const serviceLabels: Record<string, string> = {
-  cleaning: "Pulizia Casa",
-  office_cleaning: "Pulizia Uffici",
-  ironing: "Stiratura",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog Sitter",
-};
 
 export function ProfessionalCard({
   professional,

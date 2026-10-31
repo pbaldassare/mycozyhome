@@ -64,7 +64,6 @@ export default function ClientOnboarding() {
           <OnboardingSlide
             title="Altri Servizi per Te"
             features={[
-              { icon: "🛡️", text: "Scopri le polizze assicurative scontate per casa e infortuni" },
               { icon: "💬", text: "Comunica con i professionisti nella chat interna" },
               { icon: "❤️", text: "Salva i professionisti preferiti per prenotarli più velocemente" },
               { icon: "🔔", text: "Attiva le notifiche per non perdere aggiornamenti sulle prenotazioni" },

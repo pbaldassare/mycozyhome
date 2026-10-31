@@ -69,7 +69,6 @@ export default function ProfessionalTutorial() {
             icon={<Shield className="w-10 h-10" />}
             features={[
               { icon: "💰", text: "Ricevi i pagamenti in modo sicuro tramite l'app" },
-              { icon: "🛡️", text: "Accedi alle polizze assicurative scontate dalla sezione Profilo" },
               { icon: "📋", text: "Richiedi supporto per partita IVA e fatturazione" },
               { icon: "📞", text: "Il team MyCozyHome è disponibile per qualsiasi dubbio" },
             ]}

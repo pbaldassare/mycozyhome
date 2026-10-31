@@ -23,6 +23,7 @@ import {
   useDeleteService,
 } from "@/hooks/useProfessionalData";
 import { ServiceFormDialog } from "@/components/professional/ServiceFormDialog";
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 import {
   CleaningIllustration,
   IroningIllustration,
@@ -42,13 +43,6 @@ function ServiceIllustration({ type }: { type: string }) {
   return <Illustration className="w-full h-full" />;
 }
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
 interface ServiceData {
   id: string;

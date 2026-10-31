@@ -182,7 +182,7 @@ export default function ProfessionalAuth() {
           <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
             <Home className="w-4 h-4" />
           </div>
-          <span className="font-display font-semibold">HomeServ Pro</span>
+          <span className="font-display font-semibold">MyCozyHome Pro</span>
         </div>
       </header>
 

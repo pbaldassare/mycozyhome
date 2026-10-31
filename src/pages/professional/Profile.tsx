@@ -16,8 +16,7 @@ import {
   Shield,
   ChevronRight,
   Heart,
-  Receipt,
-} from "lucide-react";
+  Receipt, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useProfessionalProfile } from "@/hooks/useProfessionalData";
@@ -69,6 +68,7 @@ export default function ProfessionalProfile() {
       title: "Account",
       items: [
         { icon: User, label: "Dati personali", path: "/professional/profile/personal" },
+        { icon: Wallet, label: "Incassi e prelievi", path: "/professional/earnings" },
         { icon: Receipt, label: "Dati fiscali (P.IVA)", path: "/professional/profile/fiscal" },
         { icon: Settings, label: "Preferenze", path: "/professional/profile/preferences" },
         { icon: Bell, label: "Notifiche", path: "/professional/profile/preferences" },

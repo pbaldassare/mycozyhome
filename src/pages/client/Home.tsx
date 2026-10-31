@@ -1,4 +1,4 @@
-import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Leaf, PackageOpen, Truck, Snowflake, TreePine, LayoutGrid, Dog, PawPrint, Trash2, Loader2 } from "lucide-react";
+import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Leaf, PackageOpen, Truck, Snowflake, TreePine, LayoutGrid, Dog, PawPrint, Trash2, Loader2, Building2, SprayCan } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -11,22 +11,25 @@ const serviceCategories = [
   {
     title: "🏠 Cura della casa",
     services: [
-      { id: "cleaning", icon: HomeIcon, title: "Pulizie", description: "Pulizie ordinarie e profonde" },
-      { id: "ironing", icon: Shirt, title: "Stiro e lavanderia", description: "Stiraggio e lavanderia a domicilio" },
+      { id: "cleaning", icon: HomeIcon, title: "Pulizia casa", description: "Pulizie ordinarie e profonde" },
+      { id: "office_cleaning", icon: Building2, title: "Pulizia uffici", description: "Pulizia di uffici e studi" },
+      { id: "sanitization", icon: SprayCan, title: "Sanificazione", description: "Sanificazione degli ambienti" },
+      { id: "ironing", icon: Shirt, title: "Stiratura", description: "Stiraggio e lavanderia a domicilio" },
       { id: "wardrobe_seasonal", icon: PackageOpen, title: "Cambio stagione", description: "Cambio stagione armadi" },
       { id: "decluttering", icon: LayoutGrid, title: "Riordino", description: "Riordino e decluttering" },
-      { id: "post_renovation", icon: Truck, title: "Post-trasloco", description: "Pulizia post-trasloco o ristrutturazione" },
-      { id: "seasonal_cleaning", icon: Snowflake, title: "Servizi stagionali", description: "Natale, primavera e altro" },
+      { id: "post_renovation", icon: Truck, title: "Pulizia post-trasloco", description: "Pulizia post-trasloco o ristrutturazione" },
+      { id: "seasonal_cleaning", icon: Snowflake, title: "Pulizie stagionali", description: "Natale, primavera e altro" },
       { id: "garden_care", icon: TreePine, title: "Piante e giardino", description: "Cura piante e giardino" },
-      { id: "home_organizing", icon: Leaf, title: "Home organizing", description: "Organizzazione professionale spazi" },
+      { id: "home_organizing", icon: Leaf, title: "Organizzazione degli spazi", description: "Organizzazione professionale spazi" },
     ],
   },
   {
     title: "🐾 Animali",
     services: [
-      { id: "dog_walking", icon: Dog, title: "Dog walking", description: "Passeggiate con il cane" },
-      { id: "pet_care_travel", icon: PawPrint, title: "Cura animali", description: "Cura animali in casa durante viaggi" },
-      { id: "pet_space_cleaning", icon: Trash2, title: "Pulizia spazi", description: "Pulizia lettiere e spazi animali" },
+      { id: "dog_sitter", icon: Dog, title: "Dog sitter", description: "Compagnia e cura del cane" },
+      { id: "dog_walking", icon: Dog, title: "Passeggiate con il cane", description: "Uscite quotidiane con il cane" },
+      { id: "pet_care_travel", icon: PawPrint, title: "Cura animali in vacanza", description: "Cura animali in casa durante viaggi" },
+      { id: "pet_space_cleaning", icon: Trash2, title: "Pulizia spazi animali", description: "Pulizia lettiere e spazi animali" },
     ],
   },
 ];
@@ -85,7 +88,7 @@ export default function ClientHome() {
         <TrustIndicator
           type="secure"
           title="Professionisti verificati"
-          description="Tutti i nostri professionisti sono verificati e assicurati"
+          description="Documenti dei professionisti controllati dal nostro team prima dell'approvazione"
         />
 
         {/* Services by Category */}

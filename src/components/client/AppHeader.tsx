@@ -1,21 +1,9 @@
 import { ChevronLeft, Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useClientNotifications } from "@/hooks/useClientNotifications";
 
-// Keep in sync with src/pages/client/Notifications.tsx
-const NOTIFICATIONS_READ_KEY = "client_notifications_read";
-const KNOWN_NOTIFICATION_IDS = ["welcome"];
-
-function hasUnreadNotifications() {
-  try {
-    const read: string[] = JSON.parse(localStorage.getItem(NOTIFICATIONS_READ_KEY) || "[]");
-    return KNOWN_NOTIFICATION_IDS.some((id) => !read.includes(id));
-  } catch {
-    return true;
-  }
-}
 
 interface AppHeaderProps {
   title?: string;
@@ -35,19 +23,8 @@ export function AppHeader({
   onBack,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-  const [unread, setUnread] = useState(false);
-
-  useEffect(() => {
-    if (!showNotifications) return;
-    const update = () => setUnread(hasUnreadNotifications());
-    update();
-    window.addEventListener("storage", update);
-    window.addEventListener("focus", update);
-    return () => {
-      window.removeEventListener("storage", update);
-      window.removeEventListener("focus", update);
-    };
-  }, [showNotifications]);
+  const { unreadCount } = useClientNotifications();
+  const unread = showNotifications && unreadCount > 0;
 
   const handleBack = () => {
     if (onBack) onBack();

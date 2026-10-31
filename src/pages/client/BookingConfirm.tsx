@@ -21,15 +21,10 @@ import { assertNotPlatformBlocked } from "@/lib/platform-block";
 import { useClientWallet } from "@/hooks/useWallet";
 import { z } from "zod";
 import { toUserMessage } from "@/lib/errors";
+import { PROMO_STORAGE_KEY } from "@/lib/promo";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels, type ServiceType } from "@/lib/services";
 const addressSchema = z.string().trim().min(10, "Inserisci un indirizzo completo").max(200, "Indirizzo troppo lungo");
 const promoCodeSchema = z.string().trim().max(20, "Codice promozionale troppo lungo").optional();
 const notesSchema = z.string().trim().max(500, "Note troppo lunghe").optional();
@@ -49,7 +44,13 @@ export default function BookingConfirm() {
 
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [promoCode, setPromoCode] = useState("");
+  const [promoCode, setPromoCode] = useState(() => {
+    try {
+      return sessionStorage.getItem(PROMO_STORAGE_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const [promoApplied, setPromoApplied] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export default function BookingConfirm() {
         .from("professional_services")
         .select("*")
         .eq("professional_id", professionalId!)
-        .eq("service_type", serviceType as "cleaning" | "office_cleaning" | "ironing" | "sanitization" | "dog_sitter")
+        .eq("service_type", serviceType as ServiceType)
         .single();
       
       if (error) throw error;
@@ -156,6 +157,11 @@ export default function BookingConfirm() {
       return { id: bookingId as string };
     },
     onSuccess: (data) => {
+      try {
+        sessionStorage.removeItem(PROMO_STORAGE_KEY);
+      } catch {
+        // Nessuno storage disponibile.
+      }
       queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
       queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
       toast({

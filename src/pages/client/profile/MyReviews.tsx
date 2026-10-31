@@ -5,14 +5,8 @@ import { useClientReviews } from "@/hooks/useReviews";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5">

@@ -17,14 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 const timeSlots = [
   "08:00", "09:00", "10:00", "11:00", "12:00",
   "14:00", "15:00", "16:00", "17:00", "18:00", "19:00"

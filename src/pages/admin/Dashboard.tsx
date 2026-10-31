@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   Users,
   UserCheck,
@@ -5,216 +7,107 @@ import {
   CreditCard,
   MessageSquareWarning,
   TrendingUp,
-  Clock,
-  AlertTriangle,
+  Landmark,
+  HelpCircle,
+  ClipboardCheck,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import { StatCard } from "@/components/admin/StatCard";
-import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
-// Mock data for pending professionals
-const pendingProfessionals: Professional[] = [
-  {
-    id: "1",
-    name: "Maria Rossi",
-    email: "maria.rossi@email.com",
-    services: ["cleaning", "ironing"],
-    city: "Milano",
-    status: "pending",
-    documentsCount: 3,
-    submittedAt: "3 Feb 2026",
-  },
-  {
-    id: "2",
-    name: "Giuseppe Verdi",
-    email: "giuseppe.v@email.com",
-    services: ["dog_sitter"],
-    city: "Roma",
-    status: "pending",
-    documentsCount: 5,
-    submittedAt: "2 Feb 2026",
-  },
-  {
-    id: "3",
-    name: "Anna Bianchi",
-    email: "anna.bianchi@email.com",
-    services: ["dog_sitter"],
-    city: "Napoli",
-    status: "pending",
-    documentsCount: 4,
-    submittedAt: "1 Feb 2026",
-  },
-];
+interface DashboardStats {
+  clients: number;
+  professionals_approved: number;
+  professionals_to_review: number;
+  bookings_month: number;
+  bookings_open: number;
+  revenue_month: number;
+  disputes_open: number;
+  tickets_open: number;
+  payouts_pending: number;
+}
 
-// Mock recent activity
-const recentActivity = [
-  { id: 1, type: "booking", message: "Nuova prenotazione pulizia", time: "5 min fa" },
-  { id: 2, type: "professional", message: "Mario Bianchi approvato", time: "15 min fa" },
-  { id: 3, type: "dispute", message: "Nuova segnalazione #1234", time: "1 ora fa" },
-  { id: 4, type: "payment", message: "Pagamento €85 completato", time: "2 ore fa" },
-  { id: 5, type: "booking", message: "Prenotazione babysitter confermata", time: "3 ore fa" },
-];
-
-const activityIcons = {
-  booking: Calendar,
-  professional: UserCheck,
-  dispute: AlertTriangle,
-  payment: CreditCard,
-};
+const euro = (value: number) =>
+  new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(value);
 
 export default function AdminDashboard() {
-  const handleApprove = (id: string) => {
-    console.log("Approved:", id);
-  };
+  const { data: stats, isLoading, isError, refetch } = useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_dashboard_stats");
+      if (error) throw error;
+      return data as unknown as DashboardStats;
+    },
+    staleTime: 60_000,
+  });
 
-  const handleReject = (id: string) => {
-    console.log("Rejected:", id);
-  };
-
-  const handleView = (id: string) => {
-    console.log("View:", id);
-  };
+  const todo = stats
+    ? [
+        { count: stats.professionals_to_review, label: "professionisti da verificare", to: "/admin/professionals", icon: ClipboardCheck },
+        { count: stats.disputes_open, label: "contestazioni aperte", to: "/admin/disputes", icon: MessageSquareWarning },
+        { count: stats.payouts_pending, label: "prelievi da pagare", to: "/admin/payments", icon: Landmark },
+        { count: stats.tickets_open, label: "ticket di assistenza aperti", to: "/admin/support", icon: HelpCircle },
+      ]
+    : [];
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Benvenuto nel pannello di amministrazione HomeServ
-        </p>
+        <p className="text-muted-foreground mt-1">Andamento di MyCozyHome e cose da fare</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <StatCard
-          title="Professionisti Attivi"
-          value={156}
-          icon={UserCheck}
-          variant="primary"
-          trend={{ value: 12, positive: true }}
-        />
-        <StatCard
-          title="Clienti Registrati"
-          value="2,847"
-          icon={Users}
-          variant="success"
-          trend={{ value: 8, positive: true }}
-        />
-        <StatCard
-          title="Prenotazioni Mese"
-          value={523}
-          icon={Calendar}
-          variant="warning"
-          trend={{ value: 5, positive: true }}
-        />
-        <StatCard
-          title="Segnalazioni Aperte"
-          value={7}
-          icon={MessageSquareWarning}
-          variant="destructive"
-          subtitle="3 urgenti"
-        />
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Pending Validations */}
-        <div className="lg:col-span-2 space-y-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">In Attesa di Validazione</h2>
-              <p className="text-sm text-muted-foreground">
-                {pendingProfessionals.length} professionisti da verificare
-              </p>
-            </div>
-            <a
-              href="/admin/professionals"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Vedi tutti →
-            </a>
-          </div>
-
-          <div className="grid gap-4">
-            {pendingProfessionals.map((professional) => (
-              <ProfessionalCard
-                key={professional.id}
-                professional={professional}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onView={handleView}
-              />
-            ))}
-          </div>
+      {isError ? (
+        <div className="bg-card rounded-2xl border border-border/30 p-6 space-y-3">
+          <p>Impossibile caricare i dati della dashboard.</p>
+          <Button variant="outline" onClick={() => refetch()}>Riprova</Button>
         </div>
-
-        {/* Sidebar */}
-        <div className="space-y-5">
-          {/* Quick Stats */}
-          <div className="bg-card rounded-2xl border border-border/30 p-6">
-            <h3 className="font-semibold mb-5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-primary/15">
-                <TrendingUp className="w-5 h-5 text-primary" />
-              </div>
-              Statistiche Rapide
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors">
-                <span className="text-sm text-muted-foreground">Entrate mensili</span>
-                <span className="font-bold text-lg text-primary">€12,450</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-straw/10 hover:bg-straw/20 transition-colors">
-                <span className="text-sm text-muted-foreground">Rating medio</span>
-                <span className="font-bold text-lg text-straw-dark">4.8 ⭐</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-sage/10 hover:bg-sage/20 transition-colors">
-                <span className="text-sm text-muted-foreground">Tasso completamento</span>
-                <span className="font-bold text-lg text-sage-dark">94%</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-xl bg-blush/10 hover:bg-blush/15 transition-colors">
-                <span className="text-sm text-muted-foreground">Tempo risposta medio</span>
-                <span className="font-bold text-lg text-blush-dark">2.5h</span>
-              </div>
-            </div>
+      ) : isLoading || !stats ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-2xl" />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <StatCard title="Professionisti attivi" value={stats.professionals_approved} icon={UserCheck} variant="primary" />
+            <StatCard title="Clienti registrati" value={stats.clients} icon={Users} variant="success" />
+            <StatCard
+              title="Prenotazioni del mese"
+              value={stats.bookings_month}
+              subtitle={`${stats.bookings_open} in corso`}
+              icon={Calendar}
+              variant="warning"
+            />
+            <StatCard title="Servizi completati nel mese" value={euro(stats.revenue_month)} icon={TrendingUp} variant="default" />
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-card rounded-2xl border border-border/30 p-6">
-            <h3 className="font-semibold mb-5 flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-sage/20">
-                <Clock className="w-5 h-5 text-sage-dark" />
-              </div>
-              Attività Recente
-            </h3>
-            <div className="space-y-2">
-              {recentActivity.map((activity) => {
-                const Icon = activityIcons[activity.type as keyof typeof activityIcons];
-                const activityColors = {
-                  booking: "bg-primary/15 text-primary",
-                  professional: "bg-sage/20 text-sage-dark",
-                  dispute: "bg-blush/20 text-blush-dark",
-                  payment: "bg-straw/25 text-straw-dark",
-                };
-                return (
-                  <div
-                    key={activity.id}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
+          <section className="space-y-4">
+            <h2 className="text-xl font-semibold">Da fare</h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {todo.map(({ count, label, to, icon: Icon }) => (
+                <li key={to}>
+                  <Link
+                    to={to}
+                    className="flex items-center gap-4 bg-card rounded-2xl border border-border/30 p-5 hover:border-primary transition-colors"
                   >
-                    <div className={cn("p-2 rounded-xl", activityColors[activity.type as keyof typeof activityColors])}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+                    <Icon className="w-6 h-6 text-primary-dark shrink-0" />
+                    <span className="text-2xl font-bold tabular-nums">{count}</span>
+                    <span className="text-muted-foreground">{label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <CreditCard className="w-4 h-4" />
+            I pagamenti sono crediti interni: i bonifici ai professionisti si gestiscono da Pagamenti.
+          </p>
+        </>
+      )}
     </div>
   );
 }

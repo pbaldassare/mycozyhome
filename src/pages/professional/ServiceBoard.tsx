@@ -38,23 +38,8 @@ import { formatDistanceToNow, format } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 
-const serviceLabels: Record<string, string> = {
-  cleaning: "Pulizie",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-  dog_walking: "Passeggiate cani",
-  pet_care_travel: "Pet care viaggio",
-  pet_space_cleaning: "Pulizia spazi animali",
-  wardrobe_seasonal: "Cambio stagione",
-  decluttering: "Riordino",
-  post_renovation: "Post ristrutturazione",
-  seasonal_cleaning: "Pulizie stagionali",
-  garden_care: "Cura giardino",
-  home_organizing: "Organizzazione casa",
-};
 
+import { SERVICE_LABELS as serviceLabels } from "@/lib/services";
 const serviceOptions = Object.entries(serviceLabels).map(([value, label]) => ({ value, label }));
 
 export default function ServiceBoard() {

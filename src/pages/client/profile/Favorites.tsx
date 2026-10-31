@@ -7,14 +7,8 @@ import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 export default function Favorites() {
   const navigate = useNavigate();
 

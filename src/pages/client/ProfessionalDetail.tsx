@@ -17,14 +17,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreateConversation } from "@/hooks/useConversations";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 export default function ProfessionalDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

@@ -1,10 +1,10 @@
  import { useState } from "react";
  import { useNavigate } from "react-router-dom";
- import { ArrowLeft, Bell, Mail, Eye, MapPin } from "lucide-react";
- import { Switch } from "@/components/ui/switch";
+ import { ArrowLeft, MapPin } from "lucide-react";
  import { Label } from "@/components/ui/label";
  import { Slider } from "@/components/ui/slider";
  import { toast } from "sonner";
+ import { NotificationPreferences } from "@/components/NotificationPreferences";
  import { useProfessionalProfile } from "@/hooks/useProfessionalData";
  import { supabase } from "@/integrations/supabase/client";
  
@@ -12,9 +12,6 @@
    const navigate = useNavigate();
    const { data: professional, refetch } = useProfessionalProfile();
    
-   const [pushNotifications, setPushNotifications] = useState(true);
-   const [emailNotifications, setEmailNotifications] = useState(true);
-   const [profileVisible, setProfileVisible] = useState(true);
    const [maxRadius, setMaxRadius] = useState(professional?.max_radius_km || 10);
  
    const handleRadiusChange = async (value: number[]) => {
@@ -56,68 +53,8 @@
        <div className="flex-1 p-4 space-y-6">
          {/* Notifications */}
          <div>
-           <h2 className="text-sm font-medium text-muted-foreground mb-3 px-1">
-             Notifiche
-           </h2>
-           <div className="bg-card rounded-2xl border border-border/30 overflow-hidden divide-y divide-border/30">
-             <div className="flex items-center justify-between p-4">
-               <div className="flex items-center gap-3">
-                 <Bell className="w-5 h-5 text-muted-foreground" />
-                 <div>
-                   <Label className="font-medium">Notifiche Push</Label>
-                   <p className="text-xs text-muted-foreground">Ricevi notifiche sul dispositivo</p>
-                 </div>
-               </div>
-               <Switch
-                 checked={pushNotifications}
-                 onCheckedChange={(checked) => {
-                   setPushNotifications(checked);
-                   toast.success(checked ? "Notifiche push attivate" : "Notifiche push disattivate");
-                 }}
-               />
-             </div>
-             <div className="flex items-center justify-between p-4">
-               <div className="flex items-center gap-3">
-                 <Mail className="w-5 h-5 text-muted-foreground" />
-                 <div>
-                   <Label className="font-medium">Notifiche Email</Label>
-                   <p className="text-xs text-muted-foreground">Ricevi aggiornamenti via email</p>
-                 </div>
-               </div>
-               <Switch
-                 checked={emailNotifications}
-                 onCheckedChange={(checked) => {
-                   setEmailNotifications(checked);
-                   toast.success(checked ? "Notifiche email attivate" : "Notifiche email disattivate");
-                 }}
-               />
-             </div>
-           </div>
-         </div>
- 
-         {/* Visibility */}
-         <div>
-           <h2 className="text-sm font-medium text-muted-foreground mb-3 px-1">
-             Visibilità
-           </h2>
-           <div className="bg-card rounded-2xl border border-border/30 overflow-hidden">
-             <div className="flex items-center justify-between p-4">
-               <div className="flex items-center gap-3">
-                 <Eye className="w-5 h-5 text-muted-foreground" />
-                 <div>
-                   <Label className="font-medium">Profilo Visibile</Label>
-                   <p className="text-xs text-muted-foreground">I clienti possono trovarti nelle ricerche</p>
-                 </div>
-               </div>
-               <Switch
-                 checked={profileVisible}
-                 onCheckedChange={(checked) => {
-                   setProfileVisible(checked);
-                   toast.success(checked ? "Profilo visibile" : "Profilo nascosto");
-                 }}
-               />
-             </div>
-           </div>
+           <h2 className="text-sm font-medium text-muted-foreground mb-3 px-1">Notifiche</h2>
+           <NotificationPreferences table="professionals" />
          </div>
  
          {/* Work Radius */}

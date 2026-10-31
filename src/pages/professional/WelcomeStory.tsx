@@ -43,7 +43,7 @@ export default function ProfessionalWelcomeStory() {
             features={[
               {
                 icon: "👥",
-                text: "Accedi a migliaia di clienti che cercano servizi domestici nella tua zona",
+                text: "Ricevi richieste da clienti che cercano servizi domestici nella tua zona",
               },
               {
                 icon: "📍",
@@ -77,10 +77,6 @@ export default function ProfessionalWelcomeStory() {
           <OnboardingSlide
             title="Vantaggi Esclusivi"
             features={[
-              {
-                icon: "🛡️",
-                text: "Polizze assicurative a prezzo scontato, pensate per chi lavora a domicilio",
-              },
               {
                 icon: "📋",
                 text: "Supporto di consulenti per l'apertura della partita IVA e la fatturazione",

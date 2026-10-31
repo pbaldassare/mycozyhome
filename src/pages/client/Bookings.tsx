@@ -9,6 +9,7 @@ import { useClientBookings, BookingWithProfessional } from "@/hooks/useBookings"
 import { format, isPast, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 const statusConfig = {
   pending: { label: "In attesa", className: "bg-warning/10 text-warning" },
   confirmed: { label: "Confermato", className: "bg-success/10 text-success" },
@@ -16,13 +17,6 @@ const statusConfig = {
   cancelled: { label: "Annullato", className: "bg-destructive/10 text-destructive" },
 };
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
 interface BookingCardProps {
   booking: BookingWithProfessional;

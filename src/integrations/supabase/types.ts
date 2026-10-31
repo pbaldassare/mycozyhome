@@ -239,6 +239,7 @@ export type Database = {
           longitude: number | null
           phone: string | null
           postal_code: string | null
+          preferences: Json
           province: string | null
           review_count: number | null
           updated_at: string
@@ -262,6 +263,7 @@ export type Database = {
           longitude?: number | null
           phone?: string | null
           postal_code?: string | null
+          preferences?: Json
           province?: string | null
           review_count?: number | null
           updated_at?: string
@@ -285,6 +287,7 @@ export type Database = {
           longitude?: number | null
           phone?: string | null
           postal_code?: string | null
+          preferences?: Json
           province?: string | null
           review_count?: number | null
           updated_at?: string
@@ -645,6 +648,60 @@ export type Database = {
           },
         ]
       }
+      payout_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          iban: string
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          professional_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          iban: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          professional_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          iban?: string
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          professional_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_requests_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payout_requests_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professionals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       professional_areas: {
         Row: {
           city: string
@@ -953,6 +1010,7 @@ export type Database = {
           max_radius_km: number | null
           phone: string
           postal_code: string | null
+          preferences: Json
           profile_completed: boolean | null
           province: string | null
           revenue_blocked: boolean
@@ -992,6 +1050,7 @@ export type Database = {
           max_radius_km?: number | null
           phone: string
           postal_code?: string | null
+          preferences?: Json
           profile_completed?: boolean | null
           province?: string | null
           revenue_blocked?: boolean
@@ -1031,6 +1090,7 @@ export type Database = {
           max_radius_km?: number | null
           phone?: string
           postal_code?: string | null
+          preferences?: Json
           profile_completed?: boolean | null
           province?: string | null
           revenue_blocked?: boolean
@@ -1657,6 +1717,7 @@ export type Database = {
           max_radius_km: number | null
           phone: string | null
           postal_code: string | null
+          preferences: Json | null
           profile_completed: boolean | null
           province: string | null
           revenue_blocked: boolean | null
@@ -1696,6 +1757,7 @@ export type Database = {
           max_radius_km?: number | null
           phone?: string | null
           postal_code?: string | null
+          preferences?: Json | null
           profile_completed?: boolean | null
           province?: string | null
           revenue_blocked?: boolean | null
@@ -1735,6 +1797,7 @@ export type Database = {
           max_radius_km?: number | null
           phone?: string | null
           postal_code?: string | null
+          preferences?: Json | null
           profile_completed?: boolean | null
           province?: string | null
           revenue_blocked?: boolean | null
@@ -1755,6 +1818,7 @@ export type Database = {
         Args: { p_code: string; p_user_id: string }
         Returns: number
       }
+      admin_dashboard_stats: { Args: never; Returns: Json }
       can_access_dispute: { Args: { p_dispute: string }; Returns: boolean }
       can_access_ticket: { Args: { p_ticket: string }; Returns: boolean }
       cancel_booking: {
@@ -1815,10 +1879,15 @@ export type Database = {
         Returns: boolean
       }
       join_as_client: { Args: never; Returns: undefined }
+      leave_mycozyhome: { Args: never; Returns: undefined }
       my_professional_id: { Args: never; Returns: string }
       owns_booking_as_professional: {
         Args: { p_booking_id: string; p_professional_id: string }
         Returns: boolean
+      }
+      process_payout: {
+        Args: { p_notes?: string; p_payout_id: string; p_status: string }
+        Returns: undefined
       }
       process_pending_payment_releases: { Args: never; Returns: number }
       professional_set_booking_status: {
@@ -1828,6 +1897,10 @@ export type Database = {
       release_booking_payment: {
         Args: { p_booking_id: string }
         Returns: boolean
+      }
+      request_payout: {
+        Args: { p_amount: number; p_iban: string }
+        Returns: string
       }
       resolve_dispute_payment: {
         Args: { p_dispute_id: string; p_favor: string }

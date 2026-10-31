@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { ArrowLeft, Gift, Share2, Tag } from "lucide-react";
+import { ArrowLeft, Gift, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import {
-  PromoCleaningIllustration,
-  ReferralIllustration,
-} from "@/components/illustrations/Illustrations";
+import { PromoCleaningIllustration } from "@/components/illustrations/Illustrations";
+import { supabase } from "@/integrations/supabase/client";
+import { toUserMessage } from "@/lib/errors";
+import { PROMO_STORAGE_KEY } from "@/lib/promo";
 
 interface Promotion {
   id: string;
@@ -16,7 +16,6 @@ interface Promotion {
   description: string;
   code?: string;
   expiresIn: string;
-  type: "discount" | "referral";
   Illustration: typeof PromoCleaningIllustration;
 }
 
@@ -27,16 +26,7 @@ const promotions: Promotion[] = [
     description: "Usa il codice",
     code: "PULITO15",
     expiresIn: "Scade tra 3 giorni",
-    type: "discount",
     Illustration: PromoCleaningIllustration,
-  },
-  {
-    id: "2",
-    title: "Invita un amico, ricevi 20€",
-    description: "Condividi il tuo link referral e guadagna crediti",
-    expiresIn: "Scade tra 1 settimana",
-    type: "referral",
-    Illustration: ReferralIllustration,
   },
 ];
 
@@ -44,34 +34,32 @@ export default function Promotions() {
   const navigate = useNavigate();
   const [promoCode, setPromoCode] = useState("");
 
-  const handleApply = (code: string) => {
-    toast.success(`Codice ${code} applicato!`, {
-      description: "Lo sconto verrà applicato alla tua prossima prenotazione.",
-    });
-  };
-
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: "MyCozyHome - Invita un amico",
-        text: "Registrati su MyCozyHome con il mio link e ricevi 10€ di sconto!",
-        url: window.location.origin,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.origin);
-      toast.success("Link copiato negli appunti!");
+  // Il DB verifica il codice; lo ricordiamo per precompilarlo alla prossima prenotazione.
+  const handleApply = async (code: string) => {
+    const normalized = code.trim().toUpperCase();
+    const { data: percent, error } = await supabase.rpc("validate_promo_code", { p_code: normalized });
+    if (error || !percent) {
+      toast.error(toUserMessage(error, "Il codice promozionale non è valido."));
+      return false;
     }
+    try {
+      sessionStorage.setItem(PROMO_STORAGE_KEY, normalized);
+    } catch {
+      // Senza storage il codice si inserisce a mano al checkout.
+    }
+    toast.success(`Codice ${normalized} valido: ${percent}% di sconto`, {
+      description: "Lo troverai già inserito alla prossima prenotazione.",
+    });
+    return true;
   };
 
-  const handleApplyCode = () => {
+
+  const handleApplyCode = async () => {
     if (!promoCode.trim()) {
       toast.error("Inserisci un codice promozionale");
       return;
     }
-    toast.success(`Codice ${promoCode} applicato!`, {
-      description: "Lo sconto verrà applicato alla tua prossima prenotazione.",
-    });
-    setPromoCode("");
+    if (await handleApply(promoCode)) setPromoCode("");
   };
 
   return (
@@ -119,25 +107,15 @@ export default function Promotions() {
                           </>
                         )}
                       </p>
-                      {promo.type === "discount" ? (
+                      {promo.code && (
                         <Button
                           variant="outline"
                           size="sm"
-                          className="mt-2 text-primary border-primary hover:bg-primary/10"
+                          className="mt-2 text-primary-dark border-primary hover:bg-primary/10"
                           onClick={() => handleApply(promo.code!)}
                         >
                           <Tag className="h-4 w-4 mr-1" />
-                          Applica
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="mt-2 text-primary border-primary hover:bg-primary/10"
-                          onClick={handleShare}
-                        >
-                          <Share2 className="h-4 w-4 mr-1" />
-                          Condividi
+                          Usa il codice
                         </Button>
                       )}
                     </div>

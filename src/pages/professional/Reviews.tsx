@@ -8,14 +8,8 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useProfessionalProfile, useProfessionalReviews } from "@/hooks/useProfessionalData";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 export default function ProfessionalReviews() {
   const { data: professional } = useProfessionalProfile();
   const { data: reviews, isLoading } = useProfessionalReviews(professional?.id);

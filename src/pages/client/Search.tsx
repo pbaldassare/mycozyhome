@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, PackageOpen, LayoutGrid, Truck, Snowflake, TreePine, Leaf, Dog, PawPrint, Trash2, Loader2, List, Map, MapPin } from "lucide-react";
+import { Search, SlidersHorizontal, Home as HomeIcon, Shirt, PackageOpen, LayoutGrid, Truck, Snowflake, TreePine, Leaf, Dog, PawPrint, Trash2, Loader2, List, Map, MapPin, Building2, SprayCan } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,14 +16,17 @@ import { useGeolocation } from "@/hooks/useGeolocation";
 const serviceFilters = [
   { id: "all", label: "Tutti", icon: null },
   { id: "cleaning", label: "Pulizie", icon: HomeIcon },
-  { id: "ironing", label: "Stiro", icon: Shirt },
+  { id: "office_cleaning", label: "Uffici", icon: Building2 },
+  { id: "sanitization", label: "Sanificazione", icon: SprayCan },
+  { id: "ironing", label: "Stiratura", icon: Shirt },
   { id: "wardrobe_seasonal", label: "Cambio stagione", icon: PackageOpen },
   { id: "decluttering", label: "Riordino", icon: LayoutGrid },
   { id: "post_renovation", label: "Post-trasloco", icon: Truck },
   { id: "seasonal_cleaning", label: "Stagionali", icon: Snowflake },
   { id: "garden_care", label: "Giardino", icon: TreePine },
-  { id: "home_organizing", label: "Organizing", icon: Leaf },
-  { id: "dog_walking", label: "Dog walking", icon: Dog },
+  { id: "home_organizing", label: "Organizzazione", icon: Leaf },
+  { id: "dog_sitter", label: "Dog sitter", icon: Dog },
+  { id: "dog_walking", label: "Passeggiate", icon: Dog },
   { id: "pet_care_travel", label: "Cura animali", icon: PawPrint },
   { id: "pet_space_cleaning", label: "Pulizia spazi", icon: Trash2 },
 ];

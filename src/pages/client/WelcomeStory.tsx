@@ -29,7 +29,7 @@ export default function ClientWelcomeStory() {
         >
           <OnboardingSlide
             title="La tua casa, le nostre cure"
-            description="MyCozyHome mette in contatto chi ama la propria casa con professionisti affidabili. Scopri perché migliaia di famiglie si affidano a noi."
+            description="MyCozyHome mette in contatto chi ama la propria casa con professionisti affidabili. Prenoti in pochi minuti e paghi solo a servizio completato."
             illustration={
               <div className="w-48 h-48 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full flex items-center justify-center">
                 <Sparkles className="w-24 h-24 text-primary" />
@@ -88,25 +88,6 @@ export default function ClientWelcomeStory() {
               {
                 icon: "🤝",
                 text: "MyCozyHome ti tutela in ogni fase del servizio",
-              },
-            ]}
-          />
-
-          <OnboardingSlide
-            title="Assicurazioni a Prezzo Agevolato"
-            description="Proteggi la tua casa e chi lavora per te con polizze assicurative scontate, disponibili direttamente nell'app."
-            features={[
-              {
-                icon: "🏠",
-                text: "Polizze per la tua abitazione a condizioni vantaggiose",
-              },
-              {
-                icon: "🩹",
-                text: "Copertura in caso di infortunio del professionista a casa tua",
-              },
-              {
-                icon: "💰",
-                text: "Tariffe riservate esclusivamente agli utenti MyCozyHome",
               },
             ]}
           />

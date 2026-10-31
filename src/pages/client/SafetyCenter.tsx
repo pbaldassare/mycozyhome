@@ -9,6 +9,7 @@ import {
   FileText,
   Users,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/client/AppHeader";
 import { TrustIndicator } from "@/components/client/TrustIndicator";
 import {
@@ -60,7 +61,7 @@ const faqs = [
   {
     question: "Cosa succede se ho un problema con un servizio?",
     answer:
-      "Puoi aprire una segnalazione dalla sezione 'Prenotazioni' entro 7 giorni dal servizio. Il nostro team esaminerà il caso e ti contatterà per trovare una soluzione.",
+      "Puoi aprire una segnalazione dalla sezione 'Prenotazioni' entro 5 giorni dal servizio. Il nostro team esaminerà il caso e ti contatterà per trovare una soluzione.",
   },
   {
     question: "I miei dati sono al sicuro?",
@@ -85,6 +86,7 @@ const faqs = [
 ];
 
 export default function SafetyCenter() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background pb-24">
       <AppHeader title="Centro sicurezza" showBack />
@@ -184,9 +186,12 @@ export default function SafetyCenter() {
           <CardContent className="pt-6 text-center">
             <h3 className="font-semibold">Hai bisogno di aiuto?</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Il nostro team di supporto è disponibile 7 giorni su 7
+              Scrivici dal centro assistenza: ti rispondiamo il prima possibile
             </p>
-            <button className="mt-4 text-primary font-medium text-sm">
+            <button
+              className="mt-4 text-primary-dark font-medium text-sm"
+              onClick={() => navigate("/client/support")}
+            >
               Contatta l'assistenza →
             </button>
           </CardContent>

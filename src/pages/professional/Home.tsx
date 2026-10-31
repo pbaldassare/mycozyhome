@@ -30,14 +30,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { getProfessionalLevel } from "@/lib/professional-level";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
 
-const serviceTypeLabels: Record<string, string> = {
-  cleaning: "Pulizie casa",
-  office_cleaning: "Pulizie ufficio",
-  ironing: "Stiro",
-  sanitization: "Sanificazione",
-  dog_sitter: "Dog sitter",
-};
 
+import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 function formatBookingDate(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return "Oggi";
@@ -202,7 +196,13 @@ export default function ProfessionalHome() {
         </div>
 
         {/* Monthly Earnings */}
-        <Card>
+        <Card
+          role="link"
+          tabIndex={0}
+          className="cursor-pointer hover:border-primary transition-colors"
+          onClick={() => navigate("/professional/earnings")}
+          onKeyDown={(e) => e.key === "Enter" && navigate("/professional/earnings")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -222,6 +222,7 @@ export default function ProfessionalHome() {
                 <span className="text-xs text-muted-foreground">
                   {stats?.totalCompletedBookings || 0} servizi completati
                 </span>
+                <span className="block text-xs font-medium text-primary-dark mt-1">Incassi e prelievi →</span>
               </div>
             </div>
           </CardContent>

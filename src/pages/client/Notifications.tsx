@@ -1,70 +1,22 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, Calendar, MessageSquare, Star, Settings, CheckCheck } from "lucide-react";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-interface NotificationItem {
-  id: string;
-  type: "booking" | "message" | "review" | "system";
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-  link?: string;
-}
-
-const STORAGE_KEY = "client_notifications_read";
-
-const mockNotifications: NotificationItem[] = [
-  {
-    id: "welcome",
-    type: "system",
-    title: "Benvenuto su MyCozyHome! 🎉",
-    description: "Esplora i professionisti vicino a te e prenota in pochi tap.",
-    time: "Ora",
-    read: false,
-    link: "/client/search",
-  },
-];
+import { useClientNotifications, type ClientNotification } from "@/hooks/useClientNotifications";
 
 const iconByType = {
   booking: Calendar,
   message: MessageSquare,
   review: Star,
-  system: Bell,
 };
 
 export default function ClientNotifications() {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const { notifications, markAllRead, isLoading, isError, refetch } = useClientNotifications();
 
-  useEffect(() => {
-    const readIds: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    setNotifications(
-      mockNotifications.map((n) => ({ ...n, read: readIds.includes(n.id) }))
-    );
-    // Auto-mark all known notifications as read when opening the inbox
-    const allIds = mockNotifications.map((n) => n.id);
-    const merged = Array.from(new Set([...readIds, ...allIds]));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    window.dispatchEvent(new Event("storage"));
-  }, []);
-
-  const markAllRead = () => {
-    const ids = notifications.map((n) => n.id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
-  const handleClick = (n: NotificationItem) => {
-    const readIds: string[] = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    if (!readIds.includes(n.id)) {
-      readIds.push(n.id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(readIds));
-    }
-    if (n.link) navigate(n.link);
+  const handleClick = (n: ClientNotification) => {
+    navigate(n.link);
   };
 
   const hasUnread = notifications.some((n) => !n.read);
@@ -95,7 +47,14 @@ export default function ClientNotifications() {
           </Button>
         )}
 
-        {notifications.length === 0 ? (
+        {isLoading ? (
+          <p className="text-center py-16 text-muted-foreground">Caricamento...</p>
+        ) : isError ? (
+          <div className="text-center py-16 space-y-3">
+            <p className="text-muted-foreground">Impossibile caricare le notifiche.</p>
+            <Button variant="outline" onClick={() => refetch()}>Riprova</Button>
+          </div>
+        ) : notifications.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground">
             <Bell className="h-12 w-12 mx-auto mb-3 opacity-30" />
             <p>Nessuna notifica al momento</p>

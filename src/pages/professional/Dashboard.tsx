@@ -164,7 +164,7 @@ export default function ProfessionalDashboard() {
         {/* Header */}
         <header className="bg-primary text-primary-foreground p-6 pb-20 relative">
           <div className="flex items-center justify-between">
-            <span className="font-display font-semibold">HomeServ Pro</span>
+            <span className="font-display font-semibold">MyCozyHome Pro</span>
             <button onClick={handleLogout} className="p-2 hover:bg-white/10 rounded-lg">
               <LogOut className="w-5 h-5" />
             </button>
@@ -202,7 +202,7 @@ export default function ProfessionalDashboard() {
       {/* Header with Profile */}
       <header className="bg-primary text-primary-foreground p-6 pb-24 relative">
         <div className="flex items-center justify-between mb-6">
-          <span className="font-display font-semibold">HomeServ Pro</span>
+          <span className="font-display font-semibold">MyCozyHome Pro</span>
           <button className="p-2 hover:bg-white/10 rounded-lg">
             <Settings className="w-5 h-5" />
           </button>

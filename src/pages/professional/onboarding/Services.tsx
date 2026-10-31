@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
+import { SERVICE_CATALOG } from "@/lib/services";
 type ServiceType = Database["mycozyhome"]["Enums"]["service_type"];
 
 interface ServiceOption {
@@ -23,13 +24,7 @@ interface ServiceData {
   description: string;
 }
 
-const serviceOptions: ServiceOption[] = [
-  { id: "cleaning", label: "Pulizia casa" },
-  { id: "office_cleaning", label: "Pulizia uffici" },
-  { id: "ironing", label: "Stiratura" },
-  { id: "sanitization", label: "Sanificazione" },
-  { id: "dog_sitter", label: "Dog sitter" },
-];
+const serviceOptions: ServiceOption[] = SERVICE_CATALOG.map((s) => ({ id: s.id, label: s.label }));
 
 export default function ServicesSetup() {
   const navigate = useNavigate();
