@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ClientProfile {
@@ -41,7 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [roleLoadedFor, setRoleLoadedFor] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const fetchUserRole = async (userId: string): Promise<UserRole> => {
     const { data } = await supabase
@@ -60,29 +63,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .single();
 
+    // Il profilo lo crea il DB alla registrazione (o join_as_client).
     if (!error && data) {
       setProfile(data);
       setIsBlocked(!!data.is_blocked);
       setBlockedReason(data.blocked_reason ?? null);
     } else {
-      // Create profile if it doesn't exist
-      const { data: newProfile } = await supabase
-        .from("client_profiles")
-        .insert({ user_id: userId, email: userEmail })
-        .select()
-        .single();
-      
-      if (newProfile) {
-        setProfile(newProfile);
-        setIsBlocked(!!newProfile.is_blocked);
-        setBlockedReason(newProfile.blocked_reason ?? null);
-      }
+      setProfile(null);
     }
   };
 
   const fetchProfessionalBlockStatus = async (userId: string) => {
     const { data } = await supabase
-      .from("professionals")
+      .from("professional_private")
       .select("is_blocked, blocked_reason")
       .eq("user_id", userId)
       .maybeSingle();
@@ -95,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const userRole = await fetchUserRole(userId);
     setRole(userRole);
 
-    if (userRole === "client" || userRole === null) {
+    if (userRole === "client") {
       await fetchClientProfile(userId, userEmail);
     } else if (userRole === "professional") {
       setProfile(null);
@@ -104,6 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setIsBlocked(false);
       setBlockedReason(null);
+    }
+    setRoleLoadedFor(userId);
+  };
+
+  /** Dati di un utente non devono restare sul dispositivo dopo il logout. */
+  const clearLocalData = () => {
+    queryClient.clear();
+    if ("caches" in window) {
+      caches.delete("supabase-cache").catch(() => undefined);
     }
   };
 
@@ -115,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearLocalData();
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -140,8 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
           setIsBlocked(false);
           setBlockedReason(null);
+          setRoleLoadedFor(null);
+          if (event === "SIGNED_OUT") clearLocalData();
         }
-        setLoading(false);
+        setAuthReady(true);
       }
     );
 
@@ -152,11 +157,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchUserData(session.user.id, session.user.email);
       }
-      setLoading(false);
+      setAuthReady(true);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Il caricamento finisce solo quando il ruolo dell'utente corrente è noto.
+  const loading = !authReady || (!!user && roleLoadedFor !== user.id);
 
   return (
     <AuthContext.Provider value={{ user, session, profile, role, isBlocked, blockedReason, loading, signOut, refreshProfile }}>

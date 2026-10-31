@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { authErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -87,7 +88,7 @@ export default function ProfessionalAuth() {
           } else if (error.message.includes("Email not confirmed")) {
             toast.error("Verifica la tua email prima di accedere");
           } else {
-            toast.error(error.message);
+            toast.error(authErrorMessage(error));
           }
           return;
         }
@@ -142,30 +143,12 @@ export default function ProfessionalAuth() {
           if (error.message.includes("already registered")) {
             toast.error("Questa email è già registrata");
           } else {
-            toast.error(error.message);
+            toast.error(authErrorMessage(error));
           }
           return;
         }
 
-        // Create professional profile in database
-        if (signUpData.user) {
-          const { error: profileError } = await supabase
-            .from("professionals")
-            .insert({
-              user_id: signUpData.user.id,
-              first_name: validated.firstName,
-              last_name: validated.lastName,
-              email: validated.email,
-              phone: "",
-              city: "",
-              status: "pending",
-            });
-
-          if (profileError) {
-            console.error("Error creating professional profile:", profileError);
-          }
-        }
-
+        // Profilo professionista e ruolo li crea il DB alla registrazione.
         toast.success("Registrazione completata!");
         if (signUpData.user) {
           await redirectProfessionalAfterAuth(signUpData.user.id, false);

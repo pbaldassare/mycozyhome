@@ -154,7 +154,7 @@ export function DisputeForm({
       // Upload evidence files
       for (const uploadedFile of uploadedFiles) {
         const fileExt = uploadedFile.name.split(".").pop();
-        const fileName = `${reporterId}/${dispute.id}/${Date.now()}.${fileExt}`;
+        const fileName = `${dispute.id}/${Date.now()}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("mycozyhome-dispute-evidence")

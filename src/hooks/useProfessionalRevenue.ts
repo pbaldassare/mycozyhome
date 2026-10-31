@@ -28,7 +28,7 @@ export function useProfessionalRevenue(professionalId?: string) {
       const [{ data: prof, error: profErr }, { data: revData, error: revErr }] =
         await Promise.all([
           supabase
-            .from("professionals")
+            .from("professional_private")
             .select("has_vat_number, vat_number, revenue_blocked")
             .eq("id", professionalId)
             .maybeSingle(),

@@ -75,50 +75,16 @@ export function useProfessionalBookings() {
   });
 }
 
-export function useUpdateBookingStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string; status: string }) => {
-      const updates: { status: string; completed_at?: string; cancelled_at?: string } = { status };
-
-      if (status === "completed") {
-        updates.completed_at = new Date().toISOString();
-      } else if (status === "cancelled") {
-        updates.cancelled_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("bookings")
-        .update(updates)
-        .eq("id", bookingId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["client-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["professional-bookings"] });
-      queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
-      queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
-    },
-  });
-}
-
 export function useCancelBooking() {
-  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ bookingId, reason }: { bookingId: string; reason: string }) => {
-      const { error } = await supabase
-        .from("bookings")
-        .update({
-          status: "cancelled",
-          cancelled_at: new Date().toISOString(),
-          cancelled_by: user?.id,
-          cancellation_reason: reason,
-        })
-        .eq("id", bookingId);
+      // Il DB controlla che si possa ancora annullare e rimborsa i crediti.
+      const { error } = await supabase.rpc("cancel_booking", {
+        p_booking_id: bookingId,
+        p_reason: reason,
+      });
 
       if (error) throw error;
     },

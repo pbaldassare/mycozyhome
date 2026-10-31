@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlertCircle, Loader2, Tag
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { assertNotPlatformBlocked } from "@/lib/platform-block";
 import { useClientWallet } from "@/hooks/useWallet";
 import { z } from "zod";
+import { toUserMessage } from "@/lib/errors";
 
 const serviceTypeLabels: Record<string, string> = {
   cleaning: "Pulizie casa",
@@ -59,7 +61,7 @@ export default function BookingConfirm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("professionals")
-        .select("*")
+        .select(PUBLIC_PROFESSIONAL_COLUMNS)
         .eq("id", professionalId)
         .single();
       
@@ -98,29 +100,27 @@ export default function BookingConfirm() {
     return `${endHours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
-  const applyPromoCode = () => {
-    // Mock promo code logic - in real app, validate against backend
-    if (promoCode.toUpperCase() === "BENVENUTO10") {
-      setDiscount(totalAmount * 0.1);
-      setPromoApplied(true);
-      toast({
-        title: "Codice applicato!",
-        description: "Sconto del 10% applicato al tuo ordine",
-      });
-    } else if (promoCode.toUpperCase() === "PRIMA20") {
-      setDiscount(totalAmount * 0.2);
-      setPromoApplied(true);
-      toast({
-        title: "Codice applicato!",
-        description: "Sconto del 20% applicato al tuo ordine",
-      });
-    } else if (promoCode) {
+  const applyPromoCode = async () => {
+    const code = promoCode.trim().toUpperCase();
+    if (!code) return;
+    // Il DB valida il codice; lo sconto finale lo ricalcola create_booking.
+    const { data: percent, error } = await supabase.rpc("validate_promo_code", { p_code: code });
+    if (error || !percent) {
+      setDiscount(0);
+      setPromoApplied(false);
       toast({
         title: "Codice non valido",
-        description: "Il codice promozionale inserito non è valido",
+        description: toUserMessage(error, "Il codice promozionale inserito non è valido"),
         variant: "destructive",
       });
+      return;
     }
+    setDiscount(Math.round(totalAmount * percent) / 100);
+    setPromoApplied(true);
+    toast({
+      title: "Codice applicato!",
+      description: `Sconto del ${percent}% applicato al tuo ordine`,
+    });
   };
 
   const createBookingMutation = useMutation({
@@ -140,29 +140,20 @@ export default function BookingConfirm() {
         throw new Error("Devi effettuare l'accesso per prenotare");
       }
 
-      const { data, error } = await supabase
-        .from("bookings")
-        .insert({
-          client_id: user.id,
-          professional_id: professionalId!,
-          service_type: serviceType!,
-          scheduled_date: dateStr!,
-          scheduled_time_start: time!,
-          scheduled_time_end: getEndTime(),
-          total_hours: duration,
-          hourly_rate: service!.hourly_rate,
-          total_amount: finalAmount,
-          discount_amount: discount > 0 ? discount : null,
-          promo_code: promoApplied ? promoCode.toUpperCase() : null,
-          address: address.trim(),
-          notes: notes.trim() || null,
-          status: "pending",
-        })
-        .select()
-        .single();
+      // Prezzo, sconto e stato li calcola il DB.
+      const { data: bookingId, error } = await supabase.rpc("create_booking", {
+        p_professional_id: professionalId!,
+        p_service_type: serviceType!,
+        p_scheduled_date: dateStr!,
+        p_time_start: time!,
+        p_hours: duration,
+        p_address: address.trim(),
+        p_notes: notes.trim() || null,
+        p_promo_code: promoApplied ? promoCode.trim().toUpperCase() : null,
+      });
 
       if (error) throw error;
-      return data;
+      return { id: bookingId as string };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
@@ -174,12 +165,9 @@ export default function BookingConfirm() {
       navigate(`/client/bookings?new=${data.id}`);
     },
     onError: (error: Error) => {
-      const message = error.message.includes("Saldo crediti insufficiente")
-        ? "Saldo crediti insufficiente. Ricarica il wallet per continuare."
-        : error.message;
       toast({
         title: "Errore",
-        description: message,
+        description: toUserMessage(error),
         variant: "destructive",
       });
     },

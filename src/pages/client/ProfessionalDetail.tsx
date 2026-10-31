@@ -5,6 +5,7 @@ import {
   Shield, Award, Briefcase 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { getProfessionalLevel } from "@/lib/professional-level";
 import { cn } from "@/lib/utils";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -42,7 +43,7 @@ export default function ProfessionalDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("professionals")
-        .select("*")
+        .select(PUBLIC_PROFESSIONAL_COLUMNS)
         .eq("id", id)
         .single();
       

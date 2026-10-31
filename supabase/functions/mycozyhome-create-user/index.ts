@@ -58,7 +58,7 @@ serve(async (req) => {
     if (createError) {
       console.error("Error creating user:", createError);
       return new Response(
-        JSON.stringify({ error: createError.message }),
+        JSON.stringify({ error: "Impossibile creare l'utente" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -74,7 +74,7 @@ serve(async (req) => {
     if (roleError) {
       console.error("Error assigning role:", roleError);
       return new Response(
-        JSON.stringify({ error: roleError.message }),
+        JSON.stringify({ error: "Impossibile assegnare il ruolo" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -112,7 +112,7 @@ serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = "Errore interno";
     console.error("Unexpected error:", error);
     return new Response(
       JSON.stringify({ error: errorMessage }),

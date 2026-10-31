@@ -48,7 +48,7 @@ export default function PersonalInfo() {
       const metadata = session.user.user_metadata;
       
       const { data: prof } = await supabase
-        .from("professionals")
+        .from("professional_private")
         .select("*")
         .eq("user_id", session.user.id)
         .single();

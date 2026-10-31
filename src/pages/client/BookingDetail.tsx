@@ -117,7 +117,7 @@ export default function BookingDetail() {
         .select(`
           *,
           professional:professionals(
-            id, user_id, first_name, last_name, avatar_url, phone, email
+            id, user_id, first_name, last_name, avatar_url
           )
         `)
         .eq("id", id)
@@ -249,9 +249,6 @@ export default function BookingDetail() {
             </Avatar>
             <div className="flex-1">
               <p className="font-semibold">{professionalName}</p>
-              {booking.professional?.phone && (
-                <p className="text-sm text-muted-foreground">{booking.professional.phone}</p>
-              )}
             </div>
             <Button
               size="icon"

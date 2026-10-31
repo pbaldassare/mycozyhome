@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { AppHeader } from "@/components/client/AppHeader";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -36,7 +37,7 @@ export default function Favorites() {
 
       const { data: professionals, error: proError } = await supabase
         .from("professionals")
-        .select("*")
+        .select(PUBLIC_PROFESSIONAL_COLUMNS)
         .in("id", professionalIds);
 
       if (proError) throw proError;

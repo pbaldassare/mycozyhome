@@ -66,7 +66,7 @@ export default function ProfessionalDashboard() {
 
       // Check if professional profile exists
       const { data: prof } = await supabase
-        .from("professionals")
+        .from("professional_private")
         .select("*")
         .eq("user_id", session.user.id)
         .single();

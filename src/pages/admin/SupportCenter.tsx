@@ -174,7 +174,7 @@ export default function SupportCenter() {
         }))
       );
     } else {
-      const { data } = await supabase.from("professionals").select("id, user_id, first_name, last_name, email");
+      const { data } = await supabase.from("professional_private").select("id, user_id, first_name, last_name, email");
       setUserOptions(
         (data || []).map((u) => ({
           id: u.id,

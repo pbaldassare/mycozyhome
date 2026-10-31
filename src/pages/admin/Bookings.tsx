@@ -83,7 +83,7 @@ export default function Bookings() {
     queryFn: async () => {
       const [{ data: prof }, { data: rev }] = await Promise.all([
         supabase
-          .from("professionals")
+          .from("professional_private")
           .select("first_name, last_name, has_vat_number, vat_number, revenue_blocked")
           .eq("id", selectedProfId!)
           .maybeSingle(),

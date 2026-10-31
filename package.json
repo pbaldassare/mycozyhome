@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "gen:types": "supabase gen types typescript --project-id yjzeujiozbgrlqwwycik --schema mycozyhome | sed 's/Extract<keyof Database, \"public\">/Extract<keyof Database, \"mycozyhome\">/' > src/integrations/supabase/types.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

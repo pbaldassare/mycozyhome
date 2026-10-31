@@ -8,6 +8,7 @@ import {
   Info, CheckCircle2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -56,7 +57,7 @@ export default function BookingNew() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("professionals")
-        .select("*")
+        .select(PUBLIC_PROFESSIONAL_COLUMNS)
         .eq("id", professionalId)
         .single();
       

@@ -106,7 +106,7 @@ export function useAllShopOrders() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shop_orders")
-        .select("*, items:shop_order_items(*), professional:professionals(first_name, last_name, email, phone)")
+        .select("*, items:shop_order_items(*), professional:professionals(first_name, last_name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];

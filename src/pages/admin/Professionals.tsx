@@ -47,7 +47,7 @@ export default function Professionals() {
     queryFn: async () => {
       // Fetch all professionals (admin has access to all via service role or specific policy)
       const { data: profs, error: profsError } = await supabase
-        .from("professionals")
+        .from("professional_private")
         .select("*")
         .order("created_at", { ascending: false });
 

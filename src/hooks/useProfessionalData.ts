@@ -20,7 +20,7 @@ export function useProfessionalProfile() {
       if (!user) return null;
 
       const { data, error } = await supabase
-        .from("professionals")
+        .from("professional_private")
         .select("*")
         .eq("user_id", user.id)
         .single();
@@ -164,16 +164,10 @@ export function useUpdateBookingStatus() {
       status: "confirmed" | "cancelled";
     }) => {
       assertNotPlatformBlocked(isBlocked);
-      const updateData: { status: "confirmed" | "cancelled"; cancelled_at?: string } = { status };
-
-      if (status === "cancelled") {
-        updateData.cancelled_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("bookings")
-        .update(updateData)
-        .eq("id", bookingId);
+      const { error } = await supabase.rpc("professional_set_booking_status", {
+        p_booking_id: bookingId,
+        p_status: status,
+      });
 
       if (error) throw error;
     },

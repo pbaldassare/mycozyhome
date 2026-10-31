@@ -113,16 +113,6 @@ export function useSimulateTopUp() {
   });
 }
 
-export function useProcessPendingReleases() {
-  return useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.rpc("process_pending_payment_releases");
-      if (error) throw error;
-      return Number(data ?? 0);
-    },
-  });
-}
-
 export function useResolveDisputePayment() {
   const queryClient = useQueryClient();
 

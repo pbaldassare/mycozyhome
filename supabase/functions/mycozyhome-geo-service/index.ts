@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { hasLoggedInUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,13 @@ serve(async (req) => {
   }
 
   try {
+
+    if (!(await hasLoggedInUser(req))) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
     if (!GOOGLE_MAPS_API_KEY) {
@@ -137,7 +145,7 @@ serve(async (req) => {
           );
         }
 
-        const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&components=country:${country}&types=address&key=${GOOGLE_MAPS_API_KEY}&language=it`;
+        const autocompleteUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&components=country:${encodeURIComponent(String(country))}&types=address&key=${GOOGLE_MAPS_API_KEY}&language=it`;
         
         const response = await fetch(autocompleteUrl);
         const data = await response.json();
@@ -175,7 +183,7 @@ serve(async (req) => {
           );
         }
 
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place_id}&fields=geometry,formatted_address&key=${GOOGLE_MAPS_API_KEY}&language=it`;
+        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(String(place_id))}&fields=geometry,formatted_address&key=${GOOGLE_MAPS_API_KEY}&language=it`;
         
         const response = await fetch(detailsUrl);
         const data = await response.json();
@@ -208,7 +216,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Geo service error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorMessage = "Internal error";
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -14,6 +14,27 @@ export type Database = {
   }
   mycozyhome: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       booking_tracking: {
         Row: {
           actual_hours: number | null
@@ -187,6 +208,13 @@ export type Database = {
             foreignKeyName: "bookings_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -307,6 +335,13 @@ export type Database = {
             foreignKeyName: "client_reviews_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -371,6 +406,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_professional_id_fkey"
             columns: ["professional_id"]
@@ -517,10 +559,41 @@ export type Database = {
             foreignKeyName: "favorites_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
         ]
+      }
+      message_moderation: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          message_id: string
+          original_content: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          message_id: string
+          original_content: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          message_id?: string
+          original_content?: string
+          sender_id?: string
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -611,6 +684,13 @@ export type Database = {
             foreignKeyName: "professional_areas_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_areas_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -645,6 +725,13 @@ export type Database = {
           start_time?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "professional_availability_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "professional_availability_professional_id_fkey"
             columns: ["professional_id"]
@@ -699,6 +786,13 @@ export type Database = {
             foreignKeyName: "professional_documents_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_documents_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -724,6 +818,13 @@ export type Database = {
           professional_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "professional_favorites_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "professional_favorites_professional_id_fkey"
             columns: ["professional_id"]
@@ -772,6 +873,13 @@ export type Database = {
             foreignKeyName: "professional_services_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_services_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -800,6 +908,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "professional_wallets_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: true
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "professional_wallets_professional_id_fkey"
             columns: ["professional_id"]
@@ -929,6 +1044,36 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          description: string | null
+          percent_off: number
+          single_use_per_user: boolean
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          percent_off: number
+          single_use_per_user?: boolean
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          percent_off?: number
+          single_use_per_user?: boolean
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           admin_hidden: boolean | null
@@ -970,6 +1115,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reviews_professional_id_fkey"
             columns: ["professional_id"]
@@ -1034,6 +1193,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_offers_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "professional_private"
             referencedColumns: ["id"]
           },
           {
@@ -1448,6 +1614,13 @@ export type Database = {
             foreignKeyName: "wallet_transactions_professional_id_fkey"
             columns: ["professional_id"]
             isOneToOne: false
+            referencedRelation: "professional_private"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
             referencedRelation: "professionals"
             referencedColumns: ["id"]
           },
@@ -1455,9 +1628,154 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      professional_private: {
+        Row: {
+          address: string | null
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          avatar_url: string | null
+          average_rating: number | null
+          bio: string | null
+          birth_date: string | null
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
+          city: string | null
+          created_at: string | null
+          documents_submitted: boolean | null
+          email: string | null
+          first_name: string | null
+          fiscal_code: string | null
+          formatted_address: string | null
+          has_vat_number: boolean | null
+          id: string | null
+          is_blocked: boolean | null
+          last_name: string | null
+          latitude: number | null
+          longitude: number | null
+          max_radius_km: number | null
+          phone: string | null
+          postal_code: string | null
+          profile_completed: boolean | null
+          province: string | null
+          revenue_blocked: boolean | null
+          review_count: number | null
+          status: Database["mycozyhome"]["Enums"]["professional_status"] | null
+          updated_at: string | null
+          user_id: string | null
+          vat_number: string | null
+          vat_registered_at: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          address?: string | null
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          city?: string | null
+          created_at?: string | null
+          documents_submitted?: boolean | null
+          email?: string | null
+          first_name?: string | null
+          fiscal_code?: string | null
+          formatted_address?: string | null
+          has_vat_number?: boolean | null
+          id?: string | null
+          is_blocked?: boolean | null
+          last_name?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          max_radius_km?: number | null
+          phone?: string | null
+          postal_code?: string | null
+          profile_completed?: boolean | null
+          province?: string | null
+          revenue_blocked?: boolean | null
+          review_count?: number | null
+          status?: Database["mycozyhome"]["Enums"]["professional_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          vat_number?: string | null
+          vat_registered_at?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          address?: string | null
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          avatar_url?: string | null
+          average_rating?: number | null
+          bio?: string | null
+          birth_date?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          city?: string | null
+          created_at?: string | null
+          documents_submitted?: boolean | null
+          email?: string | null
+          first_name?: string | null
+          fiscal_code?: string | null
+          formatted_address?: string | null
+          has_vat_number?: boolean | null
+          id?: string | null
+          is_blocked?: boolean | null
+          last_name?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          max_radius_km?: number | null
+          phone?: string | null
+          postal_code?: string | null
+          profile_completed?: boolean | null
+          province?: string | null
+          revenue_blocked?: boolean | null
+          review_count?: number | null
+          status?: Database["mycozyhome"]["Enums"]["professional_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          vat_number?: string | null
+          vat_registered_at?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      _annual_revenue: { Args: { _prof_id: string }; Returns: number }
+      _promo_percent: {
+        Args: { p_code: string; p_user_id: string }
+        Returns: number
+      }
+      can_access_dispute: { Args: { p_dispute: string }; Returns: boolean }
+      can_access_ticket: { Args: { p_ticket: string }; Returns: boolean }
+      cancel_booking: {
+        Args: { p_booking_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      create_booking: {
+        Args: {
+          p_address: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_notes?: string
+          p_professional_id: string
+          p_promo_code?: string
+          p_scheduled_date: string
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: string
+      }
       ensure_client_wallet: { Args: { p_user_id: string }; Returns: undefined }
       ensure_professional_wallet: {
         Args: { p_professional_id: string; p_user_id: string }
@@ -1488,11 +1806,25 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_client_blocked: { Args: { _user_id: string }; Returns: boolean }
+      is_conversation_party: {
+        Args: { p_conversation_id: string }
+        Returns: boolean
+      }
       is_professional_user_blocked: {
         Args: { _user_id: string }
         Returns: boolean
       }
+      join_as_client: { Args: never; Returns: undefined }
+      my_professional_id: { Args: never; Returns: string }
+      owns_booking_as_professional: {
+        Args: { p_booking_id: string; p_professional_id: string }
+        Returns: boolean
+      }
       process_pending_payment_releases: { Args: never; Returns: number }
+      professional_set_booking_status: {
+        Args: { p_booking_id: string; p_reason?: string; p_status: string }
+        Returns: undefined
+      }
       release_booking_payment: {
         Args: { p_booking_id: string }
         Returns: boolean
@@ -1502,6 +1834,7 @@ export type Database = {
         Returns: boolean
       }
       simulate_wallet_top_up: { Args: { p_amount: number }; Returns: number }
+      validate_promo_code: { Args: { p_code: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "professional" | "client"

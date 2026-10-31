@@ -1,6 +1,7 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import { JoinMyCozyHome } from "@/components/JoinMyCozyHome";
 
 interface RoleGuardProps {
   allowedRole: "admin" | "professional" | "client";
@@ -23,18 +24,9 @@ export function RoleGuard({ allowedRole, children }: RoleGuardProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // Role not yet loaded (e.g. just after signup, trigger still running).
-  // Show a loader instead of redirecting to avoid infinite loops.
+  // Account dell'autenticazione condivisa senza ruolo su MyCozyHome.
   if (role === null) {
-    // For client area, default to allowing access (signup metadata sets role=client)
-    if (allowedRole === "client") {
-      return <>{children}</>;
-    }
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <JoinMyCozyHome />;
   }
 
   // Wrong role — redirect to the correct panel

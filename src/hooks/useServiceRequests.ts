@@ -191,7 +191,7 @@ export function useSendOffer() {
 
       // Blocco: verifica fatturato annuo del professionista
       const { data: profData } = await supabase
-        .from("professionals")
+        .from("professional_private")
         .select("has_vat_number, revenue_blocked")
         .eq("id", offer.professional_id)
         .maybeSingle();

@@ -1,7 +1,8 @@
 import type { PostgrestError } from "@supabase/supabase-js";
+import { toUserMessage } from "@/lib/errors";
 
 export const WALLET_NOT_ACTIVE_MESSAGE =
-  "Sistema pagamenti non ancora attivo sul database. Contatta l'amministratore o esegui APPLY_WALLET.sql nell'editor SQL di Supabase.";
+  "Il sistema dei crediti non è disponibile in questo momento. Riprova più tardi.";
 
 export function isWalletSchemaMissingError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -23,19 +24,5 @@ export function formatWalletError(error: unknown): string {
   if (isWalletSchemaMissingError(error)) {
     return WALLET_NOT_ACTIVE_MESSAGE;
   }
-
-  if (error && typeof error === "object") {
-    const e = error as PostgrestError;
-    if (e.message) {
-      if (e.hint) return `${e.message} — ${e.hint}`;
-      if (e.details) return `${e.message} (${e.details})`;
-      return e.message;
-    }
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "Errore sconosciuto";
+  return toUserMessage(error);
 }
