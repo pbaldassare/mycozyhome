@@ -11,7 +11,7 @@ import { toast } from "@/hooks/use-toast";
 
 
 import { SERVICE_LABELS as serviceLabels } from "@/lib/services";
-const statusConfig: Record<string, { label: string; icon: any; className: string }> = {
+const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
   open: { label: "Aperta", icon: Clock, className: "bg-success/10 text-success" },
   closed: { label: "Chiusa", icon: XCircle, className: "bg-muted text-muted-foreground" },
   assigned: { label: "Assegnata", icon: CheckCircle, className: "bg-primary/10 text-primary" },

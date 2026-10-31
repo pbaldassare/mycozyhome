@@ -51,7 +51,7 @@ interface Document {
   fileSize?: number;
 }
 
-interface ProfessionalData {
+export interface ProfessionalData {
   id: string;
   firstName: string;
   lastName: string;

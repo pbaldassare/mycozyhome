@@ -97,7 +97,7 @@ export default function Bookings() {
   const trackingMap = new Map(trackingData.map((t) => [t.booking_id, t]));
 
   const filteredBookings = bookings.filter((b) => {
-    const prof = b.professionals as any;
+    const prof = b.professionals;
     const profName = prof ? `${prof.first_name} ${prof.last_name}` : "";
     const matchesSearch =
       b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -188,7 +188,7 @@ export default function Bookings() {
                 <TableBody>
                   {filteredBookings.map((booking) => {
                     const status = statusConfig[booking.status] || statusConfig.pending;
-                    const prof = booking.professionals as any;
+                    const prof = booking.professionals;
                     const profName = prof ? `${prof.first_name} ${prof.last_name}` : "—";
                     const tracking = trackingMap.get(booking.id);
 
@@ -371,21 +371,21 @@ export default function Bookings() {
                   <div className="space-y-3">
                     {/* Auto tracking info */}
                     <div className="flex flex-wrap gap-2 text-xs">
-                      {(selectedTracking as any).auto_checked_in && (
+                      {selectedTracking.auto_checked_in && (
                         <Badge variant="outline" className="border-primary/30 text-primary">🤖 Check-in automatico</Badge>
                       )}
-                      {(selectedTracking as any).auto_checked_out && (
+                      {selectedTracking.auto_checked_out && (
                         <Badge variant="outline" className="border-primary/30 text-primary">🤖 Check-out automatico</Badge>
                       )}
-                      {((selectedTracking as any).left_zone_count || 0) > 0 && (
+                      {(selectedTracking.left_zone_count || 0) > 0 && (
                         <Badge variant="outline" className="border-warning/50 text-warning">
                           <AlertTriangle className="w-3 h-3 mr-1" />
-                          Uscite zona: {(selectedTracking as any).left_zone_count}
+                          Uscite zona: {selectedTracking.left_zone_count}
                         </Badge>
                       )}
-                      {((selectedTracking as any).total_out_of_range_minutes || 0) > 0 && (
+                      {(selectedTracking.total_out_of_range_minutes || 0) > 0 && (
                         <Badge variant="outline" className="border-destructive/50 text-destructive">
-                          ⏱️ Fuori zona: {Number((selectedTracking as any).total_out_of_range_minutes).toFixed(0)} min
+                          ⏱️ Fuori zona: {Number(selectedTracking.total_out_of_range_minutes).toFixed(0)} min
                         </Badge>
                       )}
                     </div>
@@ -464,7 +464,7 @@ export default function Bookings() {
                         </h5>
                         <ScrollArea className="h-40">
                           <div className="space-y-1">
-                            {selectedPings.map((ping: any) => (
+                            {selectedPings.map((ping) => (
                               <div
                                 key={ping.id}
                                 className={cn(

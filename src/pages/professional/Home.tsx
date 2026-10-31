@@ -260,7 +260,7 @@ export default function ProfessionalHome() {
                 </CardContent>
               </Card>
             ) : (
-              bookings.slice(0, 5).map((booking: any) => {
+              bookings.slice(0, 5).map((booking) => {
                 const clientName = booking.client
                   ? `${booking.client.first_name || ""} ${booking.client.last_name || ""}`.trim() || "Cliente"
                   : "Cliente";

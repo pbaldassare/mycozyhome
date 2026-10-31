@@ -10,7 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
-import { ProfessionalReviewPanel } from "@/components/admin/ProfessionalReviewPanel";
+import { ProfessionalReviewPanel, type ProfessionalData } from "@/components/admin/ProfessionalReviewPanel";
 import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
 import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,7 @@ interface ProfessionalWithDocs extends Professional {
 export default function Professionals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("pending");
-  const [selectedProfessional, setSelectedProfessional] = useState<any | null>(null);
+  const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalData | null>(null);
   const [blockTarget, setBlockTarget] = useState<ProfessionalWithDocs | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();

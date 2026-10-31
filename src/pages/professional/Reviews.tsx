@@ -102,7 +102,7 @@ export default function ProfessionalReviews() {
                 </CardContent>
               </Card>
             ) : (
-              reviews.map((review: any) => (
+              reviews.map((review) => (
                 <Card key={review.id}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">

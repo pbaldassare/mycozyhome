@@ -107,7 +107,7 @@ export function useCreateServiceRequest() {
       assertNotPlatformBlocked(isBlocked);
       const { data, error } = await supabase
         .from("service_requests")
-        .insert(req as any)
+        .insert(req)
         .select()
         .single();
       if (error) throw error;
@@ -126,7 +126,7 @@ export function useUpdateServiceRequest() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { error } = await supabase
         .from("service_requests")
-        .update({ status } as any)
+        .update({ status })
         .eq("id", id);
       if (error) throw error;
     },
@@ -203,7 +203,7 @@ export function useSendOffer() {
 
       const { data, error } = await supabase
         .from("service_offers")
-        .insert(offer as any)
+        .insert(offer)
         .select()
         .single();
       if (error) throw error;
@@ -226,7 +226,7 @@ export function useAcceptOffer() {
       assertNotPlatformBlocked(isBlocked);
       const { error } = await supabase
         .from("service_offers")
-        .update({ status: "accepted", client_accepted_at: new Date().toISOString() } as any)
+        .update({ status: "accepted", client_accepted_at: new Date().toISOString() })
         .eq("id", offerId);
       if (error) throw error;
     },
@@ -245,7 +245,7 @@ export function useConfirmOffer() {
       assertNotPlatformBlocked(isBlocked);
       const { error } = await supabase
         .from("service_offers")
-        .update({ status: "confirmed", professional_confirmed_at: new Date().toISOString() } as any)
+        .update({ status: "confirmed", professional_confirmed_at: new Date().toISOString() })
         .eq("id", offerId);
       if (error) throw error;
     },

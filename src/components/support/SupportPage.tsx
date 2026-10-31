@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AppHeader } from "@/components/client/AppHeader";
 import { SupportTicketForm } from "@/components/support/SupportTicketForm";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserTickets, useTicketResponses, useSendTicketResponse } from "@/hooks/useSupportTickets";
+import { useUserTickets, useTicketResponses, useSendTicketResponse, type SupportTicket } from "@/hooks/useSupportTickets";
 import { useTicketHasUnread, markTicketAsRead } from "@/hooks/useUnreadSupport";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -31,7 +31,7 @@ const statusColors: Record<string, string> = {
   closed: "bg-muted text-muted-foreground",
 };
 
-function TicketCard({ ticket, onClick }: { ticket: any; onClick: () => void }) {
+function TicketCard({ ticket, onClick }: { ticket: SupportTicket; onClick: () => void }) {
   const { data: hasUnread } = useTicketHasUnread(ticket.id, ticket.last_read_at);
 
   return (
@@ -162,7 +162,7 @@ function TicketChatView({
   userType,
   onBack,
 }: {
-  ticket: any;
+  ticket: SupportTicket;
   userId: string;
   userType: string;
   onBack: () => void;

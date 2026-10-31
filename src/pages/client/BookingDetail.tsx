@@ -78,7 +78,7 @@ export default function BookingDetail() {
           table: 'booking_tracking',
           filter: `booking_id=eq.${id}`,
         },
-        (payload: any) => {
+        (payload: { eventType: string; new: { check_in_at?: string | null; check_out_at?: string | null; actual_hours?: number | null } }) => {
           const newRecord = payload.new;
           queryClient.invalidateQueries({ queryKey: ["booking-tracking", id] });
 

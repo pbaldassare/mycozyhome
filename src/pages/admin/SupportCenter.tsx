@@ -63,7 +63,7 @@ const categoryLabels: Record<string, string> = {
   other: "Altro",
 };
 
-const statusConfig: Record<string, { label: string; className: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
   open: { label: "Aperto", className: "bg-warning/10 text-warning", icon: Clock },
   in_progress: { label: "In corso", className: "bg-primary/10 text-primary", icon: MessageSquare },
   resolved: { label: "Risolto", className: "bg-success/10 text-success", icon: CheckCircle },

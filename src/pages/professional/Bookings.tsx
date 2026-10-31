@@ -50,7 +50,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
 import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
 import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
-import { useBookingTrackingByBookingIds } from "@/hooks/useBookingTracking";
+import { useBookingTrackingByBookingIds, type BookingTracking } from "@/hooks/useBookingTracking";
 import { useGeofenceTracking, GEOFENCE_RADIUS_M } from "@/hooks/useGeofenceTracking";
 import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
@@ -60,6 +60,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Navigation, Radio, AlertTriangle } from "lucide-react";
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
+import type { Tables } from "@/integrations/supabase/types";
 import {
   Dialog,
   DialogContent,
@@ -75,6 +76,11 @@ function formatBookingDate(dateStr: string): string {
   if (isTomorrow(date)) return "Domani";
   return format(date, "EEEE d MMMM", { locale: it });
 }
+
+type TrackingRow = BookingTracking;
+type ProfessionalBooking = Tables<"bookings"> & {
+  client: Pick<Tables<"client_public">, "user_id" | "first_name" | "last_name" | "avatar_url" | "average_rating" | "review_count"> | null;
+};
 
 function useAllProfessionalBookings(professionalId: string | undefined) {
   return useQuery({
@@ -113,8 +119,8 @@ function TrackingActions({
   trackingRecord,
   professionalId,
 }: {
-  booking: any;
-  trackingRecord: any;
+  booking: ProfessionalBooking;
+  trackingRecord: TrackingRow | undefined;
   professionalId: string | undefined;
 }) {
   const isTodayBooking = isToday(parseISO(booking.scheduled_date));
@@ -247,8 +253,8 @@ export default function ProfessionalBookings() {
 
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const [reviewBooking, setReviewBooking] = useState<any>(null);
-  const [disputeBooking, setDisputeBooking] = useState<any>(null);
+  const [reviewBooking, setReviewBooking] = useState<ProfessionalBooking | null>(null);
+  const [disputeBooking, setDisputeBooking] = useState<ProfessionalBooking | null>(null);
   const [serviceFilter, setServiceFilter] = useState<string>("all");
   const createClientReview = useCreateClientReview();
   const { isFavorite, toggleFavorite } = useProfessionalFavorites();
@@ -257,7 +263,7 @@ export default function ProfessionalBookings() {
   const bookingIds = useMemo(() => (bookings || []).map((b) => b.id), [bookings]);
   const { data: allTracking } = useBookingTrackingByBookingIds(bookingIds);
   const trackingMap = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, TrackingRow> = {};
     (allTracking || []).forEach((t) => { map[t.booking_id] = t; });
     return map;
   }, [allTracking]);
@@ -316,7 +322,7 @@ export default function ProfessionalBookings() {
 
 
 
-  const renderBookingCard = (booking: any, showActions: boolean = false) => {
+  const renderBookingCard = (booking: ProfessionalBooking, showActions: boolean = false) => {
     const clientName = booking.client
       ? `${booking.client.first_name || ""} ${booking.client.last_name || ""}`.trim() ||
         "Cliente"

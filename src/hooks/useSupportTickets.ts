@@ -105,7 +105,7 @@ export function useSendTicketResponse() {
           content,
           attachment_url,
           attachment_name,
-        } as any)
+        })
         .select()
         .single();
 

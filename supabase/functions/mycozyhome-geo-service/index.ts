@@ -153,7 +153,7 @@ serve(async (req) => {
         console.log("Autocomplete response status:", data.status);
 
         if (data.status === "OK" || data.status === "ZERO_RESULTS") {
-          const predictions = (data.predictions || []).map((p: any) => ({
+          const predictions = (data.predictions || []).map((p: { place_id: string; description: string; structured_formatting?: { main_text?: string; secondary_text?: string } }) => ({
             place_id: p.place_id,
             description: p.description,
             main_text: p.structured_formatting?.main_text,

@@ -256,8 +256,8 @@ export function useGeofenceTracking(
           trackingId: data.id,
           autoCheckedIn: true,
           autoCheckedOut: data.status === "completed",
-          leftZoneCount: (data as any).left_zone_count || 0,
-          totalOutOfRangeMinutes: (data as any).total_out_of_range_minutes || 0,
+          leftZoneCount: data.left_zone_count || 0,
+          totalOutOfRangeMinutes: data.total_out_of_range_minutes || 0,
         }));
 
         if (data.status === "completed") {
@@ -346,7 +346,7 @@ export function useGeofenceTracking(
           watchIdRef.current = null;
         }
       }
-    } catch (e: any) {
+    } catch (e) {
       toast.error(toUserMessage(e, "Check-out non riuscito. Riprova."));
     }
   }, [getDistanceM, performCheckOut]);

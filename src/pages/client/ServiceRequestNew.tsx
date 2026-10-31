@@ -40,7 +40,7 @@ export default function ServiceRequestNew() {
     estimated_hours: "",
   });
 
-  const update = (field: string, value: any) => setForm((p) => ({ ...p, [field]: value }));
+  const update = (field: string, value: string | number | boolean | null) => setForm((p) => ({ ...p, [field]: value }));
 
   const handleSubmit = async () => {
     if (!user?.id) return;

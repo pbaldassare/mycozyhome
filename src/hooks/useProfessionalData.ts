@@ -112,39 +112,22 @@ export function useProfessionalBookings(professionalId: string | undefined) {
 
       const { data, error } = await supabase
         .from("bookings")
-        .select(`
-          *,
-          client:client_profiles!bookings_client_id_fkey (
-            first_name,
-            last_name,
-            avatar_url,
-            phone
-          )
-        `)
+        .select("*")
         .eq("professional_id", professionalId)
         .gte("scheduled_date", today)
         .in("status", ["pending", "confirmed"])
         .order("scheduled_date", { ascending: true })
         .order("scheduled_time_start", { ascending: true })
         .limit(10);
+      if (error) throw error;
 
-      if (error) {
-        // Fallback query without join if client_profiles doesn't have matching records
-        const { data: fallbackData, error: fallbackError } = await supabase
-          .from("bookings")
-          .select("*")
-          .eq("professional_id", professionalId)
-          .gte("scheduled_date", today)
-          .in("status", ["pending", "confirmed"])
-          .order("scheduled_date", { ascending: true })
-          .order("scheduled_time_start", { ascending: true })
-          .limit(10);
-
-        if (fallbackError) throw fallbackError;
-        return fallbackData || [];
-      }
-
-      return data || [];
+      // Nome e foto dei clienti in una sola richiesta (vista client_public).
+      const clientIds = [...new Set((data ?? []).map((b) => b.client_id))];
+      const { data: clients } = clientIds.length
+        ? await supabase.from("client_public").select("user_id, first_name, last_name, avatar_url").in("user_id", clientIds)
+        : { data: [] };
+      const byId = new Map((clients ?? []).map((c) => [c.user_id, c]));
+      return (data ?? []).map((b) => ({ ...b, client: byId.get(b.client_id) ?? null }));
     },
     enabled: !!professionalId,
   });

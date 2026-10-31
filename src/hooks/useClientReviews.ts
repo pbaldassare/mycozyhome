@@ -21,7 +21,7 @@ export function useCreateClientReview() {
       comment: string;
     }) => {
       const { data, error } = await supabase
-        .from("client_reviews" as any)
+        .from("client_reviews")
         .insert({
           booking_id: bookingId,
           professional_id: professionalId,
@@ -62,7 +62,7 @@ export function useCanReviewClient(bookingId: string | undefined, professionalId
       if (!bookingId || !professionalId) return false;
 
       const { data } = await supabase
-        .from("client_reviews" as any)
+        .from("client_reviews")
         .select("id")
         .eq("booking_id", bookingId)
         .eq("professional_id", professionalId)

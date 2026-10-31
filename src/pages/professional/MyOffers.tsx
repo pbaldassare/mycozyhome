@@ -53,7 +53,7 @@ export default function MyOffers() {
             </Button>
           </div>
         ) : (
-          offers.map((offer: any) => {
+          offers.map((offer) => {
             const status = statusConfig[offer.status] || statusConfig.pending;
             const request = offer.service_request;
             return (

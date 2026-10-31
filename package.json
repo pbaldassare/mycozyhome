@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:types": "supabase gen types typescript --project-id yjzeujiozbgrlqwwycik --schema mycozyhome | sed 's/Extract<keyof Database, \"public\">/Extract<keyof Database, \"mycozyhome\">/' > src/integrations/supabase/types.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.app.json"
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
+    "test:db": "supabase db query --linked --project-ref yjzeujiozbgrlqwwycik -f supabase/tests/mycozyhome_security.sql"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

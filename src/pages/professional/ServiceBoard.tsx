@@ -79,7 +79,7 @@ export default function ServiceBoard() {
       toast({ title: "Offerta inviata!", description: "Il cliente la valuterà." });
       setSelectedRequest(null);
       setOfferForm({ useStandardRate: true, hourly_rate: "", total_price: "", estimated_hours: "", message: "" });
-    } catch (err: any) {
+    } catch (err) {
       if (err?.code === "23505") {
         toast({ title: "Hai già inviato un'offerta per questa inserzione", variant: "destructive" });
       } else {

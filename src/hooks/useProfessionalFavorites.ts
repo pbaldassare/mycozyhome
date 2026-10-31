@@ -13,12 +13,12 @@ export function useProfessionalFavorites() {
       if (!professional?.id) return [];
 
       const { data, error } = await supabase
-        .from("professional_favorites" as any)
+        .from("professional_favorites")
         .select("client_id")
         .eq("professional_id", professional.id);
 
       if (error) throw error;
-      return (data as any[]).map((f) => f.client_id as string);
+      return (data ?? []).map((f) => f.client_id);
     },
     enabled: !!professional?.id,
   });
@@ -28,8 +28,8 @@ export function useProfessionalFavorites() {
       if (!professional?.id) throw new Error("Profilo non trovato");
 
       const { error } = await supabase
-        .from("professional_favorites" as any)
-        .insert({ professional_id: professional.id, client_id: clientId } as any);
+        .from("professional_favorites")
+        .insert({ professional_id: professional.id, client_id: clientId });
 
       if (error) throw error;
     },
@@ -54,7 +54,7 @@ export function useProfessionalFavorites() {
       if (!professional?.id) throw new Error("Profilo non trovato");
 
       const { error } = await supabase
-        .from("professional_favorites" as any)
+        .from("professional_favorites")
         .delete()
         .eq("professional_id", professional.id)
         .eq("client_id", clientId);

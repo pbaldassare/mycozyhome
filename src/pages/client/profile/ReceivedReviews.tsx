@@ -28,7 +28,7 @@ export default function ReceivedReviews() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as any[];
+      return data;
     },
     enabled: !!user?.id,
   });

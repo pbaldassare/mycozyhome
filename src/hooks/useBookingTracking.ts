@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { toUserMessage } from "@/lib/errors";
 const MAX_RANGE_METERS = 500;
 
-interface BookingTracking {
+export interface BookingTracking {
   id: string;
   booking_id: string;
   professional_id: string;
@@ -111,8 +111,8 @@ export function useBookingTracking(bookingId: string | undefined) {
         );
       }
     },
-    onError: (error: any) => {
-      if (error?.code === 1) {
+    onError: (error: unknown) => {
+      if ((error as GeolocationPositionError | null)?.code === 1) {
         toast.error("Permesso di geolocalizzazione negato. Abilita il GPS.");
       } else {
         toast.error(toUserMessage(error, "Check-in non riuscito. Riprova."));
@@ -171,8 +171,8 @@ export function useBookingTracking(bookingId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ["booking-tracking"] });
       toast.success(`Check-out registrato! Ore lavorate: ${actualHours.toFixed(1)}h`);
     },
-    onError: (error: any) => {
-      if (error?.code === 1) {
+    onError: (error: unknown) => {
+      if ((error as GeolocationPositionError | null)?.code === 1) {
         toast.error("Permesso di geolocalizzazione negato. Abilita il GPS.");
       } else {
         toast.error(toUserMessage(error, "Check-out non riuscito. Riprova."));

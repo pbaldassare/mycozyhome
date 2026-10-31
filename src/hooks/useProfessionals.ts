@@ -79,7 +79,7 @@ export function useSearchProfessionals(
   return useQuery({
     queryKey: ["search-professionals", serviceType, searchQuery, userLatitude, userLongitude, filters],
     queryFn: async () => {
-      let query = supabase
+      const query = supabase
         .from("professionals")
         .select(`
           id, first_name, last_name, avatar_url, city, average_rating, review_count, status, bio, latitude, longitude, years_experience,

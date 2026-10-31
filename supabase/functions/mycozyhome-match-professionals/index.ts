@@ -142,7 +142,7 @@ serve(async (req) => {
         // If no main location, check areas
         if (!profLat || !profLng) {
           const areaWithLocation = prof.professional_areas?.find(
-            (a: any) => a.latitude && a.longitude
+            (a: { latitude: number | null; longitude: number | null }) => a.latitude && a.longitude
           );
           if (areaWithLocation) {
             profLat = areaWithLocation.latitude;
@@ -173,7 +173,7 @@ serve(async (req) => {
 
         // Check availability for the requested day and time
         const availability = prof.professional_availability?.find(
-          (a: any) => a.day_of_week === day_of_week && a.is_available
+          (a: { day_of_week: number; is_available: boolean | null }) => a.day_of_week === day_of_week && a.is_available
         );
 
         if (!availability) {

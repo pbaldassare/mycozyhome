@@ -18,6 +18,7 @@ interface Professional {
   latitude?: number;
   longitude?: number;
   city?: string;
+  distanceKm?: number;
 }
 
 interface ProfessionalsMapProps {
@@ -283,8 +284,8 @@ function ProfessionalsMapInner({
             <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
               <MapPin className="h-3 w-3" />
               <span>
-                {(selectedProfessional as any).distance 
-                  ? `${(selectedProfessional as any).distance.toFixed(1)} km da te`
+                {selectedProfessional.distanceKm != null
+                  ? `${selectedProfessional.distanceKm.toFixed(1)} km da te`
                   : selectedProfessional.city || ""}
               </span>
             </div>
