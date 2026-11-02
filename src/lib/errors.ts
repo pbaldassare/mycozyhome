@@ -74,6 +74,7 @@ export function authErrorMessage(error: unknown): string {
   if (message.includes("password should be")) return "La password non rispetta i requisiti minimi.";
   if (message.includes("rate limit") || message.includes("too many")) return "Troppi tentativi. Riprova tra qualche minuto.";
   if (message.includes("same password")) return "La nuova password deve essere diversa da quella attuale.";
+  if (message.includes("email address") && message.includes("invalid")) return "Indirizzo email non valido o non raggiungibile. Usane uno reale.";
   if (message.includes("expired") || message.includes("invalid")) return "Il link non è più valido. Richiedine uno nuovo.";
   if (error) console.error(error);
   return GENERIC_ERROR_MESSAGE;
