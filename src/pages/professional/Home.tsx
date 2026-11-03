@@ -20,6 +20,7 @@ import {
   Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuickActions, EmptyAgenda, ProfileChecklist } from "@/components/professional/GrowthPanel";
 import { format, parseISO, isToday, isTomorrow } from "date-fns";
 import { it } from "date-fns/locale";
 import {
@@ -217,6 +218,8 @@ export default function ProfessionalHome() {
           </Card>
         )}
 
+        <QuickActions />
+
         {/* Agenda di oggi */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -230,12 +233,7 @@ export default function ProfessionalHome() {
           ) : bookingsError ? (
             <LoadError onRetry={() => refetchBookings()} message="Impossibile caricare gli appuntamenti." />
           ) : todayBookings.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                <p className="text-muted-foreground text-sm">Nessun appuntamento oggi</p>
-              </CardContent>
-            </Card>
+            <EmptyAgenda />
           ) : (
             <ol className="relative border-l-2 border-primary/20 ml-2 space-y-4">
               {todayBookings.map((booking) => (
@@ -280,6 +278,8 @@ export default function ProfessionalHome() {
           )}
         </section>
 
+        <ProfileChecklist professional={professional} />
+
         {/* Prossimi giorni */}
         {laterBookings.length > 0 && (
           <section>
@@ -319,6 +319,18 @@ export default function ProfessionalHome() {
         )}
 
         {/* Zone calde */}
+        {isApproved && hotZones && hotZones.length === 0 && (
+          <div className="flex items-center gap-3 rounded-3xl bg-gradient-to-r from-orange-50 to-rose-50 border border-orange-100 p-4">
+            <span className="w-10 h-10 shrink-0 rounded-2xl bg-orange-100 text-orange-500 flex items-center justify-center">
+              <Flame className="h-5 w-5" />
+            </span>
+            <p className="text-sm">
+              <span className="font-semibold">Nessuna richiesta aperta in zona.</span>{" "}
+              <span className="text-muted-foreground">Ti avvisiamo appena ne arriva una.</span>
+            </p>
+          </div>
+        )}
+
         {isApproved && !!hotZones?.length && (
           <section>
             <div className="flex items-center justify-between mb-3">
@@ -366,8 +378,8 @@ export default function ProfessionalHome() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-primary-light flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-primary" />
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                  <TrendingUp className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Guadagni del mese</p>
