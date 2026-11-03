@@ -10,6 +10,13 @@ import { useProfessionalProfile, useProfessionalReviews } from "@/hooks/useProfe
 
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
+
+const SUB_RATINGS = [
+  { key: "rating_punctuality", label: "Puntualità" },
+  { key: "rating_quality", label: "Qualità" },
+  { key: "rating_kindness", label: "Cordialità" },
+] as const;
+
 export default function ProfessionalReviews() {
   const { data: professional } = useProfessionalProfile();
   const { data: reviews, isLoading } = useProfessionalReviews(professional?.id);
@@ -29,6 +36,12 @@ export default function ProfessionalReviews() {
     stars,
     percentage: totalReviews > 0 ? Math.round((ratingCounts[stars - 1] / totalReviews) * 100) : 0,
   }));
+
+  // Medie dei voti di dettaglio (solo le recensioni che li hanno).
+  const subAverages = SUB_RATINGS.map(({ key, label }) => {
+    const values = (reviews ?? []).map((r) => r[key]).filter((v): v is number => v != null);
+    return { key, label, avg: values.length ? values.reduce((a, b) => a + b, 0) / values.length : null };
+  }).filter((s) => s.avg != null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,6 +89,16 @@ export default function ProfessionalReviews() {
                 ))}
               </div>
             </div>
+            {subAverages.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-5">
+                {subAverages.map((s) => (
+                  <div key={s.key} className="rounded-2xl bg-primary-light p-3 text-center">
+                    <p className="text-lg font-bold text-primary">{s.avg!.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -138,6 +161,15 @@ export default function ProfessionalReviews() {
                             </span>
                           )}
                         </div>
+                        {SUB_RATINGS.some(({ key }) => review[key] != null) && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {SUB_RATINGS.filter(({ key }) => review[key] != null).map(({ key, label }) => (
+                              <span key={key} className="text-xs rounded-full bg-muted px-2 py-0.5">
+                                {label} {review[key]}/5
+                              </span>
+                            ))}
+                          </div>
+                        )}
                         {review.comment && (
                           <p className="text-sm text-muted-foreground mt-2">
                             {review.comment}
