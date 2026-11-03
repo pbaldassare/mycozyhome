@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Star, MapPin, CheckCircle2, Clock, Calendar, MessageCircle, 
-  Shield, Award, Briefcase 
+  Shield, Award, Briefcase, Package
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
@@ -41,6 +41,21 @@ export default function ProfessionalDetail() {
         .eq("id", id)
         .single();
       
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: packages } = useQuery({
+    queryKey: ["service-packages-public", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_packages")
+        .select("*")
+        .eq("professional_id", id!)
+        .eq("is_active", true)
+        .order("price");
       if (error) throw error;
       return data;
     },
@@ -195,8 +210,8 @@ export default function ProfessionalDetail() {
 
         <TabsContent value="services" className="space-y-3">
           {services?.map((service) => (
+            <div key={service.id} className="space-y-2">
             <div
-              key={service.id}
               className="trust-card flex justify-between items-center cursor-pointer"
               onClick={() => navigate(`/client/booking/new?professional=${id}&service=${service.service_type}`)}
             >
@@ -223,6 +238,33 @@ export default function ProfessionalDetail() {
                 <div className="text-lg font-bold text-primary">€{service.hourly_rate}</div>
                 <div className="text-xs text-muted-foreground">/ora</div>
               </div>
+            </div>
+            {/* Pacchetti a prezzo fisso, come le voci di un menù */}
+            {packages
+              ?.filter((p) => p.service_type === service.service_type)
+              .map((pkg) => (
+                <div key={pkg.id} className="ml-3 flex items-center gap-3 rounded-2xl bg-primary-light/60 p-3">
+                  <Package className="h-5 w-5 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm">{pkg.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {pkg.hours}h · prezzo fisso{pkg.description ? ` · ${pkg.description}` : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-primary">€{Number(pkg.price).toFixed(0)}</div>
+                    <Button
+                      size="sm"
+                      className="h-8 mt-1"
+                      onClick={() =>
+                        navigate(`/client/booking/new?professional=${id}&service=${service.service_type}&package=${pkg.id}`)
+                      }
+                    >
+                      Prenota
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           ))}
           

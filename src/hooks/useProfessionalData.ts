@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { assertNotPlatformBlocked } from "@/lib/platform-block";
+import { toUserMessage } from "@/lib/errors";
+import type { Database } from "@/integrations/supabase/types";
 
 interface ProfessionalStats {
   todayBookings: number;
@@ -382,5 +384,63 @@ export function useProfessionalReviews(professionalId: string | undefined) {
       return reviewsWithBookings;
     },
     enabled: !!professionalId,
+  });
+}
+
+export type ServicePackage = Database["mycozyhome"]["Tables"]["service_packages"]["Row"];
+type ServicePackageInsert = Database["mycozyhome"]["Tables"]["service_packages"]["Insert"];
+
+/** Pacchetti a prezzo fisso del professionista, attivi e no. */
+export function useServicePackages(professionalId: string | undefined) {
+  return useQuery({
+    queryKey: ["service-packages", professionalId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_packages")
+        .select("*")
+        .eq("professional_id", professionalId!)
+        .order("price");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!professionalId,
+  });
+}
+
+export function useSavePackage() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async ({ id, ...pkg }: ServicePackageInsert) => {
+      const { error } = id
+        ? await supabase.from("service_packages").update(pkg).eq("id", id)
+        : await supabase.from("service_packages").insert(pkg);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-packages"] });
+      toast({ title: "Pacchetto salvato" });
+    },
+    onError: (error) => {
+      toast({ title: "Errore", description: toUserMessage(error), variant: "destructive" });
+    },
+  });
+}
+
+export function useDeletePackage() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("service_packages").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["service-packages"] });
+      toast({ title: "Pacchetto eliminato" });
+    },
+    onError: (error) => {
+      toast({ title: "Errore", description: toUserMessage(error), variant: "destructive" });
+    },
   });
 }

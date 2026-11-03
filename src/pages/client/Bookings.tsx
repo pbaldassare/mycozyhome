@@ -1,7 +1,8 @@
-import { Calendar, Clock, MapPin, ChevronRight, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, ChevronRight, Loader2, Repeat, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -19,12 +20,26 @@ const statusConfig = {
 };
 
 
+// La select è `*`: queste colonne arrivano già, il tipo condiviso non le elenca.
+type Booking = BookingWithProfessional & {
+  professional_id: string;
+  total_hours: number;
+  package_id: string | null;
+  series_id: string | null;
+};
+
 interface BookingCardProps {
-  booking: BookingWithProfessional;
+  booking: Booking;
   onClick?: () => void;
 }
 
+function rebookUrl(b: Booking) {
+  const pkg = b.package_id ? `&package=${b.package_id}` : "";
+  return `/client/booking/new?professional=${b.professional_id}&service=${b.service_type}&duration=${b.total_hours}${pkg}`;
+}
+
 function BookingCard({ booking, onClick }: BookingCardProps) {
+  const navigate = useNavigate();
   const status = statusConfig[booking.status as keyof typeof statusConfig] || statusConfig.pending;
   const professionalName = booking.professional 
     ? `${booking.professional.first_name} ${booking.professional.last_name}`
@@ -38,11 +53,8 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
   const timeRange = `${booking.scheduled_time_start.slice(0, 5)} - ${booking.scheduled_time_end.slice(0, 5)}`;
 
   return (
-    <button
-      onClick={onClick}
-      className="trust-card w-full text-left hover:shadow-md"
-    >
-      <div className="flex items-start gap-4">
+    <div className="trust-card w-full hover:shadow-md">
+      <button onClick={onClick} className="flex items-start gap-4 w-full text-left">
         <Avatar className="h-12 w-12">
           <AvatarImage src={booking.professional?.avatar_url || ""} />
           <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -55,9 +67,16 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
             <h3 className="font-semibold truncate">
               {serviceTypeLabels[booking.service_type] || booking.service_type}
             </h3>
-            <Badge className={cn("text-xs", status.className)}>
-              {status.label}
-            </Badge>
+            <div className="flex gap-1 shrink-0">
+              {booking.series_id && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <Repeat className="h-3 w-3" /> Ricorrente
+                </Badge>
+              )}
+              <Badge className={cn("text-xs", status.className)}>
+                {status.label}
+              </Badge>
+            </div>
           </div>
 
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -85,14 +104,25 @@ function BookingCard({ booking, onClick }: BookingCardProps) {
           <span className="font-bold text-primary">€{Number(booking.total_amount).toFixed(0)}</span>
           <ChevronRight className="h-5 w-5 text-muted-foreground" />
         </div>
-      </div>
-    </button>
+      </button>
+      {booking.status === "completed" && booking.professional && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full mt-3"
+          onClick={() => navigate(rebookUrl(booking))}
+        >
+          <RotateCcw className="h-4 w-4" /> Prenota di nuovo
+        </Button>
+      )}
+    </div>
   );
 }
 
 export default function ClientBookings() {
   const navigate = useNavigate();
-  const { data: bookings, isLoading, isError, refetch } = useClientBookings();
+  const { data, isLoading, isError, refetch } = useClientBookings();
+  const bookings = data as Booking[] | undefined;
 
   const upcomingBookings = bookings?.filter(b => 
     !isPast(parseISO(b.scheduled_date)) && 
