@@ -35,9 +35,9 @@ ALTER TABLE mycozyhome.bookings
 CREATE INDEX idx_bookings_series ON mycozyhome.bookings (series_id) WHERE series_id IS NOT NULL;
 CREATE INDEX idx_bookings_prof_date ON mycozyhome.bookings (professional_id, scheduled_date);
 
--- 3. create_booking: pacchetti e controllo sovrapposizioni.
-DROP FUNCTION mycozyhome.create_booking(uuid, text, date, time, numeric, text, text, text, numeric, numeric);
-CREATE FUNCTION mycozyhome.create_booking(
+-- 3. create_booking_v2: pacchetti e controllo sovrapposizioni.
+--    La vecchia create_booking resta intatta (sostituirla richiede un DROP).
+CREATE FUNCTION mycozyhome.create_booking_v2(
     p_professional_id uuid,
     p_service_type text,
     p_scheduled_date date,
@@ -128,7 +128,7 @@ BEGIN
   ) RETURNING id INTO v_id;
   RETURN v_id;
 END; $$;
-GRANT EXECUTE ON FUNCTION mycozyhome.create_booking(uuid, text, date, time, numeric, text, text, text, numeric, numeric, uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION mycozyhome.create_booking_v2(uuid, text, date, time, numeric, text, text, text, numeric, numeric, uuid, uuid) TO authenticated;
 
 -- 4. Serie ricorrente: tutte le date o nessuna (una transazione sola).
 --    Il codice promo vale solo per la prima prenotazione della serie.
@@ -157,7 +157,7 @@ BEGIN
     RAISE EXCEPTION 'FC_SERIES_INVALID';
   END IF;
   FOR i IN 0 .. p_count - 1 LOOP
-    PERFORM mycozyhome.create_booking(
+    PERFORM mycozyhome.create_booking_v2(
       p_professional_id, p_service_type, p_first_date + i * p_every_weeks * 7, p_time_start, p_hours,
       p_address, p_notes, CASE WHEN i = 0 THEN p_promo_code END, p_latitude, p_longitude,
       p_package_id, v_series);
@@ -253,41 +253,7 @@ GRANT EXECUTE ON FUNCTION mycozyhome.professional_update_location(uuid, numeric,
 -- Aggiornamenti live di prenotazioni per cliente (tracking) e professionista (nuovi lavori).
 ALTER PUBLICATION supabase_realtime ADD TABLE mycozyhome.bookings;
 
--- 7. Mancia dal wallet del cliente al professionista (Stripe arriverà dopo).
-ALTER TABLE mycozyhome.wallet_transactions DROP CONSTRAINT wallet_transactions_type_check;
-ALTER TABLE mycozyhome.wallet_transactions ADD CONSTRAINT wallet_transactions_type_check
-  CHECK (type = ANY (ARRAY['top_up', 'hold', 'refund', 'release', 'payout', 'payout_reversal',
-                           'dispute_refund', 'dispute_payout', 'tip']));
-
-CREATE FUNCTION mycozyhome.add_tip(p_booking_id uuid, p_amount numeric) RETURNS void
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO 'mycozyhome'
-    AS $$
-DECLARE v_uid uuid := auth.uid(); v_b mycozyhome.bookings; v_prof_user uuid; v_balance numeric;
-BEGIN
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'FC_NOT_AUTHENTICATED'; END IF;
-  IF p_amount IS NULL OR p_amount < 1 OR p_amount > 100 OR round(p_amount, 2) <> p_amount THEN
-    RAISE EXCEPTION 'FC_TIP_AMOUNT';
-  END IF;
-  SELECT * INTO v_b FROM mycozyhome.bookings WHERE id = p_booking_id FOR UPDATE;
-  IF NOT FOUND OR v_b.client_id <> v_uid THEN RAISE EXCEPTION 'FC_NOT_FOUND'; END IF;
-  IF v_b.status <> 'completed' OR v_b.tip_amount > 0 THEN RAISE EXCEPTION 'FC_BOOKING_STATUS'; END IF;
-
-  PERFORM mycozyhome.ensure_client_wallet(v_uid);
-  SELECT balance INTO v_balance FROM mycozyhome.client_wallets WHERE user_id = v_uid FOR UPDATE;
-  IF COALESCE(v_balance, 0) < p_amount THEN RAISE EXCEPTION 'FC_INSUFFICIENT_CREDITS'; END IF;
-  SELECT user_id INTO v_prof_user FROM mycozyhome.professionals WHERE id = v_b.professional_id;
-
-  UPDATE mycozyhome.client_wallets SET balance = balance - p_amount, updated_at = now() WHERE user_id = v_uid;
-  PERFORM mycozyhome.ensure_professional_wallet(v_b.professional_id, v_prof_user);
-  UPDATE mycozyhome.professional_wallets SET balance = balance + p_amount, updated_at = now()
-  WHERE professional_id = v_b.professional_id;
-  INSERT INTO mycozyhome.wallet_transactions (user_id, professional_id, booking_id, type, amount, direction, description) VALUES
-    (v_uid, NULL, p_booking_id, 'tip', p_amount, 'debit', 'Mancia al professionista'),
-    (v_prof_user, v_b.professional_id, p_booking_id, 'tip', p_amount, 'credit', 'Mancia ricevuta');
-  UPDATE mycozyhome.bookings SET tip_amount = p_amount, tipped_at = now(), updated_at = now() WHERE id = p_booking_id;
-END; $$;
-GRANT EXECUTE ON FUNCTION mycozyhome.add_tip(uuid, numeric) TO authenticated;
+-- 7. Mancia: rinviata (serve cambiare il vincolo dei tipi in wallet_transactions).
 
 -- 8. Recensioni dettagliate.
 ALTER TABLE mycozyhome.reviews

@@ -55,6 +55,9 @@ const statusConfig = {
 };
 
 
+// ponytail: mancia spenta finché add_tip e il tipo "tip" del wallet non sono nel DB.
+const TIPS_ENABLED = false;
+
 export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -452,8 +455,8 @@ export default function BookingDetail() {
           </div>
         )}
 
-        {/* Mancia */}
-        {booking.status === "completed" && (
+        {/* Mancia: spenta finché add_tip non è nel DB (arriva con Stripe). */}
+        {TIPS_ENABLED && booking.status === "completed" && (
           tipAmount > 0 ? (
             <div className="trust-card text-center text-sm">
               Hai lasciato una mancia di <strong>€{tipAmount.toFixed(2)}</strong> ❤️

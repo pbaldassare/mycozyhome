@@ -1958,6 +1958,21 @@ export type Database = {
           p_professional_id: string
           p_promo_code?: string
           p_scheduled_date: string
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: string
+      }
+      create_booking_v2: {
+        Args: {
+          p_address: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_notes?: string
+          p_professional_id: string
+          p_promo_code?: string
+          p_scheduled_date: string
           p_package_id?: string
           p_series_id?: string
           p_service_type: string

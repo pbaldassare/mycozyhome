@@ -193,7 +193,7 @@ export default function BookingConfirm() {
         if (error) throw error;
         return { id: null };
       }
-      const { data: bookingId, error } = await supabase.rpc("create_booking", {
+      const { data: bookingId, error } = await supabase.rpc("create_booking_v2", {
         ...common,
         p_scheduled_date: dateStr!,
       });
