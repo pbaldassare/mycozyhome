@@ -24,8 +24,8 @@ export function useGeolocation() {
   useEffect(() => {
     if (!navigator.geolocation) {
       setState({
-        latitude: DEFAULT_CENTER.lat,
-        longitude: DEFAULT_CENTER.lng,
+        latitude: null,
+        longitude: null,
         error: "Geolocation not supported",
         loading: false,
       });
@@ -43,8 +43,8 @@ export function useGeolocation() {
       },
       (error) => {
         setState({
-          latitude: DEFAULT_CENTER.lat,
-          longitude: DEFAULT_CENTER.lng,
+          latitude: null,
+          longitude: null,
           error: error.message,
           loading: false,
         });

@@ -74,7 +74,7 @@ export default function ClientHome() {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader showNotifications />
+      <AppHeader showAddress showNotifications />
 
       <div className="px-4 py-6 space-y-7">
         <div>

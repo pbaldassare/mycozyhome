@@ -11,6 +11,7 @@ import { SearchFilters, SearchFiltersState } from "@/components/client/SearchFil
 import { cn } from "@/lib/utils";
 import { useSearchProfessionals } from "@/hooks/useProfessionals";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useClientAddress } from "@/hooks/useClientAddress";
 
 
 import { LoadError } from "@/components/LoadError";
@@ -54,7 +55,12 @@ export default function ClientSearch() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFiltersState>(defaultFilters);
   
-  const { latitude: userLat, longitude: userLon, loading: geoLoading } = useGeolocation();
+  const geo = useGeolocation();
+  const { address: savedAddress } = useClientAddress();
+  // Prima l'indirizzo salvato, poi la posizione reale del telefono.
+  const userLat = savedAddress?.lat ?? geo.latitude;
+  const userLon = savedAddress?.lng ?? geo.longitude;
+  const geoLoading = !savedAddress && geo.loading;
 
   const { data: professionals, isLoading, isError, refetch } = useSearchProfessionals(
     selectedService,

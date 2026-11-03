@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { addDays, format, startOfDay } from "date-fns";
@@ -7,6 +7,7 @@ import { Star, MapPin, Loader2, Navigation, Zap, SearchX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/client/AppHeader";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { useClientAddress } from "@/hooks/useClientAddress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadError } from "@/components/LoadError";
@@ -46,7 +47,12 @@ export default function QuickBook() {
   const [date, setDate] = useState<Date>(() => asap().date);
   const [time, setTime] = useState<string>(() => asap().time);
   const [hours, setHours] = useState<number>(initialHours >= 1 && initialHours <= 8 ? initialHours : 2);
+  const { address: savedAddress } = useClientAddress();
   const [address, setAddress] = useState<{ text: string; lat: number; lng: number } | null>(null);
+  // Precompila con l'indirizzo salvato nel profilo.
+  useEffect(() => {
+    if (savedAddress && !address) setAddress(savedAddress);
+  }, [savedAddress, address]);
   const [locating, setLocating] = useState(false);
 
   const today = startOfDay(new Date());

@@ -1,14 +1,20 @@
-import { ChevronLeft, Bell } from "lucide-react";
+import { useState } from "react";
+import { ChevronLeft, ChevronDown, Bell, MapPin, LocateFixed } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useClientNotifications } from "@/hooks/useClientNotifications";
+import { useClientAddress } from "@/hooks/useClientAddress";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { toast } from "sonner";
 
 
 interface AppHeaderProps {
   title?: string;
   showBack?: boolean;
   showNotifications?: boolean;
+  showAddress?: boolean;
   rightAction?: React.ReactNode;
   className?: string;
   onBack?: () => void;
@@ -18,6 +24,7 @@ export function AppHeader({
   title,
   showBack = false,
   showNotifications = false,
+  showAddress = false,
   rightAction,
   className,
   onBack,
@@ -44,6 +51,7 @@ export function AppHeader({
               <ChevronLeft className="h-5 w-5" />
             </Button>
           )}
+          {showAddress && <AddressPicker />}
           {title && (
             <h1 className="text-lg font-semibold truncate">{title}</h1>
           )}
@@ -68,5 +76,61 @@ export function AppHeader({
         </div>
       </div>
     </header>
+  );
+}
+
+/** Indirizzo sempre visibile in alto, come nelle app di delivery. */
+function AddressPicker() {
+  const { address, save } = useClientAddress();
+  const [open, setOpen] = useState(false);
+
+  const pick = async (a: { text: string; lat: number; lng: number }) => {
+    try {
+      await save.mutateAsync(a);
+      setOpen(false);
+      toast.success("Indirizzo aggiornato");
+    } catch {
+      toast.error("Impossibile salvare l'indirizzo");
+    }
+  };
+
+  const useMyPosition = () =>
+    navigator.geolocation?.getCurrentPosition(
+      (p) => pick({ text: "La mia posizione", lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => toast.error("Posizione non disponibile"),
+    );
+
+  return (
+    <>
+      <button onClick={() => setOpen(true)} className="flex items-center gap-2.5 min-w-0 text-left">
+        <span className="h-9 w-9 shrink-0 rounded-2xl bg-gradient-to-br from-rose-100 to-orange-100 flex items-center justify-center">
+          <MapPin className="h-5 w-5 text-rose-500" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[11px] font-medium text-muted-foreground leading-none">Il tuo indirizzo</span>
+          <span className="flex items-center gap-1 font-semibold text-sm text-foreground">
+            <span className="truncate max-w-[220px]">{address?.text ?? "Imposta il tuo indirizzo"}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-primary" />
+          </span>
+        </span>
+      </button>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl">
+          <SheetHeader>
+            <SheetTitle>Dove ti serve aiuto?</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-3 py-4">
+            <AddressAutocomplete
+              value={address?.text}
+              placeholder="Via, numero civico, città"
+              onSelect={(r) => pick({ text: r.formatted_address, lat: r.latitude, lng: r.longitude })}
+            />
+            <button onClick={useMyPosition} className="flex items-center gap-2 text-sm font-medium text-primary">
+              <LocateFixed className="h-4 w-4" /> Usa la mia posizione
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
