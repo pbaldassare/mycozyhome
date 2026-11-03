@@ -14,7 +14,7 @@ export function ProfessionalLayout() {
     <RoleGuard allowedRole="professional">
       <BlockedUserGuard userType="professional">
         <NewJobAlerts />
-        <div className="min-h-screen bg-background pb-20">
+        <div className="min-h-screen bg-background pb-28">
           <main className="flex-1">
             <Outlet />
           </main>

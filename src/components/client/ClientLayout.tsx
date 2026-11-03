@@ -7,7 +7,7 @@ export function ClientLayout() {
   return (
     <RoleGuard allowedRole="client">
       <BlockedUserGuard userType="client">
-        <div className="min-h-screen bg-background pb-20">
+        <div className="min-h-screen bg-background pb-28">
           <main className="flex-1">
             <Outlet />
           </main>

@@ -23,6 +23,7 @@ export function BottomNav() {
         <NavLink
           key={item.to}
           to={item.to}
+          end={item.to === "/client"}
           className={({ isActive }) =>
             cn(
               "bottom-nav-item",
@@ -31,7 +32,7 @@ export function BottomNav() {
           }
         >
           <item.icon className="h-5 w-5" />
-          <span className="text-xs font-medium">{item.label}</span>
+          <span className="text-[10px] font-semibold">{item.label}</span>
         </NavLink>
       ))}
     </nav>
