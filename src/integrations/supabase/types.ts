@@ -14,6 +14,69 @@ export type Database = {
   }
   mycozyhome: {
     Tables: {
+      booking_photos: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          kind: string
+          path: string
+          uploaded_by: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          path: string
+          uploaded_by?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          path?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
+      service_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          hours: number
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          professional_id: string
+          service_type: Database["mycozyhome"]["Enums"]["service_type"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          hours: number
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          professional_id: string
+          service_type: Database["mycozyhome"]["Enums"]["service_type"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          hours?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          professional_id?: string
+          service_type?: Database["mycozyhome"]["Enums"]["service_type"]
+        }
+        Relationships: []
+      }
       app_settings: {
         Row: {
           key: string
@@ -117,6 +180,14 @@ export type Database = {
       }
       bookings: {
         Row: {
+          en_route_at: string | null
+          package_id: string | null
+          pro_latitude: number | null
+          pro_location_at: string | null
+          pro_longitude: number | null
+          series_id: string | null
+          tip_amount: number
+          tipped_at: string | null
           address: string
           cancellation_reason: string | null
           cancelled_at: string | null
@@ -146,6 +217,14 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          en_route_at?: string | null
+          package_id?: string | null
+          pro_latitude?: number | null
+          pro_location_at?: string | null
+          pro_longitude?: number | null
+          series_id?: string | null
+          tip_amount?: number
+          tipped_at?: string | null
           address: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -175,6 +254,14 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          en_route_at?: string | null
+          package_id?: string | null
+          pro_latitude?: number | null
+          pro_location_at?: string | null
+          pro_longitude?: number | null
+          series_id?: string | null
+          tip_amount?: number
+          tipped_at?: string | null
           address?: string
           cancellation_reason?: string | null
           cancelled_at?: string | null
@@ -1136,6 +1223,9 @@ export type Database = {
       }
       reviews: {
         Row: {
+          rating_kindness: number | null
+          rating_punctuality: number | null
+          rating_quality: number | null
           admin_hidden: boolean | null
           admin_notes: string | null
           booking_id: string
@@ -1149,6 +1239,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          rating_kindness?: number | null
+          rating_punctuality?: number | null
+          rating_quality?: number | null
           admin_hidden?: boolean | null
           admin_notes?: string | null
           booking_id: string
@@ -1162,6 +1255,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          rating_kindness?: number | null
+          rating_punctuality?: number | null
+          rating_quality?: number | null
           admin_hidden?: boolean | null
           admin_notes?: string | null
           booking_id?: string
@@ -1862,10 +1958,71 @@ export type Database = {
           p_professional_id: string
           p_promo_code?: string
           p_scheduled_date: string
+          p_package_id?: string
+          p_series_id?: string
           p_service_type: string
           p_time_start: string
         }
         Returns: string
+      }
+      create_booking_series: {
+        Args: {
+          p_address: string
+          p_count: number
+          p_every_weeks: number
+          p_first_date: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_notes?: string
+          p_package_id?: string
+          p_professional_id: string
+          p_promo_code?: string
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: string
+      }
+      available_professionals: {
+        Args: {
+          p_date: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: {
+          average_rating: number | null
+          avatar_url: string | null
+          city: string
+          distance_km: number | null
+          first_name: string
+          hourly_rate: number
+          id: string
+          last_name: string
+          min_hours: number | null
+          min_package_price: number | null
+          review_count: number | null
+          years_experience: number | null
+        }[]
+      }
+      add_tip: {
+        Args: { p_amount: number; p_booking_id: string }
+        Returns: undefined
+      }
+      can_access_booking: { Args: { p_booking: string }; Returns: boolean }
+      professional_set_en_route: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
+      professional_update_location: {
+        Args: { p_booking_id: string; p_latitude: number; p_longitude: number }
+        Returns: undefined
+      }
+      review_photos: {
+        Args: { p_professional_id: string }
+        Returns: { booking_id: string; path: string }[]
       }
       ensure_client_wallet: { Args: { p_user_id: string }; Returns: undefined }
       ensure_professional_wallet: {

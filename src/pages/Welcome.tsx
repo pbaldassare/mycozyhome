@@ -34,7 +34,7 @@ export default function Welcome() {
         <div className="w-full max-w-md space-y-4">
           <Button
             size="lg"
-            className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/90"
+            className="w-full h-14 text-lg rounded-2xl"
             onClick={() => navigate("/client/welcome")}
           >
             Registrati come Cliente
