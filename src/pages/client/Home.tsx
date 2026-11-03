@@ -14,7 +14,8 @@ import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
 import { useClientBookings, type BookingWithProfessional } from "@/hooks/useBookings";
 import { useAuth } from "@/hooks/useAuth";
 import { SERVICE_CATALOG, serviceLabel } from "@/lib/services";
-import { SERVICE_ICONS } from "@/lib/service-icons";
+import { cn } from "@/lib/utils";
+import { SERVICE_ICONS, serviceColor } from "@/lib/service-icons";
 import { suggestFromText } from "@/lib/smart-assistant";
 
 type HomeBooking = BookingWithProfessional & { en_route_at?: string | null; total_hours?: number };
@@ -203,7 +204,7 @@ export default function ClientHome() {
                   onClick={() => navigate(`/client/book?service=${s.id}`)}
                   className="rounded-3xl bg-card border border-border/60 shadow-soft p-3 flex flex-col items-center gap-2 text-center"
                 >
-                  <span className="w-12 h-12 rounded-2xl bg-primary-light text-primary flex items-center justify-center">
+                  <span className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", serviceColor(s.id))}>
                     <Icon className="h-6 w-6" />
                   </span>
                   <span className="text-xs font-medium leading-tight">{s.label}</span>

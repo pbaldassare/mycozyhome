@@ -1,9 +1,9 @@
-import { Star, MapPin, CheckCircle2 } from "lucide-react";
+import { Star, MapPin, BadgeCheck, Clock } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/client/FavoriteButton";
 import { getProfessionalLevel } from "@/lib/professional-level";
+import { serviceColor } from "@/lib/service-icons";
 
 interface ProfessionalCardProps {
   id?: string;
@@ -21,6 +21,7 @@ interface ProfessionalCardProps {
   className?: string;
 }
 
+/** Card stile app di delivery: foto grande, nome intero, prezzo in evidenza, servizi colorati. */
 export function ProfessionalCard({
   id,
   name,
@@ -36,92 +37,86 @@ export function ProfessionalCard({
   onClick,
   className,
 }: ProfessionalCardProps) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
+  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase();
   const levelInfo = getProfessionalLevel(rating, yearsExperience, reviewCount);
   const LevelIcon = levelInfo.icon;
+  const showDistance = distance && distance !== "N/A";
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => e.key === "Enter" && onClick?.()}
       className={cn(
-        "trust-card w-full text-left flex gap-4 hover:shadow-md",
-        className
+        "relative w-full text-left rounded-3xl bg-card border border-border/60 shadow-soft p-3 flex gap-3 cursor-pointer transition-all hover:shadow-md active:scale-[0.99]",
+        className,
       )}
     >
-      <div className="relative flex-shrink-0">
-        <Avatar className="h-16 w-16 border-2 border-border/30">
-          <AvatarImage src={avatarUrl} alt={name} />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-            {initials}
-          </AvatarFallback>
+      <div className="relative shrink-0">
+        <Avatar className="h-20 w-20 rounded-2xl">
+          <AvatarImage src={avatarUrl} alt={name} className="object-cover" />
+          <AvatarFallback className="rounded-2xl bg-primary-light text-primary font-bold text-lg">{initials}</AvatarFallback>
         </Avatar>
-        {isVerified && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-success rounded-full flex items-center justify-center border-2 border-card">
-            <CheckCircle2 className="h-3 w-3 text-success-foreground" />
-          </div>
+        {rating > 0 && (
+          <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 inline-flex items-center gap-0.5 rounded-full bg-card px-2 py-0.5 text-xs font-bold shadow-md">
+            <Star className="h-3 w-3 text-amber-400 fill-amber-400" />
+            {rating.toFixed(1)}
+          </span>
         )}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-foreground truncate">{name}</h3>
-          <span className={cn("inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0", levelInfo.bgClass, levelInfo.colorClass)}>
+      <div className="flex-1 min-w-0 pr-7">
+        <div className="flex items-center gap-1">
+          <h3 className="font-bold text-foreground leading-tight line-clamp-1">{name}</h3>
+          {isVerified && <BadgeCheck className="h-4 w-4 shrink-0 text-sky-500" aria-label="Verificato" />}
+        </div>
+
+        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+          <span className={cn("inline-flex items-center gap-0.5 font-semibold", levelInfo.colorClass)}>
             <LevelIcon className="h-3 w-3" />
             {levelInfo.label}
           </span>
-        </div>
-
-        <div className="flex items-center gap-3 mt-1">
-          {rating > 0 && (
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-warning fill-warning" />
-              <span className="text-sm font-medium">{rating.toFixed(1)}</span>
-              <span className="text-xs text-muted-foreground">
-                ({reviewCount})
-              </span>
-            </div>
-          )}
-          {distance && (
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              <span className="text-xs">{distance}</span>
-            </div>
+          {reviewCount > 0 && <span>· {reviewCount} recensioni</span>}
+          {showDistance && (
+            <span className="inline-flex items-center gap-0.5">
+              · <MapPin className="h-3 w-3 text-rose-400" /> {distance}
+            </span>
           )}
         </div>
 
         <div className="flex flex-wrap gap-1.5 mt-2">
           {services.slice(0, 2).map((service) => (
-            <Badge
-              key={service}
-              variant="secondary"
-              className="text-xs font-normal"
-            >
+            <span key={service} className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", serviceColor(service))}>
               {service}
-            </Badge>
+            </span>
           ))}
           {services.length > 2 && (
-            <Badge variant="outline" className="text-xs font-normal">
+            <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold bg-muted text-muted-foreground">
               +{services.length - 2}
-            </Badge>
+            </span>
           )}
+        </div>
+
+        <div className="flex items-center justify-between mt-2">
+          {yearsExperience > 0 ? (
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <Clock className="h-3 w-3" /> {yearsExperience} anni di esperienza
+            </span>
+          ) : <span />}
+          {hourlyRate ? (
+            <span className="rounded-full bg-brand-gradient px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-sm shadow-primary/30">
+              da €{hourlyRate}/h
+            </span>
+          ) : null}
         </div>
       </div>
 
-      {hourlyRate && (
-        <div className="text-right flex-shrink-0">
-          <div className="text-lg font-bold text-primary">€{hourlyRate}</div>
-          <div className="text-xs text-muted-foreground">/ora</div>
+      {showFavorite && id && (
+        <div className="absolute top-2 right-2" onClick={(e) => e.stopPropagation()}>
+          <FavoriteButton professionalId={id} size="sm" />
         </div>
       )}
-
-      {showFavorite && id && (
-        <FavoriteButton professionalId={id} size="sm" className="flex-shrink-0" />
-      )}
-    </button>
+    </div>
   );
 }

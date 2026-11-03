@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LoadError } from "@/components/LoadError";
 import { SERVICE_CATALOG, serviceLabel, type ServiceType } from "@/lib/services";
-import { SERVICE_ICONS } from "@/lib/service-icons";
+import { SERVICE_ICONS, serviceColor } from "@/lib/service-icons";
 import { cn } from "@/lib/utils";
 
 const TIMES = Array.from({ length: 12 }, (_, i) => `${String(8 + i).padStart(2, "0")}:00`); // 08:00–19:00
@@ -152,7 +152,7 @@ export default function QuickBook() {
                     active ? "border-primary ring-2 ring-primary bg-card" : "border-border/60 bg-card",
                   )}
                 >
-                  <span className={cn("w-11 h-11 rounded-2xl flex items-center justify-center", active ? "bg-brand-gradient text-primary-foreground" : "bg-primary-light text-primary")}>
+                  <span className={cn("w-11 h-11 rounded-2xl flex items-center justify-center", active ? "bg-brand-gradient text-primary-foreground" : serviceColor(s.id))}>
                     <Icon className="h-5 w-5" />
                   </span>
                   <span className="text-xs font-medium leading-tight">{s.label}</span>
