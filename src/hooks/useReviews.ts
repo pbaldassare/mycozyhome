@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 import { toUserMessage } from "@/lib/errors";
+import { uploadReviewPhotos } from "@/hooks/useBookingPhotos";
 export interface ReviewWithDetails {
   id: string;
   rating: number;
@@ -80,11 +81,19 @@ export function useCreateReview() {
       professionalId,
       rating,
       comment,
+      punctuality,
+      quality,
+      kindness,
+      photos = [],
     }: {
       bookingId: string;
       professionalId: string;
       rating: number;
       comment: string;
+      punctuality?: number;
+      quality?: number;
+      kindness?: number;
+      photos?: File[];
     }) => {
       if (!user?.id) throw new Error("Not authenticated");
 
@@ -107,21 +116,32 @@ export function useCreateReview() {
           client_id: user.id,
           rating,
           comment: comment || null,
+          rating_punctuality: punctuality || null,
+          rating_quality: quality || null,
+          rating_kindness: kindness || null,
         })
         .select()
         .single();
 
       if (error) throw error;
 
+      // Le foto si caricano dopo la recensione: se falliscono la recensione resta valida.
+      if (photos.length) {
+        try {
+          await uploadReviewPhotos(bookingId, photos);
+        } catch (e) {
+          console.error(e);
+          toast({ title: "Foto non caricate", description: "La recensione è stata salvata senza foto." });
+        }
+      }
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["client-reviews"] });
       queryClient.invalidateQueries({ queryKey: ["client-bookings"] });
-      toast({
-        title: "Recensione inviata",
-        description: "Grazie per il tuo feedback!",
-      });
+      queryClient.invalidateQueries({ queryKey: ["can-review"] });
+      queryClient.invalidateQueries({ queryKey: ["booking-photos"] });
     },
     onError: (error: Error) => {
       toast({

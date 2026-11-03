@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreateConversation } from "@/hooks/useConversations";
+import { useReviewPhotos } from "@/hooks/useBookingPhotos";
 
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
@@ -61,6 +62,31 @@ export default function ProfessionalDetail() {
     },
     enabled: !!id,
   });
+
+  // ponytail: medie calcolate nel client su tutte le recensioni; spostare in una vista se diventano migliaia.
+  const { data: reviewDetails } = useQuery({
+    queryKey: ["professional-review-details", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("rating_punctuality, rating_quality, rating_kindness")
+        .eq("professional_id", id!)
+        .eq("is_visible", true);
+      if (error) throw error;
+      const avg = (values: (number | null)[]) => {
+        const nums = values.filter((v): v is number => v != null);
+        return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+      };
+      return [
+        { label: "Puntualità", value: avg(data.map((r) => r.rating_punctuality)) },
+        { label: "Qualità", value: avg(data.map((r) => r.rating_quality)) },
+        { label: "Cordialità", value: avg(data.map((r) => r.rating_kindness)) },
+      ].filter((d) => d.value != null) as { label: string; value: number }[];
+    },
+    enabled: !!id,
+    retry: false,
+  });
+  const { data: reviewPhotos } = useReviewPhotos(id);
 
   const { data: reviews } = useQuery({
     queryKey: ["professional-reviews", id],
@@ -254,6 +280,28 @@ export default function ProfessionalDetail() {
         </TabsContent>
 
         <TabsContent value="reviews" className="space-y-3">
+          {reviewDetails && reviewDetails.length > 0 && (
+            <div className="trust-card space-y-2.5">
+              {reviewDetails.map((d) => (
+                <div key={d.label} className="flex items-center gap-3 text-sm">
+                  <span className="w-24 text-muted-foreground">{d.label}</span>
+                  <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
+                    <div className="h-full bg-brand-gradient rounded-full" style={{ width: `${(d.value / 5) * 100}%` }} />
+                  </div>
+                  <span className="w-8 text-right font-semibold">{d.value.toFixed(1)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {reviewPhotos && reviewPhotos.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+              {reviewPhotos.map((photo) => (
+                <a key={photo.path} href={photo.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                  <img src={photo.url} alt="Foto da una recensione" loading="lazy" className="h-24 w-24 rounded-xl object-cover bg-muted" />
+                </a>
+              ))}
+            </div>
+          )}
           {reviews?.map((review) => (
             <div key={review.id} className="trust-card">
               <div className="flex items-center gap-2 mb-2">
