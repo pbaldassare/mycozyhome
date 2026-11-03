@@ -53,6 +53,7 @@ const ClientDispute = lazy(() => import("@/pages/client/Dispute"));
 const ClientAuth = lazy(() => import("@/pages/client/Auth"));
 const ClientProfessionalDetail = lazy(() => import("@/pages/client/ProfessionalDetail"));
 const ClientBookingNew = lazy(() => import("@/pages/client/BookingNew"));
+const ClientQuickBook = lazy(() => import("@/pages/client/QuickBook"));
 const ClientBookingConfirm = lazy(() => import("@/pages/client/BookingConfirm"));
 const ClientPersonalData = lazy(() => import("@/pages/client/profile/PersonalData"));
 const ClientBookingDetail = lazy(() => import("@/pages/client/BookingDetail"));
@@ -144,6 +145,7 @@ const App = () => (
           <Route path="/client/professional/:id" element={<ClientProfessionalDetail />} />
           <Route path="/client/onboarding" element={<ClientOnboarding />} />
           <Route element={<RoleGuard allowedRole="client"><BlockedUserGuard userType="client"><Outlet /></BlockedUserGuard></RoleGuard>}>
+            <Route path="/client/book" element={<ClientQuickBook />} />
             <Route path="/client/booking/new" element={<ClientBookingNew />} />
             <Route path="/client/booking/:id" element={<ClientBookingDetail />} />
             <Route path="/client/booking/confirm" element={<ClientBookingConfirm />} />

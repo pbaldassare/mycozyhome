@@ -1,143 +1,245 @@
-import { Search, MapPin, Sparkles, Home as HomeIcon, Shirt, Leaf, PackageOpen, Truck, Snowflake, TreePine, LayoutGrid, Dog, PawPrint, Trash2, Loader2, Building2, SprayCan } from "lucide-react";
+import { useState } from "react";
+import { Search, Sparkles, Zap, ArrowRight, Wand2, Gift, Share2, CalendarClock, RotateCcw, Navigation, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
+import { format, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
+import { toast } from "sonner";
 import { AppHeader } from "@/components/client/AppHeader";
-import { TrustIndicator } from "@/components/client/TrustIndicator";
 import { ProfessionalCard } from "@/components/client/ProfessionalCard";
-import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
-import { useAuth } from "@/hooks/useAuth";
-
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { LoadError } from "@/components/LoadError";
-const serviceCategories = [
-  {
-    title: "🏠 Cura della casa",
-    services: [
-      { id: "cleaning", icon: HomeIcon, title: "Pulizia casa", description: "Pulizie ordinarie e profonde" },
-      { id: "office_cleaning", icon: Building2, title: "Pulizia uffici", description: "Pulizia di uffici e studi" },
-      { id: "sanitization", icon: SprayCan, title: "Sanificazione", description: "Sanificazione degli ambienti" },
-      { id: "ironing", icon: Shirt, title: "Stiratura", description: "Stiraggio e lavanderia a domicilio" },
-      { id: "wardrobe_seasonal", icon: PackageOpen, title: "Cambio stagione", description: "Cambio stagione armadi" },
-      { id: "decluttering", icon: LayoutGrid, title: "Riordino", description: "Riordino e decluttering" },
-      { id: "post_renovation", icon: Truck, title: "Pulizia post-trasloco", description: "Pulizia post-trasloco o ristrutturazione" },
-      { id: "seasonal_cleaning", icon: Snowflake, title: "Pulizie stagionali", description: "Natale, primavera e altro" },
-      { id: "garden_care", icon: TreePine, title: "Piante e giardino", description: "Cura piante e giardino" },
-      { id: "home_organizing", icon: Leaf, title: "Organizzazione degli spazi", description: "Organizzazione professionale spazi" },
-    ],
-  },
-  {
-    title: "🐾 Animali",
-    services: [
-      { id: "dog_sitter", icon: Dog, title: "Dog sitter", description: "Compagnia e cura del cane" },
-      { id: "dog_walking", icon: Dog, title: "Passeggiate con il cane", description: "Uscite quotidiane con il cane" },
-      { id: "pet_care_travel", icon: PawPrint, title: "Cura animali in vacanza", description: "Cura animali in casa durante viaggi" },
-      { id: "pet_space_cleaning", icon: Trash2, title: "Pulizia spazi animali", description: "Pulizia lettiere e spazi animali" },
-    ],
-  },
-];
+import { useFeaturedProfessionals } from "@/hooks/useProfessionals";
+import { useClientBookings, type BookingWithProfessional } from "@/hooks/useBookings";
+import { useAuth } from "@/hooks/useAuth";
+import { SERVICE_CATALOG, serviceLabel } from "@/lib/services";
+import { SERVICE_ICONS } from "@/lib/service-icons";
+import { suggestFromText } from "@/lib/smart-assistant";
+
+type HomeBooking = BookingWithProfessional & { en_route_at?: string | null; total_hours?: number };
+
+const initials = (b: HomeBooking) =>
+  `${b.professional?.first_name?.[0] ?? ""}${b.professional?.last_name?.[0] ?? ""}`.toUpperCase();
 
 export default function ClientHome() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { data: professionals, isLoading, isError, refetch } = useFeaturedProfessionals(5);
+  const { data: bookings } = useClientBookings();
+  const [wish, setWish] = useState("");
 
   const userName = profile?.first_name || "Utente";
+  const all = (bookings ?? []) as HomeBooking[];
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
+  const next = all
+    .filter((b) => ["pending", "confirmed"].includes(b.status) && b.scheduled_date >= todayStr)
+    .sort((a, b) => (a.scheduled_date + a.scheduled_time_start).localeCompare(b.scheduled_date + b.scheduled_time_start))[0];
+
+  // Lista già ordinata per data decrescente: il primo di ogni coppia professionista+servizio è il più recente.
+  const seen = new Set<string>();
+  const rebook = all
+    .filter((b) => b.status === "completed" && b.professional)
+    .filter((b) => {
+      const key = `${b.professional!.id}:${b.service_type}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6);
+
+  const askAssistant = () => {
+    const s = suggestFromText(wish);
+    if (!s) {
+      toast.error("Non ho capito il servizio: prova con parole come pulizia, stiro, cane, giardino…");
+      return;
+    }
+    navigate(`/client/book?${new URLSearchParams({ service: s.service_type, hours: String(s.hours), notes: s.notes })}`);
+  };
+
+  const invite = async () => {
+    const url = window.location.origin;
+    const text = "Uso MyCozyHome per pulizie, stiro e pet sitting: prova anche tu!";
+    try {
+      if (navigator.share) await navigator.share({ title: "MyCozyHome", text, url });
+      else {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        toast.success("Link copiato: incollalo dove vuoi");
+      }
+    } catch {
+      // Condivisione annullata dall'utente.
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader showNotifications />
 
-      <div className="px-4 py-6 space-y-6">
-        {/* Welcome Section */}
+      <div className="px-4 py-6 space-y-7">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Ciao {userName}! 👋</h1>
-          <p className="text-muted-foreground mt-1">
-            Di cosa hai bisogno oggi?
-          </p>
+          <h1 className="text-3xl font-bold text-foreground">Ciao {userName}! 👋</h1>
+          <p className="text-muted-foreground mt-1">Di cosa hai bisogno oggi?</p>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="Cerca un servizio o professionista..."
-            className="pl-12 pr-12 h-12 rounded-xl bg-card border-border/30"
-            onClick={() => navigate("/client/search")}
-            readOnly
+        {/* Ricerca */}
+        <button
+          onClick={() => navigate("/client/search")}
+          className="w-full flex items-center gap-3 h-14 px-4 rounded-2xl bg-card border border-border/60 shadow-soft text-muted-foreground text-left"
+        >
+          <Search className="h-5 w-5" />
+          Cerca un servizio o professionista…
+        </button>
+
+        {/* Prenotazione rapida */}
+        <button
+          onClick={() => navigate("/client/book")}
+          className="w-full text-left rounded-3xl bg-brand-gradient text-primary-foreground p-5 shadow-lg shadow-primary/30 active:scale-[0.99] transition-transform"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium opacity-90">
+            <Zap className="h-4 w-4" /> Nuovo
+          </div>
+          <p className="text-2xl font-bold mt-1">Prenota in 30 secondi</p>
+          <p className="text-sm opacity-90 mt-1">Scegli servizio e orario: ti mostriamo chi è libero, con il prezzo finale.</p>
+          <span className="mt-4 inline-flex items-center gap-2 bg-white text-primary font-semibold rounded-2xl px-4 py-2.5">
+            Inizia ora <ArrowRight className="h-4 w-4" />
+          </span>
+        </button>
+
+        {/* Prossimo appuntamento */}
+        {next && (
+          <section>
+            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-primary" /> Prossimo appuntamento
+            </h2>
+            <button
+              onClick={() => navigate(`/client/booking/${next.id}`)}
+              className="w-full text-left rounded-3xl bg-card border border-border/60 shadow-soft p-4 flex items-center gap-3"
+            >
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={next.professional?.avatar_url ?? ""} />
+                <AvatarFallback className="bg-primary-light text-primary font-semibold">{initials(next)}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold truncate">{serviceLabel(next.service_type)}</p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {format(parseISO(next.scheduled_date), "EEE d MMM", { locale: it })} · {next.scheduled_time_start.slice(0, 5)} ·{" "}
+                  {next.professional?.first_name}
+                </p>
+              </div>
+              {next.en_route_at ? (
+                <span className="status-badge bg-success/10 text-success gap-1">
+                  <Navigation className="h-3 w-3" /> In viaggio
+                </span>
+              ) : (
+                <span className="status-badge bg-primary-light text-primary">
+                  {next.status === "confirmed" ? "Confermato" : "In attesa"}
+                </span>
+              )}
+            </button>
+          </section>
+        )}
+
+        {/* Assistente */}
+        <section className="rounded-3xl bg-card border border-border/60 shadow-soft p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-2xl bg-primary-light text-primary flex items-center justify-center">
+              <Wand2 className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 className="font-bold">Descrivi cosa ti serve</h2>
+              <p className="text-xs text-muted-foreground">Scegliamo noi servizio e durata</p>
+            </div>
+          </div>
+          <Textarea
+            value={wish}
+            onChange={(e) => setWish(e.target.value)}
+            placeholder="Es. trilocale con cane, pulizia dopo il trasloco"
+            className="rounded-2xl bg-background min-h-[72px]"
+            maxLength={500}
           />
-          <button className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg bg-primary/10 text-primary">
-            <MapPin className="h-4 w-4" />
+          <Button className="w-full" onClick={askAssistant} disabled={!wish.trim()}>
+            Trova il servizio giusto <ArrowRight className="h-4 w-4" />
+          </Button>
+        </section>
+
+        {/* Prenota di nuovo */}
+        {rebook.length > 0 && (
+          <section>
+            <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <RotateCcw className="h-5 w-5 text-primary" /> Prenota di nuovo
+            </h2>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x">
+              {rebook.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() =>
+                    navigate(`/client/booking/new?professional=${b.professional!.id}&service=${b.service_type}&duration=${b.total_hours ?? 2}`)
+                  }
+                  className="snap-start shrink-0 w-40 rounded-3xl bg-card border border-border/60 shadow-soft p-4 text-left"
+                >
+                  <Avatar className="h-11 w-11 mb-2">
+                    <AvatarImage src={b.professional?.avatar_url ?? ""} />
+                    <AvatarFallback className="bg-primary-light text-primary font-semibold">{initials(b)}</AvatarFallback>
+                  </Avatar>
+                  <p className="font-semibold text-sm truncate">{b.professional?.first_name} {b.professional?.last_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{serviceLabel(b.service_type)}</p>
+                  <p className="text-xs font-semibold text-primary mt-2">Riprenota →</p>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Categorie */}
+        <section>
+          <h2 className="text-lg font-bold mb-3">Servizi per ogni esigenza</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {SERVICE_CATALOG.map((s) => {
+              const Icon = SERVICE_ICONS[s.id];
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => navigate(`/client/book?service=${s.id}`)}
+                  className="rounded-3xl bg-card border border-border/60 shadow-soft p-3 flex flex-col items-center gap-2 text-center"
+                >
+                  <span className="w-12 h-12 rounded-2xl bg-primary-light text-primary flex items-center justify-center">
+                    <Icon className="h-6 w-6" />
+                  </span>
+                  <span className="text-xs font-medium leading-tight">{s.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Promo + invita */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => navigate("/client/promotions")}
+            className="rounded-3xl p-4 text-left bg-straw-light border border-straw/40 shadow-soft"
+          >
+            <Gift className="h-6 w-6 text-straw-dark" />
+            <p className="font-bold mt-2">Promozioni</p>
+            <p className="text-xs text-muted-foreground">Codici sconto attivi</p>
+          </button>
+          <button onClick={invite} className="rounded-3xl p-4 text-left bg-sage-light border border-sage/40 shadow-soft">
+            <Share2 className="h-6 w-6 text-sage-dark" />
+            <p className="font-bold mt-2">Invita un amico</p>
+            <p className="text-xs text-muted-foreground">Condividi MyCozyHome</p>
           </button>
         </div>
 
-        {/* Pubblica inserzione */}
-        <div
-          className="p-4 rounded-xl border bg-primary/5 border-primary/20 cursor-pointer hover:bg-primary/10 transition-colors"
-          onClick={() => navigate("/client/service-requests")}
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Sparkles className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold">Pubblica una richiesta</h3>
-              <p className="text-sm text-muted-foreground">Ricevi offerte dai professionisti</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Trust Indicator */}
-        <TrustIndicator
-          type="secure"
-          title="Professionisti verificati"
-          description="Documenti dei professionisti controllati dal nostro team prima dell'approvazione"
-        />
-
-        {/* Services by Category */}
-        {serviceCategories.map((category) => (
-          <section key={category.title}>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">{category.title}</h2>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              {category.services.slice(0, 4).map((service) => (
-                <div
-                  key={service.id}
-                  onClick={() => navigate(`/client/search?service=${service.id}`)}
-                  className="service-card flex flex-col items-center text-center p-4 cursor-pointer"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
-                    <service.icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="font-medium text-sm">{service.title}</h3>
-                </div>
-              ))}
-            </div>
-            {category.services.length > 4 && (
-              <button
-                className="text-sm text-primary font-medium mt-2 w-full text-center"
-                onClick={() => navigate("/client/search")}
-              >
-                Vedi tutti i servizi →
-              </button>
-            )}
-          </section>
-        ))}
-
-        {/* Featured Professionals */}
+        {/* Consigliati */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-warning" />
-              <h2 className="text-lg font-semibold">Consigliati per te</h2>
-            </div>
-            <button 
-              className="text-sm text-primary font-medium"
-              onClick={() => navigate("/client/search")}
-            >
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-warning" /> Consigliati per te
+            </h2>
+            <button className="text-sm text-primary font-medium" onClick={() => navigate("/client/search")}>
               Vedi tutti
             </button>
           </div>
-          
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -151,10 +253,10 @@ export default function ClientHome() {
                   key={pro.id}
                   id={pro.id}
                   name={pro.name}
+                  avatarUrl={pro.avatarUrl ?? undefined}
                   rating={pro.rating}
                   reviewCount={pro.reviewCount}
                   yearsExperience={pro.yearsExperience}
-                  distance={pro.distance}
                   services={pro.services}
                   hourlyRate={pro.hourlyRate}
                   isVerified={pro.isVerified}
@@ -164,9 +266,7 @@ export default function ClientHome() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <p>Nessun professionista disponibile al momento</p>
-            </div>
+            <p className="text-center py-8 text-muted-foreground">Nessun professionista disponibile al momento</p>
           )}
         </section>
       </div>
