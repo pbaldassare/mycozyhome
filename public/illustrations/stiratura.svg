@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <rect width="240" height="200" fill="#D6E6D3"/>
+  <ellipse cx="120" cy="184" rx="86" ry="9" fill="#BFD6BB"/>
+  <!-- pila di panni -->
+  <rect x="50" y="154" width="140" height="26" rx="12" fill="#F07B6A"/><rect x="58" y="160" width="124" height="4" rx="2" fill="#F5A093"/>
+  <rect x="56" y="130" width="128" height="26" rx="12" fill="#F4A7B4"/><rect x="64" y="136" width="112" height="4" rx="2" fill="#F8C4CD"/>
+  <rect x="52" y="106" width="136" height="26" rx="12" fill="#4F86A8"/><rect x="60" y="112" width="120" height="4" rx="2" fill="#77A6C3"/>
+  <rect x="60" y="84" width="120" height="24" rx="11" fill="#F6E3A1"/><rect x="68" y="90" width="104" height="4" rx="2" fill="#FAEEC4"/>
+  <!-- ferro -->
+  <path d="M84 84c4-22 30-34 64-32l18 2c6 10 6 22 0 30z" fill="#FFFFFF"/>
+  <path d="M84 84h82v6H86z" fill="#B7C3CF"/>
+  <path d="M110 54q22-18 50-6" stroke="#7FA6C9" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <circle cx="128" cy="70" r="5" fill="#F07B6A"/>
+  <path d="M166 62q20 0 26 20" stroke="#8C9AA8" stroke-width="2.5" fill="none"/>
+  <!-- vapore -->
+  <path d="M70 60q-6-8 0-16t0-16" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" opacity=".9"/>
+  <path d="M56 66q-6-8 0-16t0-16" stroke="#FFFFFF" stroke-width="4" fill="none" stroke-linecap="round" opacity=".6"/>
+  <path d="M196 28l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#FFFFFF"/>
+</svg>

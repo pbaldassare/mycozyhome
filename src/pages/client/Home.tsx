@@ -23,6 +23,12 @@ type HomeBooking = BookingWithProfessional & { en_route_at?: string | null; tota
 const initials = (b: HomeBooking) =>
   `${b.professional?.first_name?.[0] ?? ""}${b.professional?.last_name?.[0] ?? ""}`.toUpperCase();
 
+const FEATURED = [
+  { id: "cleaning", label: "Pulizie", img: "/illustrations/pulizie.svg" },
+  { id: "ironing", label: "Stiratura", img: "/illustrations/stiratura.svg" },
+  { id: "dog_sitter", label: "Pet sitting", img: "/illustrations/animali.svg" },
+];
+
 export default function ClientHome() {
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -194,7 +200,21 @@ export default function ClientHome() {
 
         {/* Categorie */}
         <section>
-          <h2 className="text-lg font-bold mb-3">Servizi per ogni esigenza</h2>
+          <h2 className="text-lg font-bold">Servizi per ogni esigenza</h2>
+          <p className="text-sm text-muted-foreground mb-3">E molto altro, sempre a portata di tap.</p>
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            {FEATURED.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => navigate(`/client/book?service=${f.id}`)}
+                className="rounded-3xl bg-card border border-border/60 shadow-soft overflow-hidden text-center active:scale-[0.98] transition-transform"
+              >
+                <img src={f.img} alt="" className="w-full aspect-[6/5] object-cover" />
+                <span className="block py-2.5 text-sm font-bold">{f.label}</span>
+              </button>
+            ))}
+          </div>
+          <h3 className="text-sm font-bold text-muted-foreground mb-2">Tutti i servizi</h3>
           <div className="grid grid-cols-3 gap-3">
             {SERVICE_CATALOG.map((s) => {
               const Icon = SERVICE_ICONS[s.id];

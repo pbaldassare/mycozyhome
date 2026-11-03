@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200">
+  <rect width="240" height="200" fill="#BDE9EF"/>
+  <ellipse cx="120" cy="186" rx="80" ry="8" fill="#9ED6DD"/>
+  <!-- secchio -->
+  <path d="M158 150h34l-5 34h-24z" fill="#5FB3C4"/><rect x="155" y="146" width="40" height="7" rx="3" fill="#4A9DAE"/>
+  <path d="M160 146c0-14 30-14 30 0" fill="none" stroke="#4A9DAE" stroke-width="3"/>
+  <!-- mocio -->
+  <rect x="78" y="40" width="5" height="138" rx="2.5" fill="#C98A4B" transform="rotate(-6 80 110)"/>
+  <path d="M70 176c4-10 22-10 26 0z" fill="#F2E3B3"/><rect x="66" y="174" width="34" height="6" rx="3" fill="#E8D49A"/>
+  <!-- gambe -->
+  <rect x="108" y="138" width="9" height="44" rx="4" fill="#2F4A6B"/><rect x="123" y="138" width="9" height="44" rx="4" fill="#2F4A6B"/>
+  <ellipse cx="111" cy="183" rx="8" ry="4" fill="#3B2A20"/><ellipse cx="129" cy="183" rx="8" ry="4" fill="#3B2A20"/>
+  <!-- corpo e grembiule -->
+  <path d="M102 90q18-12 36 0l4 52h-44z" fill="#FFFFFF"/>
+  <path d="M104 108h32l8 40h-48z" fill="#F07B6A"/><path d="M112 98h16v12h-16z" fill="#F07B6A"/>
+  <!-- braccia -->
+  <path d="M104 94q-16 14-20 30" stroke="#F2C9A5" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M136 94q14 16 10 40" stroke="#F2C9A5" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <!-- testa -->
+  <rect x="114" y="74" width="12" height="14" rx="5" fill="#F2C9A5"/>
+  <path d="M104 62c0-18 32-18 32 0v14h-32z" fill="#4A2E22"/>
+  <circle cx="120" cy="64" r="15" fill="#F2C9A5"/>
+  <path d="M105 60c2-14 28-16 30 0-8-6-20-6-30 0z" fill="#4A2E22"/>
+  <path d="M134 56q14 4 10 24q-6-8-8-20z" fill="#4A2E22"/>
+  <circle cx="115" cy="65" r="1.8" fill="#2B2B2B"/><circle cx="125" cy="65" r="1.8" fill="#2B2B2B"/>
+  <path d="M116 71q4 3 8 0" stroke="#9A4B3C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <!-- bolle -->
+  <circle cx="190" cy="50" r="9" fill="#FFFFFF" opacity=".7"/><circle cx="206" cy="72" r="5" fill="#FFFFFF" opacity=".7"/><circle cx="38" cy="60" r="7" fill="#FFFFFF" opacity=".6"/>
+  <path d="M200 30l3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#FFFFFF"/>
+</svg>
