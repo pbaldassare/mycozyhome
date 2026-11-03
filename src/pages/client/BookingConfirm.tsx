@@ -5,7 +5,7 @@ import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
 import { 
   MapPin, Calendar, Clock, User, CreditCard, 
-  CheckCircle2, AlertCircle, Loader2, Tag
+  CheckCircle2, AlertCircle, Loader2, Tag, Repeat
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
@@ -22,6 +22,7 @@ import { useClientWallet } from "@/hooks/useWallet";
 import { z } from "zod";
 import { toUserMessage } from "@/lib/errors";
 import { PROMO_STORAGE_KEY } from "@/lib/promo";
+import { cn } from "@/lib/utils";
 
 
 import { SERVICE_LABELS as serviceTypeLabels, type ServiceType } from "@/lib/services";
@@ -40,10 +41,19 @@ export default function BookingConfirm() {
   const serviceType = searchParams.get("service");
   const dateStr = searchParams.get("date");
   const time = searchParams.get("time");
-  const duration = parseInt(searchParams.get("duration") || "2");
+  const packageId = searchParams.get("package");
+  const durationParam = Number(searchParams.get("duration")) || 2;
+  // Posizione passata dalla prenotazione rapida (facoltativa).
+  const latParam = searchParams.get("lat");
+  const lngParam = searchParams.get("lng");
+  const latitude = latParam ? Number(latParam) : null;
+  const longitude = lngParam ? Number(lngParam) : null;
 
-  const [address, setAddress] = useState("");
-  const [notes, setNotes] = useState("");
+  const [address, setAddress] = useState(searchParams.get("address") ?? "");
+  const [notes, setNotes] = useState(searchParams.get("notes") ?? "");
+  // 0 = una volta sola; altrimenti ogni N settimane per `repeatCount` appuntamenti.
+  const [everyWeeks, setEveryWeeks] = useState(0);
+  const [repeatCount, setRepeatCount] = useState(4);
   const [promoCode, setPromoCode] = useState(() => {
     try {
       return sessionStorage.getItem(PROMO_STORAGE_KEY) ?? "";
@@ -88,17 +98,36 @@ export default function BookingConfirm() {
     enabled: !!professionalId && !!serviceType,
   });
 
-  const totalAmount = service ? service.hourly_rate * duration : 0;
-  const finalAmount = totalAmount - discount;
-  const walletBalance = wallet?.balance ?? 0;
-  const hasEnoughCredits = walletBalance >= finalAmount;
+  const { data: pkg, isLoading: loadingPackage } = useQuery({
+    queryKey: ["service-package", packageId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_packages")
+        .select("*")
+        .eq("id", packageId!)
+        .eq("is_active", true)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!packageId,
+  });
 
-  // Calculate end time
+  // Il pacchetto fissa durata e prezzo; il DB ricalcola comunque tutto.
+  const duration = pkg ? Number(pkg.hours) : durationParam;
+  const totalAmount = pkg ? Number(pkg.price) : service ? service.hourly_rate * duration : 0;
+  const finalAmount = totalAmount - discount;
+  const appointments = everyWeeks ? repeatCount : 1;
+  // Lo sconto promo vale solo sul primo appuntamento della serie.
+  const seriesAmount = finalAmount + totalAmount * (appointments - 1);
+  const walletBalance = wallet?.balance ?? 0;
+  const hasEnoughCredits = walletBalance >= seriesAmount;
+
   const getEndTime = () => {
     if (!time) return "";
     const [hours, minutes] = time.split(":").map(Number);
-    const endHours = hours + duration;
-    return `${endHours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+    const end = hours * 60 + minutes + Math.round(duration * 60);
+    return `${Math.floor(end / 60).toString().padStart(2, "0")}:${(end % 60).toString().padStart(2, "0")}`;
   };
 
   const applyPromoCode = async () => {
@@ -142,15 +171,31 @@ export default function BookingConfirm() {
       }
 
       // Prezzo, sconto e stato li calcola il DB.
-      const { data: bookingId, error } = await supabase.rpc("create_booking", {
+      const common = {
         p_professional_id: professionalId!,
         p_service_type: serviceType!,
-        p_scheduled_date: dateStr!,
         p_time_start: time!,
         p_hours: duration,
         p_address: address.trim(),
-        p_notes: notes.trim() || null,
-        p_promo_code: promoApplied ? promoCode.trim().toUpperCase() : null,
+        p_notes: notes.trim() || undefined,
+        p_promo_code: promoApplied ? promoCode.trim().toUpperCase() : undefined,
+        p_latitude: latitude ?? undefined,
+        p_longitude: longitude ?? undefined,
+        p_package_id: packageId ?? undefined,
+      };
+      if (everyWeeks) {
+        const { error } = await supabase.rpc("create_booking_series", {
+          ...common,
+          p_first_date: dateStr!,
+          p_every_weeks: everyWeeks,
+          p_count: repeatCount,
+        });
+        if (error) throw error;
+        return { id: null };
+      }
+      const { data: bookingId, error } = await supabase.rpc("create_booking", {
+        ...common,
+        p_scheduled_date: dateStr!,
       });
 
       if (error) throw error;
@@ -165,10 +210,10 @@ export default function BookingConfirm() {
       queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
       queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
       toast({
-        title: "Prenotazione confermata!",
+        title: data.id ? "Prenotazione confermata!" : `${repeatCount} appuntamenti prenotati!`,
         description: "Riceverai una conferma dal professionista",
       });
-      navigate(`/client/bookings?new=${data.id}`);
+      navigate(data.id ? `/client/bookings?new=${data.id}` : "/client/bookings");
     },
     onError: (error: Error) => {
       toast({
@@ -179,7 +224,7 @@ export default function BookingConfirm() {
     },
   });
 
-  if (loadingProfessional || loadingService) {
+  if (loadingProfessional || loadingService || loadingPackage) {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader title="Conferma" showBack />
@@ -191,7 +236,7 @@ export default function BookingConfirm() {
     );
   }
 
-  if (!professional || !service || !date || !time) {
+  if (!professional || !service || !date || !time || (packageId && !pkg)) {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader title="Errore" showBack />
@@ -245,7 +290,10 @@ export default function BookingConfirm() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Servizio</p>
-                <p className="font-medium">{serviceTypeLabels[serviceType!] || serviceType}</p>
+                <p className="font-medium">
+                  {serviceTypeLabels[serviceType!] || serviceType}
+                  {pkg && <span className="text-muted-foreground"> · {pkg.name}</span>}
+                </p>
               </div>
             </div>
 
@@ -302,6 +350,52 @@ export default function BookingConfirm() {
           />
         </div>
 
+        {/* Ricorrenza */}
+        <div className="trust-card space-y-3">
+          <div className="flex items-center gap-2">
+            <Repeat className="h-5 w-5 text-primary" />
+            <h3 className="font-semibold">Ripeti</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { weeks: 0, label: "Una volta" },
+              { weeks: 1, label: "Ogni settimana" },
+              { weeks: 2, label: "Ogni 2 settimane" },
+              { weeks: 4, label: "Ogni 4 settimane" },
+            ].map((o) => (
+              <button
+                key={o.weeks}
+                type="button"
+                onClick={() => setEveryWeeks(o.weeks)}
+                className={cn(
+                  "py-3 rounded-2xl text-sm font-medium transition-all",
+                  everyWeeks === o.weeks
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-card border border-border/60 hover:bg-muted"
+                )}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          {everyWeeks > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Numero di appuntamenti</span>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="icon" className="h-9 w-9"
+                  onClick={() => setRepeatCount((c) => Math.max(2, c - 1))} disabled={repeatCount <= 2}>
+                  −
+                </Button>
+                <span className="w-6 text-center font-semibold">{repeatCount}</span>
+                <Button variant="outline" size="icon" className="h-9 w-9"
+                  onClick={() => setRepeatCount((c) => Math.min(12, c + 1))} disabled={repeatCount >= 12}>
+                  +
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Promo Code */}
         <div className="trust-card space-y-3">
           <div className="flex items-center gap-2">
@@ -343,7 +437,7 @@ export default function BookingConfirm() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                €{service.hourly_rate}/ora × {duration} ore
+                {pkg ? `Pacchetto a prezzo fisso (${duration} ore)` : `€${service.hourly_rate}/ora × ${duration} ore`}
               </span>
               <span>€{totalAmount.toFixed(2)}</span>
             </div>
@@ -357,9 +451,15 @@ export default function BookingConfirm() {
             
             <div className="border-t border-border/30 pt-2 mt-2">
               <div className="flex justify-between text-base">
-                <span className="font-semibold">Totale</span>
+                <span className="font-semibold">{everyWeeks ? "Primo appuntamento" : "Totale"}</span>
                 <span className="font-bold text-primary">€{finalAmount.toFixed(2)}</span>
               </div>
+              {everyWeeks > 0 && (
+                <div className="flex justify-between text-base mt-1">
+                  <span className="font-semibold">Totale {repeatCount} appuntamenti</span>
+                  <span className="font-bold text-primary">€{seriesAmount.toFixed(2)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -372,7 +472,7 @@ export default function BookingConfirm() {
               Saldo wallet: €{walletBalance.toFixed(2)}
             </p>
             <p className="text-xs text-muted-foreground">
-              Alla conferma verranno bloccati €{finalAmount.toFixed(2)}. Il professionista riceverà il pagamento solo a servizio completato (dopo 5 giorni senza contestazioni).
+              Alla conferma verranno bloccati €{seriesAmount.toFixed(2)}. Il professionista riceverà il pagamento solo a servizio completato (dopo 5 giorni senza contestazioni).
             </p>
             {!hasEnoughCredits && finalAmount > 0 && (
               <p className="text-xs text-destructive mt-1 font-medium">
@@ -405,7 +505,7 @@ export default function BookingConfirm() {
           ) : (
             <>
               <CheckCircle2 className="h-5 w-5 mr-2" />
-              Conferma prenotazione • €{finalAmount.toFixed(2)}
+              Conferma prenotazione • €{seriesAmount.toFixed(2)}
             </>
           )}
         </Button>

@@ -5,7 +5,7 @@ import { format, addDays, isSameDay, isAfter, isBefore, startOfDay } from "date-
 import { it } from "date-fns/locale";
 import { 
   Calendar as CalendarIcon, Clock, MapPin, ChevronLeft, ChevronRight,
-  Info, CheckCircle2
+  Info, CheckCircle2, Package
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
@@ -39,12 +39,15 @@ export default function BookingNew() {
   const navigate = useNavigate();
   const professionalId = searchParams.get("professional");
   const preselectedService = searchParams.get("service");
+  const preselectedDuration = Number(searchParams.get("duration")) || 2;
 
-  const [step, setStep] = useState(1);
+  // Con il servizio già scelto (dalla scheda o da "Prenota di nuovo") si parte dalla data.
+  const [step, setStep] = useState(preselectedService ? 2 : 1);
   const [selectedService, setSelectedService] = useState<string | null>(preselectedService);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(searchParams.get("package"));
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<number>(2);
+  const [selectedDuration, setSelectedDuration] = useState<number>(preselectedDuration);
 
   const { data: professional, isLoading: loadingProfessional } = useQuery({
     queryKey: ["professional", professionalId],
@@ -76,6 +79,21 @@ export default function BookingNew() {
     enabled: !!professionalId,
   });
 
+  const { data: packages } = useQuery({
+    queryKey: ["service-packages-public", professionalId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("service_packages")
+        .select("*")
+        .eq("professional_id", professionalId!)
+        .eq("is_active", true)
+        .order("price");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!professionalId,
+  });
+
   const { data: availability } = useQuery({
     queryKey: ["professional-availability", professionalId],
     queryFn: async () => {
@@ -96,12 +114,18 @@ export default function BookingNew() {
     [services, selectedService]
   );
 
+  const selectedPackage = packages?.find((p) => p.id === selectedPackageId) ?? null;
+  // Un pacchetto fissa durata e prezzo: niente passo "durata".
+  const lastStep = selectedPackage ? 2 : 3;
+  const duration = selectedPackage ? Number(selectedPackage.hours) : selectedDuration;
+
   const totalAmount = useMemo(() => {
+    if (selectedPackage) return Number(selectedPackage.price);
     if (!selectedServiceData) return 0;
     return selectedServiceData.hourly_rate * selectedDuration;
-  }, [selectedServiceData, selectedDuration]);
+  }, [selectedPackage, selectedServiceData, selectedDuration]);
 
-  const minDuration = selectedServiceData?.min_hours || 1;
+  const minDuration = selectedPackage ? 1 : selectedServiceData?.min_hours || 1;
 
   const filteredDurationOptions = durationOptions.filter(d => d.hours >= minDuration);
 
@@ -137,11 +161,11 @@ export default function BookingNew() {
   const canProceedStep3 = selectedDuration >= minDuration;
 
   const handleNext = () => {
-    if (step < 3) {
+    if (step < lastStep) {
       setStep(step + 1);
     } else {
-      // Navigate to confirmation page
-      navigate(`/client/booking/confirm?professional=${professionalId}&service=${selectedService}&date=${format(selectedDate!, "yyyy-MM-dd")}&time=${selectedTime}&duration=${selectedDuration}`);
+      const pkg = selectedPackage ? `&package=${selectedPackage.id}` : "";
+      navigate(`/client/booking/confirm?professional=${professionalId}&service=${selectedService}&date=${format(selectedDate!, "yyyy-MM-dd")}&time=${selectedTime}&duration=${duration}${pkg}`);
     }
   };
 
@@ -203,7 +227,7 @@ export default function BookingNew() {
       {/* Progress Steps */}
       <div className="px-4 py-4">
         <div className="flex items-center justify-between mb-6">
-          {[1, 2, 3].map((s) => (
+          {Array.from({ length: lastStep }, (_, i) => i + 1).map((s) => (
             <div key={s} className="flex items-center flex-1">
               <div
                 className={cn(
@@ -217,7 +241,7 @@ export default function BookingNew() {
               >
                 {s < step ? <CheckCircle2 className="h-5 w-5" /> : s}
               </div>
-              {s < 3 && (
+              {s < lastStep && (
                 <div
                   className={cn(
                     "flex-1 h-1 mx-2 rounded-full transition-colors",
@@ -239,6 +263,7 @@ export default function BookingNew() {
                   key={service.id}
                   onClick={() => {
                     setSelectedService(service.service_type);
+                    setSelectedPackageId(null);
                     // Reset duration if less than min
                     if (selectedDuration < (service.min_hours || 1)) {
                       setSelectedDuration(service.min_hours || 1);
@@ -246,7 +271,7 @@ export default function BookingNew() {
                   }}
                   className={cn(
                     "w-full trust-card text-left transition-all",
-                    selectedService === service.service_type
+                    selectedService === service.service_type && !selectedPackage
                       ? "ring-2 ring-primary border-primary"
                       : "hover:shadow-md"
                   )}
@@ -275,6 +300,38 @@ export default function BookingNew() {
                   </div>
                 </button>
               ))}
+            </div>
+            {!!packages?.length && (
+              <>
+                <h2 className="text-lg font-semibold pt-2">Oppure un pacchetto a prezzo fisso</h2>
+                <div className="space-y-3">
+                  {packages.map((pkg) => (
+                    <button
+                      key={pkg.id}
+                      onClick={() => {
+                        setSelectedService(pkg.service_type);
+                        setSelectedPackageId(pkg.id);
+                      }}
+                      className={cn(
+                        "w-full trust-card text-left flex items-center gap-3 transition-all",
+                        selectedPackageId === pkg.id ? "ring-2 ring-primary border-primary" : "hover:shadow-md"
+                      )}
+                    >
+                      <Package className="h-5 w-5 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground">{pkg.name}</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {serviceTypeLabels[pkg.service_type]} · {pkg.hours}h
+                          {pkg.description ? ` · ${pkg.description}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-lg font-bold text-primary">€{Number(pkg.price).toFixed(0)}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <div>
             </div>
           </div>
         )}
@@ -420,7 +477,7 @@ export default function BookingNew() {
             (step === 3 && !canProceedStep3)
           }
         >
-          {step < 3 ? "Continua" : "Conferma prenotazione"}
+          {step < lastStep ? "Continua" : "Vai al riepilogo"}
           <ChevronRight className="h-5 w-5 ml-2" />
         </Button>
       </div>

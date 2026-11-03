@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Package } from "lucide-react";
 import {
   useProfessionalProfile,
   useProfessionalServices,
@@ -21,8 +21,16 @@ import {
   useUpdateService,
   useAddService,
   useDeleteService,
+  useServicePackages,
+  useSavePackage,
+  useDeletePackage,
 } from "@/hooks/useProfessionalData";
-import { ServiceFormDialog } from "@/components/professional/ServiceFormDialog";
+import {
+  ServiceFormDialog,
+  PackageFormDialog,
+  type PackageDraft,
+} from "@/components/professional/ServiceFormDialog";
+import type { ServiceType } from "@/lib/services";
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 import {
   CleaningIllustration,
@@ -61,6 +69,18 @@ export default function ProfessionalServices() {
   const updateService = useUpdateService();
   const addService = useAddService();
   const deleteService = useDeleteService();
+  const { data: packages } = useServicePackages(professional?.id);
+  const savePackage = useSavePackage();
+  const deletePackage = useDeletePackage();
+  const [packageDraft, setPackageDraft] = useState<PackageDraft | null>(null);
+
+  const handlePackageSubmit = (draft: PackageDraft) => {
+    if (!professional?.id) return;
+    savePackage.mutate(
+      { ...draft, professional_id: professional.id, service_type: draft.service_type as ServiceType },
+      { onSuccess: () => setPackageDraft(null) },
+    );
+  };
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceData | null>(null);
@@ -201,8 +221,8 @@ export default function ProfessionalServices() {
               <Card>
                 <CardContent className="p-0 divide-y">
                   {services.map((service) => (
+                    <div key={service.id}>
                     <div
-                      key={service.id}
                       className="flex items-center justify-between p-4"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -254,6 +274,64 @@ export default function ProfessionalServices() {
                         </Button>
                       </div>
                     </div>
+                    {/* Pacchetti a prezzo fisso di questo servizio */}
+                    <div className="px-4 pb-4 space-y-2">
+                      {packages
+                        ?.filter((p) => p.service_type === service.service_type)
+                        .map((pkg) => (
+                          <div
+                            key={pkg.id}
+                            className="flex items-center gap-2 rounded-2xl bg-primary-light/60 px-3 py-2"
+                          >
+                            <Package className="h-4 w-4 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{pkg.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {pkg.hours}h · €{Number(pkg.price).toFixed(0)}
+                              </p>
+                            </div>
+                            <Switch
+                              checked={pkg.is_active}
+                              disabled={savePackage.isPending}
+                              onCheckedChange={(checked) =>
+                                savePackage.mutate({
+                                  id: pkg.id,
+                                  professional_id: pkg.professional_id,
+                                  service_type: pkg.service_type,
+                                  name: pkg.name,
+                                  hours: pkg.hours,
+                                  price: pkg.price,
+                                  is_active: checked,
+                                })
+                              }
+                            />
+                            <Button variant="ghost" size="icon" className="h-8 w-8"
+                              onClick={() => setPackageDraft(pkg)}>
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                              disabled={deletePackage.isPending}
+                              onClick={() => deletePackage.mutate(pkg.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      <button
+                        className="text-sm text-primary font-medium flex items-center gap-1"
+                        onClick={() =>
+                          setPackageDraft({
+                            service_type: service.service_type,
+                            name: "",
+                            description: null,
+                            hours: Math.max(2, service.min_hours ?? 1),
+                            price: 0,
+                          })
+                        }
+                      >
+                        <Plus className="h-4 w-4" /> Aggiungi pacchetto a prezzo fisso
+                      </button>
+                    </div>
+                    </div>
                   ))}
                 </CardContent>
               </Card>
@@ -282,6 +360,14 @@ export default function ProfessionalServices() {
         existingServiceTypes={existingServiceTypes}
         onSubmit={handleFormSubmit}
         isPending={isPending}
+      />
+
+      <PackageFormDialog
+        open={!!packageDraft}
+        onOpenChange={(open) => !open && setPackageDraft(null)}
+        initial={packageDraft}
+        onSubmit={handlePackageSubmit}
+        isPending={savePackage.isPending}
       />
 
       {/* Delete Confirmation Dialog */}
