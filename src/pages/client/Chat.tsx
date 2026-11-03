@@ -44,7 +44,9 @@ function groupMessagesByDate(messages: Message[]): Map<string, Message[]> {
 }
 
 export default function ClientChat() {
-  const { conversationId } = useParams();
+  const { conversationId: routeId } = useParams();
+  // "/client/chat/new?professional=..." apre (o crea) la chat con quel professionista.
+  const conversationId = routeId === "new" ? undefined : routeId;
   const [searchParams] = useSearchParams();
   const professionalIdFromQuery = searchParams.get("professional");
   const navigate = useNavigate();
@@ -57,9 +59,12 @@ export default function ClientChat() {
   );
 
   // Handle creating new conversation from professional detail
+  const creatingRef = useRef(false);
   useEffect(() => {
     async function handleNewConversation() {
-      if (professionalIdFromQuery && !conversationId) {
+      // Una sola creazione anche se l'effetto parte due volte.
+      if (professionalIdFromQuery && !conversationId && !creatingRef.current) {
+        creatingRef.current = true;
         const newConvId = await createConversation(professionalIdFromQuery);
         if (newConvId) {
           setActiveConversationId(newConvId);

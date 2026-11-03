@@ -145,7 +145,9 @@ export function useCreateConversation() {
         .eq("client_id", user.id)
         .eq("professional_id", professionalId)
         .eq("status", "active")
-        .single();
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
 
       if (existing) {
         return existing.id;
