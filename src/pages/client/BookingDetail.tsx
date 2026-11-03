@@ -39,7 +39,12 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useBookingTracking } from "@/hooks/useBookingTracking";
 import { useQueryClient } from "@tanstack/react-query";
-import { Navigation } from "lucide-react";
+import { Navigation, Heart, Camera, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LIVE_STEPS, etaMinutes, liveStep } from "@/lib/live-status";
+import { useBookingPhotos } from "@/hooks/useBookingPhotos";
+import { toUserMessage } from "@/lib/errors";
+import type { ReviewInput } from "@/components/client/ReviewForm";
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 const statusConfig = {
@@ -63,6 +68,9 @@ export default function BookingDetail() {
   const { data: canReviewBooking } = useCanReview(id);
   const { tracking } = useBookingTracking(id);
   const queryClient = useQueryClient();
+  const { data: photos } = useBookingPhotos(id);
+  const [customTip, setCustomTip] = useState("");
+  const [tipping, setTipping] = useState(false);
 
   // Realtime: notifica il cliente quando il professionista fa check-in/check-out
   useEffect(() => {
@@ -95,6 +103,11 @@ export default function BookingDetail() {
             });
           }
         }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'mycozyhome', table: 'bookings', filter: `id=eq.${id}` },
+        () => queryClient.invalidateQueries({ queryKey: ["booking-detail", id] })
       )
       .subscribe();
 
@@ -175,15 +188,45 @@ export default function BookingDetail() {
   const canDispute = user && canDisputeBooking(booking);
   const paymentLabel = PAYMENT_STATUS_LABELS[booking.payment_status ?? "none"] ?? booking.payment_status;
 
-  const handleReviewSubmit = async (rating: number, comment: string) => {
-    if (!booking) return;
+  const handleReviewSubmit = async (review: ReviewInput) => {
     await createReview.mutateAsync({
       bookingId: booking.id,
       professionalId: booking.professional_id,
-      rating,
-      comment,
+      ...review,
     });
     setShowReviewDialog(false);
+  };
+
+  const step = liveStep(booking, tracking?.check_in_at);
+  const proFirstName = booking.professional?.first_name || "Il professionista";
+  const hasProPosition = booking.pro_latitude != null && booking.pro_longitude != null;
+  const eta = step === 2 && hasProPosition && booking.latitude != null && booking.longitude != null
+    ? etaMinutes(Number(booking.pro_latitude), Number(booking.pro_longitude), Number(booking.latitude), Number(booking.longitude))
+    : null;
+  const mapsUrl = hasProPosition
+    ? `https://www.google.com/maps/dir/?api=1&origin=${booking.pro_latitude},${booking.pro_longitude}&destination=${
+        booking.latitude != null ? `${booking.latitude},${booking.longitude}` : encodeURIComponent(booking.address)}`
+    : null;
+  const tipAmount = Number(booking.tip_amount ?? 0);
+  const rebookUrl = `/client/booking/new?professional=${booking.professional_id}&service=${booking.service_type}&duration=${booking.total_hours}${
+    booking.package_id ? `&package=${booking.package_id}` : ""}`;
+
+  const sendTip = async (amount: number) => {
+    if (!(amount >= 1 && amount <= 100)) {
+      toast.error("La mancia deve essere tra 1 € e 100 €.");
+      return;
+    }
+    setTipping(true);
+    const { error } = await supabase.rpc("add_tip", { p_booking_id: booking.id, p_amount: Math.round(amount * 100) / 100 });
+    setTipping(false);
+    if (error) {
+      toast.error(toUserMessage(error, "Impossibile inviare la mancia. Riprova."));
+      return;
+    }
+    toast.success("Grazie! La mancia è arrivata al professionista ❤️");
+    queryClient.invalidateQueries({ queryKey: ["booking-detail", id] });
+    queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+    queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
   };
 
   return (
@@ -198,6 +241,57 @@ export default function BookingDetail() {
             {status.label}
           </Badge>
         </div>
+
+        {/* Stato live, come nelle app di delivery */}
+        {step >= 0 && (
+          <div className="trust-card space-y-4">
+            <div className="flex items-center justify-between">
+              {LIVE_STEPS.map((label, i) => (
+                <div key={label} className="flex-1 flex flex-col items-center gap-1.5">
+                  <div className="flex items-center w-full">
+                    <div className={cn("h-1 flex-1 rounded-full", i === 0 ? "opacity-0" : i <= step ? "bg-primary" : "bg-muted")} />
+                    <div
+                      className={cn(
+                        "h-3.5 w-3.5 rounded-full shrink-0",
+                        i < step ? "bg-primary" : i === step ? "bg-primary ring-4 ring-primary/25 animate-pulse" : "bg-muted",
+                      )}
+                    />
+                    <div className={cn("h-1 flex-1 rounded-full", i === LIVE_STEPS.length - 1 ? "opacity-0" : i < step ? "bg-primary" : "bg-muted")} />
+                  </div>
+                  <span className={cn("text-[10px] text-center leading-tight", i === step ? "font-semibold text-foreground" : "text-muted-foreground")}>
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {step === 2 && (
+              <div className="rounded-2xl bg-brand-gradient text-primary-foreground p-4 space-y-1">
+                <p className="font-bold text-lg flex items-center gap-2">
+                  <Navigation className="h-5 w-5" />
+                  {proFirstName} sta arrivando{eta != null && ` · ~${eta} min`}
+                </p>
+                {booking.pro_location_at ? (
+                  <p className="text-sm opacity-90">
+                    Posizione aggiornata alle {format(new Date(booking.pro_location_at), "HH:mm")}
+                  </p>
+                ) : (
+                  <p className="text-sm opacity-90">In attesa della prima posizione…</p>
+                )}
+                {mapsUrl && (
+                  <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-semibold underline underline-offset-4 pt-1">
+                    Vedi su mappa
+                  </a>
+                )}
+              </div>
+            )}
+            {step === 3 && (
+              <p className="text-sm text-center text-muted-foreground">
+                {proFirstName} è al lavoro dalle {format(new Date(tracking!.check_in_at!), "HH:mm")} 🧹
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Service Info */}
         <div className="trust-card">
@@ -339,6 +433,64 @@ export default function BookingDetail() {
           </div>
         </div>
 
+        {/* Foto prima/dopo e della recensione */}
+        {photos && photos.length > 0 && (
+          <div className="trust-card">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Camera className="h-5 w-5" /> Foto del servizio
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {photos.map((photo) => (
+                <a key={photo.path} href={photo.url} target="_blank" rel="noopener noreferrer" className="relative aspect-square rounded-xl overflow-hidden bg-muted">
+                  <img src={photo.url} alt={photo.kind === "before" ? "Prima" : photo.kind === "after" ? "Dopo" : "Foto recensione"} className="h-full w-full object-cover" loading="lazy" />
+                  <span className="absolute bottom-1 left-1 rounded-full bg-black/60 text-white text-[10px] px-2 py-0.5">
+                    {photo.kind === "before" ? "Prima" : photo.kind === "after" ? "Dopo" : "Recensione"}
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Mancia */}
+        {booking.status === "completed" && (
+          tipAmount > 0 ? (
+            <div className="trust-card text-center text-sm">
+              Hai lasciato una mancia di <strong>€{tipAmount.toFixed(2)}</strong> ❤️
+            </div>
+          ) : (
+            <div className="trust-card space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Heart className="h-5 w-5 text-primary" /> Lascia una mancia a {proFirstName}
+              </h3>
+              <div className="flex gap-2">
+                {[2, 5, 10].map((amount) => (
+                  <Button key={amount} variant="outline" className="flex-1" disabled={tipping} onClick={() => sendTip(amount)}>
+                    €{amount}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min={1}
+                  max={100}
+                  placeholder="Altro importo"
+                  value={customTip}
+                  onChange={(e) => setCustomTip(e.target.value)}
+                />
+                <Button disabled={tipping || !customTip} onClick={() => sendTip(Number(customTip))}>
+                  Invia
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                La mancia viene pagata con i crediti del tuo wallet e va interamente al professionista.
+              </p>
+            </div>
+          )
+        )}
+
         {/* Actions */}
         <div className="space-y-3">
           {isUpcoming && (
@@ -395,12 +547,13 @@ export default function BookingDetail() {
           )}
 
           {booking.status === "completed" && (
-            <Button 
-              variant="outline" 
-              className="w-full" 
+            <Button
+              variant={showReviewButton ? "outline" : "default"}
+              className="w-full"
               size="lg"
-              onClick={() => navigate(`/client/booking/new?professional=${booking.professional_id}&service=${booking.service_type}`)}
+              onClick={() => navigate(rebookUrl)}
             >
+              <RotateCcw className="h-5 w-5 mr-2" />
               Prenota di nuovo
             </Button>
           )}
