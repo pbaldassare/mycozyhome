@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
+import { useClientAddress } from "@/hooks/useClientAddress";
 import { AppHeader } from "@/components/client/AppHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,10 +48,22 @@ export default function BookingConfirm() {
   // Posizione passata dalla prenotazione rapida (facoltativa).
   const latParam = searchParams.get("lat");
   const lngParam = searchParams.get("lng");
-  const latitude = latParam ? Number(latParam) : null;
-  const longitude = lngParam ? Number(lngParam) : null;
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    latParam && lngParam ? { lat: Number(latParam), lng: Number(lngParam) } : null,
+  );
+  const latitude = coords?.lat ?? null;
+  const longitude = coords?.lng ?? null;
 
   const [address, setAddress] = useState(searchParams.get("address") ?? "");
+  const { address: savedAddress, save: saveAddress } = useClientAddress();
+  // Senza indirizzo nell'URL, propone quello salvato nel profilo.
+  useEffect(() => {
+    if (!address && savedAddress) {
+      setAddress(savedAddress.text);
+      setCoords({ lat: savedAddress.lat, lng: savedAddress.lng });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [savedAddress]);
   const [notes, setNotes] = useState(searchParams.get("notes") ?? "");
   // 0 = una volta sola; altrimenti ogni N settimane per `repeatCount` appuntamenti.
   const [everyWeeks, setEveryWeeks] = useState(0);
@@ -207,11 +221,13 @@ export default function BookingConfirm() {
       } catch {
         // Nessuno storage disponibile.
       }
+      // Il primo indirizzo usato diventa quello del profilo: la prossima volta è già pronto.
+      if (!savedAddress && coords) saveAddress.mutate({ text: address.trim(), ...coords });
       queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
       queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
       toast({
-        title: data.id ? "Prenotazione confermata!" : `${repeatCount} appuntamenti prenotati!`,
-        description: "Riceverai una conferma dal professionista",
+        title: data.id ? "Prenotazione inviata!" : `${repeatCount} appuntamenti inviati!`,
+        description: "Il professionista deve accettarla: ti avvisiamo appena conferma. I crediti sono bloccati, non ancora pagati.",
       });
       navigate(data.id ? `/client/bookings?new=${data.id}` : "/client/bookings");
     },
@@ -325,14 +341,20 @@ export default function BookingConfirm() {
             <MapPin className="h-5 w-5 text-primary" />
             <h3 className="font-semibold">Indirizzo del servizio</h3>
           </div>
-          <Input
+          <AddressAutocomplete
             placeholder="Via, numero civico, città..."
             value={address}
-            onChange={(e) => {
-              setAddress(e.target.value);
+            onSelect={(r) => {
+              setAddress(r.formatted_address);
+              setCoords({ lat: r.latitude, lng: r.longitude });
               setAddressError(null);
             }}
-            className={addressError ? "border-destructive" : ""}
+            onInputChange={(text) => {
+              setAddress(text);
+              setCoords(null);
+              setAddressError(null);
+            }}
+            className={addressError ? "[&_input]:border-destructive" : ""}
           />
           {addressError && (
             <p className="text-sm text-destructive">{addressError}</p>

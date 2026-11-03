@@ -1,3 +1,4 @@
+import { isBookingOver } from "@/lib/booking-time";
 import { Calendar, Clock, MapPin, ChevronRight, Loader2, Repeat, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AppHeader } from "@/components/client/AppHeader";
@@ -13,7 +14,7 @@ import { it } from "date-fns/locale";
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
 import { LoadError } from "@/components/LoadError";
 const statusConfig = {
-  pending: { label: "In attesa", className: "bg-warning/10 text-warning" },
+  pending: { label: "Da confermare", className: "bg-warning/10 text-warning" },
   confirmed: { label: "Confermato", className: "bg-success/10 text-success" },
   completed: { label: "Completato", className: "bg-muted text-muted-foreground" },
   cancelled: { label: "Annullato", className: "bg-destructive/10 text-destructive" },
@@ -125,13 +126,13 @@ export default function ClientBookings() {
   const bookings = data as Booking[] | undefined;
 
   const upcomingBookings = bookings?.filter(b => 
-    !isPast(parseISO(b.scheduled_date)) && 
+    !isBookingOver(b) && 
     b.status !== "completed" && 
     b.status !== "cancelled"
   ) || [];
 
   const pastBookings = bookings?.filter(b => 
-    isPast(parseISO(b.scheduled_date)) || 
+    isBookingOver(b) || 
     b.status === "completed" || 
     b.status === "cancelled"
   ) || [];

@@ -1,3 +1,4 @@
+import { isBookingOver } from "@/lib/booking-time";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format, parseISO, isPast } from "date-fns";
@@ -183,7 +184,7 @@ export default function BookingDetail() {
   const initials = professionalName.split(" ").map(n => n[0]).join("");
   const formattedDate = format(parseISO(booking.scheduled_date), "EEEE d MMMM yyyy", { locale: it });
   const timeRange = `${booking.scheduled_time_start.slice(0, 5)} - ${booking.scheduled_time_end.slice(0, 5)}`;
-  const isUpcoming = !isPast(parseISO(booking.scheduled_date)) && 
+  const isUpcoming = !isBookingOver(booking) && 
     booking.status !== "completed" && 
     booking.status !== "cancelled";
   const showReviewButton = booking.status === "completed" && canReviewBooking;

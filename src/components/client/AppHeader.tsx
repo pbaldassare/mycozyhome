@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronDown, Bell, MapPin, LocateFixed } from "lucide-react";
+import { ChevronLeft, ChevronDown, Bell, MapPin, LocateFixed, Wallet } from "lucide-react";
+import { useClientWallet } from "@/hooks/useWallet";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ export function AppHeader({
 
         <div className="flex items-center gap-2">
           {rightAction}
+          {showAddress && <WalletChip />}
           {showNotifications && (
             <Button
               variant="ghost"
@@ -109,7 +111,7 @@ function AddressPicker() {
         <span className="min-w-0">
           <span className="block text-[11px] font-medium text-muted-foreground leading-none">Il tuo indirizzo</span>
           <span className="flex items-center gap-1 font-semibold text-sm text-foreground">
-            <span className="truncate max-w-[220px]">{address?.text ?? "Imposta il tuo indirizzo"}</span>
+            <span className="truncate max-w-[150px]">{address?.text ?? "Imposta il tuo indirizzo"}</span>
             <ChevronDown className="h-4 w-4 shrink-0 text-primary" />
           </span>
         </span>
@@ -132,5 +134,21 @@ function AddressPicker() {
         </SheetContent>
       </Sheet>
     </>
+  );
+}
+
+/** Saldo sempre visibile: un tocco apre il wallet. */
+function WalletChip() {
+  const navigate = useNavigate();
+  const { data: wallet } = useClientWallet();
+  return (
+    <button
+      onClick={() => navigate("/client/profile/payments")}
+      className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1.5 text-sm font-bold text-emerald-700"
+      aria-label="Saldo wallet"
+    >
+      <Wallet className="h-4 w-4" />
+      €{Number(wallet?.balance ?? 0).toFixed(0)}
+    </button>
   );
 }

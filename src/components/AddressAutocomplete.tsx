@@ -21,6 +21,8 @@ interface AddressResult {
 interface AddressAutocompleteProps {
   value?: string;
   onSelect: (result: AddressResult) => void;
+  /** Testo digitato a mano (senza scegliere un suggerimento). */
+  onInputChange?: (text: string) => void;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -29,6 +31,7 @@ interface AddressAutocompleteProps {
 export function AddressAutocomplete({
   value,
   onSelect,
+  onInputChange,
   placeholder = "Inserisci indirizzo...",
   className,
   disabled,
@@ -83,6 +86,7 @@ export function AddressAutocomplete({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setInput(newValue);
+    onInputChange?.(newValue);
 
     // Debounce API calls
     if (debounceRef.current) {

@@ -140,7 +140,7 @@ export default function ClientHome() {
                 </span>
               ) : (
                 <span className="status-badge bg-primary-light text-primary">
-                  {next.status === "confirmed" ? "Confermato" : "In attesa"}
+                  {next.status === "confirmed" ? "Confermato" : "Da confermare"}
                 </span>
               )}
             </button>
