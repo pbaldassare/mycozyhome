@@ -54,6 +54,7 @@ import { useBookingTrackingByBookingIds, type BookingTracking } from "@/hooks/us
 import { useGeofenceTracking, GEOFENCE_RADIUS_M } from "@/hooks/useGeofenceTracking";
 import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
+import { EnRouteButton, BookingPhotos } from "@/components/professional/BookingExtras";
 import { DisputeForm } from "@/components/dispute/DisputeForm";
 import { canDisputeBooking } from "@/lib/payment-flow";
 import { useAuth } from "@/hooks/useAuth";
@@ -460,6 +461,17 @@ export default function ProfessionalBookings() {
 
           {/* Tracking actions for confirmed bookings today */}
           <TrackingActions booking={booking} trackingRecord={trackingMap[booking.id]} professionalId={professional?.id} />
+
+          {booking.status === "confirmed" && isToday(parseISO(booking.scheduled_date)) && (
+            <EnRouteButton
+              bookingId={booking.id}
+              enRouteAt={booking.en_route_at}
+              checkedIn={!!trackingMap[booking.id]?.check_in_at}
+            />
+          )}
+          {(booking.status === "confirmed" || booking.status === "completed") && (
+            <BookingPhotos bookingId={booking.id} />
+          )}
 
           {/* Review button for completed bookings */}
           {booking.status === "completed" && (
