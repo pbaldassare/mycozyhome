@@ -12,6 +12,7 @@ const QUICK_AMOUNTS = [20, 50, 100, 200];
 
 const typeLabels: Record<string, string> = {
   top_up: "Ricarica",
+  tip: "Mancia",
   hold: "Prenotazione",
   refund: "Rimborso",
   release: "Erogazione",

@@ -15,6 +15,7 @@ const euro = (value: number) =>
 
 const TYPE_LABELS: Record<string, string> = {
   top_up: "Ricarica",
+  tip: "Mancia",
   hold: "Crediti bloccati",
   refund: "Rimborso",
   release: "Pagamento al professionista",

@@ -56,8 +56,9 @@ const statusConfig = {
 };
 
 
-// ponytail: mancia spenta finché add_tip e il tipo "tip" del wallet non sono nel DB.
-const TIPS_ENABLED = false;
+// Mancia facoltativa: in percentuale del servizio o importo fisso. Pagata col wallet (Stripe dopo).
+const TIP_PERCENTS = [5, 10, 15];
+const TIP_FIXED = [2, 5, 10];
 
 export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();
@@ -74,6 +75,8 @@ export default function BookingDetail() {
   const queryClient = useQueryClient();
   const { data: photos } = useBookingPhotos(id);
   const [customTip, setCustomTip] = useState("");
+  const [tipMode, setTipMode] = useState<"percent" | "fixed">("percent");
+  const [tipChoice, setTipChoice] = useState<number | null>(null);
   const [tipping, setTipping] = useState(false);
 
   // Realtime: notifica il cliente quando il professionista fa check-in/check-out
@@ -415,7 +418,7 @@ export default function BookingDetail() {
               <span className="text-muted-foreground">Durata</span>
               <span>{booking.total_hours} ore</span>
             </div>
-            {booking.discount_amount && Number(booking.discount_amount) > 0 && (
+            {Number(booking.discount_amount ?? 0) > 0 && (
               <div className="flex justify-between text-success">
                 <span>Sconto</span>
                 <span>-€{Number(booking.discount_amount).toFixed(2)}</span>
@@ -456,43 +459,64 @@ export default function BookingDetail() {
           </div>
         )}
 
-        {/* Mancia: spenta finché add_tip non è nel DB (arriva con Stripe). */}
-        {TIPS_ENABLED && booking.status === "completed" && (
+        {booking.status === "completed" && (
           tipAmount > 0 ? (
             <div className="trust-card text-center text-sm">
               Hai lasciato una mancia di <strong>€{tipAmount.toFixed(2)}</strong> ❤️
             </div>
-          ) : (
-            <div className="trust-card space-y-3">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Heart className="h-5 w-5 text-primary" /> Lascia una mancia a {proFirstName}
-              </h3>
-              <div className="flex gap-2">
-                {[2, 5, 10].map((amount) => (
-                  <Button key={amount} variant="outline" className="flex-1" disabled={tipping} onClick={() => sendTip(amount)}>
-                    €{amount}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex gap-2">
+          ) : (() => {
+            const base = Number(booking.total_amount ?? 0);
+            const toEuro = (v: number) => (tipMode === "percent" ? Math.round(base * v) / 100 : v);
+            const selected = customTip ? Number(customTip) : tipChoice != null ? toEuro(tipChoice) : 0;
+            return (
+              <div className="trust-card space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-rose-500" /> Mancia a {proFirstName}
+                  </h3>
+                  <span className="text-xs text-muted-foreground">Facoltativa</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-sm font-semibold">
+                  {(["percent", "fixed"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => { setTipMode(m); setTipChoice(null); }}
+                      className={`rounded-full py-1.5 ${tipMode === m ? "bg-card shadow-sm text-primary" : "text-muted-foreground"}`}
+                    >
+                      {m === "percent" ? "Percentuale" : "Importo fisso"}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {(tipMode === "percent" ? TIP_PERCENTS : TIP_FIXED).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => { setTipChoice(v); setCustomTip(""); }}
+                      className={`rounded-2xl border py-2 text-center ${tipChoice === v && !customTip ? "border-primary bg-primary/10 text-primary" : "border-border"}`}
+                    >
+                      <span className="block font-bold">{tipMode === "percent" ? `${v}%` : `€${v}`}</span>
+                      {tipMode === "percent" && <span className="block text-xs text-muted-foreground">€{toEuro(v).toFixed(2)}</span>}
+                    </button>
+                  ))}
+                </div>
                 <Input
                   type="number"
                   inputMode="decimal"
                   min={1}
                   max={100}
-                  placeholder="Altro importo"
+                  placeholder="Altro importo in €"
                   value={customTip}
                   onChange={(e) => setCustomTip(e.target.value)}
                 />
-                <Button disabled={tipping || !customTip} onClick={() => sendTip(Number(customTip))}>
-                  Invia
+                <Button className="w-full" disabled={tipping || !(selected > 0)} onClick={() => sendTip(selected)}>
+                  {selected > 0 ? `Invia mancia di €${selected.toFixed(2)}` : "Scegli un importo"}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  Viene pagata con il credito del tuo wallet e va tutta al professionista.
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                La mancia viene pagata con i crediti del tuo wallet e va interamente al professionista.
-              </p>
-            </div>
-          )
+            );
+          })()
         )}
 
         {/* Actions */}

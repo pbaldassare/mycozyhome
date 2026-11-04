@@ -5,6 +5,7 @@ import { useWalletTransactions } from "@/hooks/useWallet";
 
 const typeLabels: Record<string, string> = {
   top_up: "Ricarica crediti",
+  tip: "Mancia",
   hold: "Prenotazione",
   refund: "Rimborso",
   release: "Erogazione al professionista",
