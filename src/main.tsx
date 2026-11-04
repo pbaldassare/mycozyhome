@@ -2,8 +2,24 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { initTheme } from "./lib/theme";
+import { registerSW } from "virtual:pwa-register";
 
 initTheme();
+
+// iPhone riprende l'app installata senza ricaricarla, quindi non vede mai la
+// versione nuova: si controlla al ritorno nell'app e ogni 10 minuti.
+// Con autoUpdate, quando arriva una versione nuova la pagina si ricarica da sola.
+registerSW({
+  immediate: true,
+  onRegisteredSW(_url, reg) {
+    if (!reg) return;
+    const check = () => reg.update().catch(() => undefined);
+    setInterval(check, 10 * 60_000);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") check();
+    });
+  },
+});
 
 // Dopo un deploy i chunk della versione precedente non esistono più.
 // Si svuota la cache del service worker (che altrimenti ripropone la versione
