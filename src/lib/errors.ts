@@ -24,6 +24,7 @@ const FC_MESSAGES: Record<string, string> = {
   FC_SERVICE_UNAVAILABLE: "Questo servizio non è più disponibile.",
   FC_SLOT_TAKEN: "Il professionista è già impegnato in quell'orario. Scegline un altro.",
   FC_SERIES_INVALID: "Scegli da 2 a 12 appuntamenti, ogni 1-4 settimane.",
+  FC_VAT_REQUIRED: "Inserisci la Partita IVA oppure dichiara la prestazione occasionale in Profilo → Dati fiscali.",
   FC_TIP_AMOUNT: "La mancia deve essere tra 1 € e 100 €.",
   FC_INSUFFICIENT_CREDITS: "Crediti insufficienti: ricarica il wallet.",
   FC_BOOKING_NOT_CANCELLABLE: "Questa prenotazione non si può più annullare.",

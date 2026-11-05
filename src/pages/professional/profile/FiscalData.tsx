@@ -43,6 +43,22 @@ export default function FiscalData() {
     }
   }, [professional]);
 
+  const declareOccasional = async () => {
+    if (!professional) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("professionals")
+      .update({ occasional_declared_at: new Date().toISOString() })
+      .eq("id", professional.id);
+    setSaving(false);
+    if (error) {
+      toast.error(toUserMessage(error, "Salvataggio non riuscito. Riprova."));
+      return;
+    }
+    toast.success("Dichiarazione registrata.");
+    queryClient.invalidateQueries({ queryKey: ["professional-profile"] });
+  };
+
   const handleSave = async () => {
     if (!professional) return;
 
@@ -165,6 +181,29 @@ export default function FiscalData() {
               <Button className="w-full" onClick={handleSave} disabled={saving}>
                 {saving ? "Salvataggio..." : "Registra Partita IVA"}
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {!hasVat && (
+          <Card>
+            <CardContent className="p-4 space-y-3 text-sm">
+              {professional?.occasional_declared_at ? (
+                <p>
+                  ✅ Hai dichiarato di lavorare in modo <strong>occasionale e non continuativo</strong> il{" "}
+                  {new Date(professional.occasional_declared_at).toLocaleDateString("it-IT")}.
+                </p>
+              ) : (
+                <>
+                  <p>
+                    <strong>Non hai la Partita IVA?</strong> Dichiara di svolgere l'attività in modo occasionale e non
+                    continuativo (prestazione occasionale, fino a 5.000 € l'anno).
+                  </p>
+                  <Button variant="outline" className="w-full" onClick={declareOccasional} disabled={saving}>
+                    Dichiaro prestazione occasionale
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
