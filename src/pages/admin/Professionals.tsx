@@ -29,6 +29,9 @@ interface ProfessionalWithDocs extends Professional {
   firstName: string;
   lastName: string;
   phone: string;
+  fiscalCode?: string;
+  vatNumber?: string;
+  occasionalDeclaredAt?: string;
 }
 
 export default function Professionals() {
@@ -89,6 +92,9 @@ export default function Professionals() {
             }),
             isBlocked: !!prof.is_blocked,
             blockedReason: prof.blocked_reason,
+            fiscalCode: prof.fiscal_code ?? undefined,
+            vatNumber: prof.vat_number ?? undefined,
+            occasionalDeclaredAt: prof.occasional_declared_at ?? undefined,
             documents: (docs || []).map((doc) => ({
               id: doc.id,
               type: doc.document_type,
@@ -210,6 +216,9 @@ export default function Professionals() {
         reviewCount: prof.reviewsCount,
         isBlocked: prof.isBlocked,
         blockedReason: prof.blockedReason,
+        fiscalCode: prof.fiscalCode,
+        vatNumber: prof.vatNumber,
+        occasionalDeclaredAt: prof.occasionalDeclaredAt,
       });
     }
   };

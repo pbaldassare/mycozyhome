@@ -17,6 +17,11 @@ const personalInfoSchema = z.object({
   city: z.string().min(2, "Inserisci la città"),
   province: z.string().optional(),
   postalCode: z.string().optional(),
+  vatNumber: z.string(),
+  occasional: z.boolean(),
+}).refine((d) => d.occasional || /^\d{11}$/.test(d.vatNumber), {
+  path: ["vatNumber"],
+  message: "Inserisci la Partita IVA (11 cifre) oppure spunta la dichiarazione qui sotto",
 });
 
 export default function PersonalInfo() {
@@ -33,6 +38,8 @@ export default function PersonalInfo() {
     city: "",
     province: "",
     postalCode: "",
+    vatNumber: "",
+    occasional: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -65,6 +72,8 @@ export default function PersonalInfo() {
           city: prof.city || "",
           province: prof.province || "",
           postalCode: prof.postal_code || "",
+          vatNumber: prof.vat_number || "",
+          occasional: !!prof.occasional_declared_at,
         });
       } else {
         setFormData((prev) => ({
@@ -109,6 +118,11 @@ export default function PersonalInfo() {
         city: validated.city,
         province: validated.province || null,
         postal_code: validated.postalCode || null,
+        // Con la P.IVA niente dichiarazione; senza, si registra quando è stata fatta.
+        has_vat_number: !validated.occasional,
+        vat_number: validated.occasional ? null : validated.vatNumber,
+        vat_registered_at: validated.occasional ? null : new Date().toISOString(),
+        occasional_declared_at: validated.occasional ? new Date().toISOString() : null,
         profile_completed: true,
       };
 
@@ -239,6 +253,38 @@ export default function PersonalInfo() {
             onChange={handleChange}
             className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base"
           />
+        </section>
+
+        <section>
+          <label className="block text-base font-semibold mb-2">Partita IVA {formData.occasional ? "" : "*"}</label>
+          <Input
+            name="vatNumber"
+            inputMode="numeric"
+            placeholder="11 cifre, es. 12345678901"
+            disabled={formData.occasional}
+            value={formData.occasional ? "" : formData.vatNumber}
+            onChange={(e) => {
+              setFormData({ ...formData, vatNumber: e.target.value.replace(/\D/g, "").slice(0, 11) });
+              setErrors({ ...errors, vatNumber: "" });
+            }}
+            className="h-12 rounded-xl bg-[hsl(var(--sage-light))] border-0 text-base disabled:opacity-50"
+          />
+          {errors.vatNumber && <p className="text-xs text-destructive mt-1">{errors.vatNumber}</p>}
+          <label className="mt-3 flex items-start gap-3 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-5 w-5 shrink-0 accent-[hsl(var(--primary))]"
+              checked={formData.occasional}
+              onChange={(e) => {
+                setFormData({ ...formData, occasional: e.target.checked });
+                setErrors({ ...errors, vatNumber: "" });
+              }}
+            />
+            <span>
+              <strong>Non ho la Partita IVA.</strong> Dichiaro di svolgere l'attività in modo occasionale e non
+              continuativo (prestazione occasionale, fino a 5.000 € l'anno).
+            </span>
+          </label>
         </section>
 
         <section>

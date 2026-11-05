@@ -1106,6 +1106,7 @@ export type Database = {
           updated_at: string
           user_id: string
           vat_number: string | null
+          occasional_declared_at: string | null
           vat_registered_at: string | null
           years_experience: number | null
         }
@@ -1146,6 +1147,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           vat_number?: string | null
+          occasional_declared_at?: string | null
           vat_registered_at?: string | null
           years_experience?: number | null
         }
@@ -1186,6 +1188,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           vat_number?: string | null
+          occasional_declared_at?: string | null
           vat_registered_at?: string | null
           years_experience?: number | null
         }
@@ -1849,6 +1852,7 @@ export type Database = {
           updated_at: string | null
           user_id: string | null
           vat_number: string | null
+          occasional_declared_at: string | null
           vat_registered_at: string | null
           years_experience: number | null
         }
@@ -1889,6 +1893,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           vat_number?: string | null
+          occasional_declared_at?: string | null
           vat_registered_at?: string | null
           years_experience?: number | null
         }
@@ -1929,6 +1934,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
           vat_number?: string | null
+          occasional_declared_at?: string | null
           vat_registered_at?: string | null
           years_experience?: number | null
         }

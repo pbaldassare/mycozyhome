@@ -70,6 +70,8 @@ export interface ProfessionalData {
   reviewCount?: number;
   isBlocked?: boolean;
   blockedReason?: string | null;
+  vatNumber?: string;
+  occasionalDeclaredAt?: string;
 }
 
 interface ProfessionalReviewPanelProps {
@@ -262,6 +264,16 @@ export function ProfessionalReviewPanel({
               <span className="font-mono">{professional.fiscalCode}</span>
             </div>
           )}
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            {professional.vatNumber ? (
+              <span>P.IVA <span className="font-mono">{professional.vatNumber}</span></span>
+            ) : professional.occasionalDeclaredAt ? (
+              <span>Senza P.IVA · prestazione occasionale dichiarata il {format(new Date(professional.occasionalDeclaredAt), "d MMM yyyy", { locale: it })}</span>
+            ) : (
+              <span className="text-destructive">Né P.IVA né dichiarazione di prestazione occasionale</span>
+            )}
+          </div>
         </CardContent>
       </Card>
 
