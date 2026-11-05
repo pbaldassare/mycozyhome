@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Download, LogOut } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -99,8 +99,8 @@ export function AccountDataSection() {
               variant="outline"
               className="w-full justify-start gap-3 h-14 rounded-2xl border-destructive/30 text-destructive hover:bg-destructive/5"
             >
-              <LogOut className="w-5 h-5" />
-              Esci da MyCozyHome
+              <Trash2 className="w-5 h-5" />
+              Elimina il mio account
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>

@@ -7,7 +7,9 @@ const corsHeaders = {
 };
 
 interface GeocodeRequest {
-  address: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
 }
 
 interface GeocodeResponse {
@@ -60,16 +62,17 @@ serve(async (req) => {
 
       // Geocode an address
       if (action === "geocode") {
-        const { address } = body as GeocodeRequest;
-        
-        if (!address) {
+        const { address, lat, lng } = body as GeocodeRequest;
+        const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
+
+        if (!address && !hasCoords) {
           return new Response(
             JSON.stringify({ error: "Address is required" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}&language=it&region=it`;
+        const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?${hasCoords ? `latlng=${lat},${lng}&result_type=street_address|premise` : `address=${encodeURIComponent(address!)}`}&key=${GOOGLE_MAPS_API_KEY}&language=it&region=it`;
         
         const response = await fetch(geocodeUrl);
         const data = await response.json();

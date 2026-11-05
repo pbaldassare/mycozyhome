@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { addDays, format, startOfDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { Star, MapPin, Loader2, Navigation, Zap, SearchX } from "lucide-react";
+import { locateMe } from "@/lib/locate";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppHeader } from "@/components/client/AppHeader";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
@@ -70,16 +72,11 @@ export default function QuickBook() {
   };
 
   const useMyPosition = () => {
-    if (!navigator.geolocation) return;
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setAddress({ text: "", lat: p.coords.latitude, lng: p.coords.longitude });
-        setLocating(false);
-      },
-      () => setLocating(false),
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+    locateMe()
+      .then(setAddress)
+      .catch((e: Error) => toast.error(e.message))
+      .finally(() => setLocating(false));
   };
 
   const dateStr = format(date, "yyyy-MM-dd");
@@ -218,7 +215,7 @@ export default function QuickBook() {
           />
           <button onClick={useMyPosition} className="mt-2 text-sm font-medium text-primary inline-flex items-center gap-1.5">
             {locating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
-            {address && !address.text ? "Uso la tua posizione" : "Usa la mia posizione"}
+            Usa la mia posizione
           </button>
         </section>
 

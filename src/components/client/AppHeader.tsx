@@ -9,6 +9,7 @@ import { useClientAddress } from "@/hooks/useClientAddress";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
+import { locateMe } from "@/lib/locate";
 
 
 interface AppHeaderProps {
@@ -96,11 +97,14 @@ function AddressPicker() {
     }
   };
 
-  const useMyPosition = () =>
-    navigator.geolocation?.getCurrentPosition(
-      (p) => pick({ text: "La mia posizione", lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => toast.error("Posizione non disponibile"),
-    );
+  const [locating, setLocating] = useState(false);
+  const useMyPosition = () => {
+    setLocating(true);
+    locateMe()
+      .then(pick)
+      .catch((e: Error) => toast.error(e.message))
+      .finally(() => setLocating(false));
+  };
 
   return (
     <>
@@ -128,7 +132,7 @@ function AddressPicker() {
               onSelect={(r) => pick({ text: r.formatted_address, lat: r.latitude, lng: r.longitude })}
             />
             <button onClick={useMyPosition} className="flex items-center gap-2 text-sm font-medium text-primary">
-              <LocateFixed className="h-4 w-4" /> Usa la mia posizione
+              <LocateFixed className={cn("h-4 w-4", locating && "animate-pulse")} /> {locating ? "Cerco la tua posizione…" : "Usa la mia posizione"}
             </button>
           </div>
         </SheetContent>
