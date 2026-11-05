@@ -15,6 +15,7 @@ import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
 import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toUserMessage } from "@/lib/errors";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ProfessionalWithDocs extends Professional {
@@ -171,7 +172,7 @@ export default function Professionals() {
       console.error("Error approving professional:", error);
       toast({
         title: "Errore",
-        description: "Impossibile approvare il professionista.",
+        description: toUserMessage(error, "Impossibile approvare il professionista."),
         variant: "destructive",
       });
     }

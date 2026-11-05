@@ -2028,6 +2028,10 @@ export type Database = {
           years_experience: number | null
         }[]
       }
+      register_vat_number: {
+        Args: { p_vat: string }
+        Returns: undefined
+      }
       add_tip: {
         Args: { p_amount: number; p_booking_id: string }
         Returns: undefined

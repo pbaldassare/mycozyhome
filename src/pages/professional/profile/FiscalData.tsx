@@ -69,15 +69,7 @@ export default function FiscalData() {
     }
 
     setSaving(true);
-    const { error } = await supabase
-      .from("professionals")
-      .update({
-        has_vat_number: true,
-        vat_number: parsed.data.vatNumber,
-        vat_registered_at: new Date().toISOString(),
-        revenue_blocked: false,
-      })
-      .eq("id", professional.id);
+    const { error } = await supabase.rpc("register_vat_number", { p_vat: parsed.data.vatNumber });
     setSaving(false);
 
     if (error) {

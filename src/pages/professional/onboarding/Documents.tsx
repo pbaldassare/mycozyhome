@@ -33,6 +33,12 @@ const requiredDocuments = [
     required: true,
   },
   {
+    type: "insurance",
+    name: "Polizza assicurativa (RC)",
+    description: "Polizza di responsabilità civile valida, con nome e scadenza leggibili",
+    required: true,
+  },
+  {
     type: "fiscal_code",
     name: "Codice Fiscale / Tessera Sanitaria",
     description: "Scansione o foto leggibile",
@@ -342,7 +348,7 @@ export default function DocumentsUpload() {
           onClick={handleSubmitForReview}
           className="w-full h-14 text-base rounded-2xl bg-[hsl(var(--sage))] hover:bg-[hsl(var(--sage-dark))]"
           size="lg"
-          disabled={loading || !documents.some((d) => d.document_type === "id_card")}
+          disabled={loading || requiredDocuments.some((r) => r.required && !documents.some((d) => d.document_type === r.type))}
         >
           {loading ? "Invio in corso..." : "Invia per Verifica"}
         </Button>

@@ -86,7 +86,7 @@ const documentTypeLabels: Record<string, string> = {
   id_card: "Carta d'identità",
   fiscal_code: "Codice fiscale",
   certificate: "Certificato",
-  insurance: "Assicurazione",
+  insurance: "Polizza assicurativa (RC)",
   other: "Altro",
 };
 
@@ -170,11 +170,7 @@ export function ProfessionalReviewPanel({
   const status = statusConfig[professional.status];
 
   const handleApprove = () => {
-    onApprove(professional.id, adminNotes);
-    toast({
-      title: "Professionista approvato",
-      description: `${fullName} è stato approvato e sarà visibile ai clienti.`,
-    });
+    onApprove(professional.id, adminNotes); // l'esito (ok o errore) lo mostra la pagina
     onClose();
   };
 
@@ -197,7 +193,11 @@ export function ProfessionalReviewPanel({
   };
 
   const pendingDocs = professional.documents.filter((d) => d.status === "pending");
-  const allDocsReviewed = pendingDocs.length === 0 && professional.documents.length > 0;
+  // Carta d'identità e polizza RC devono esserci ed essere approvate (lo controlla anche il database).
+  const missingRequired = ["id_card", "insurance"].filter(
+    (t) => !professional.documents.some((d) => d.type === t && d.status === "approved"),
+  );
+  const allDocsReviewed = pendingDocs.length === 0 && professional.documents.length > 0 && missingRequired.length === 0;
 
   return (
     <div className="space-y-6">
@@ -384,6 +384,12 @@ export function ProfessionalReviewPanel({
       </Card>
 
       {/* Actions */}
+      {(professional.status === "pending" || professional.status === "in_review") && missingRequired.length > 0 && (
+        <p className="rounded-lg bg-warning/10 border border-warning/30 p-3 text-sm">
+          Per approvare servono approvati:{" "}
+          <strong>{missingRequired.map((t) => documentTypeLabels[t]).join(" e ")}</strong>.
+        </p>
+      )}
       {(professional.status === "pending" || professional.status === "in_review") && (
         <div className="flex gap-3">
           <Button
