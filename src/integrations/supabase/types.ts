@@ -2043,6 +2043,42 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_booking_v3: {
+        Args: {
+          p_address: string
+          p_early_execution?: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_notes?: string
+          p_package_id?: string
+          p_professional_id: string
+          p_promo_code?: string
+          p_scheduled_date: string
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: string
+      }
+      create_booking_series_v2: {
+        Args: {
+          p_address: string
+          p_count: number
+          p_early_execution?: string
+          p_every_weeks: number
+          p_first_date: string
+          p_hours: number
+          p_latitude?: number
+          p_longitude?: number
+          p_notes?: string
+          p_package_id?: string
+          p_professional_id: string
+          p_promo_code?: string
+          p_service_type: string
+          p_time_start: string
+        }
+        Returns: string
+      }
       register_vat_number: {
         Args: { p_vat: string }
         Returns: undefined

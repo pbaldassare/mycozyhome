@@ -8,7 +8,8 @@ import {
   CheckCircle2, AlertCircle, Loader2, Tag, Repeat
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { CANCELLATION_NOTICE } from "@/lib/legal";
+import { CANCELLATION_NOTICE, EARLY_EXECUTION_TEXT, EARLY_EXECUTION_VERSION } from "@/lib/legal";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { useClientAddress } from "@/hooks/useClientAddress";
@@ -40,6 +41,7 @@ export default function BookingConfirm() {
   const { isBlocked } = useAuth();
   const { data: wallet } = useClientWallet();
   
+  const [earlyExecution, setEarlyExecution] = useState(false);
   const professionalId = searchParams.get("professional");
   const serviceType = searchParams.get("service");
   const dateStr = searchParams.get("date");
@@ -197,9 +199,10 @@ export default function BookingConfirm() {
         p_latitude: latitude ?? undefined,
         p_longitude: longitude ?? undefined,
         p_package_id: packageId ?? undefined,
+        p_early_execution: professional?.has_vat_number && earlyExecution ? EARLY_EXECUTION_VERSION : undefined,
       };
       if (everyWeeks) {
-        const { error } = await supabase.rpc("create_booking_series", {
+        const { error } = await supabase.rpc("create_booking_series_v2", {
           ...common,
           p_first_date: dateStr!,
           p_every_weeks: everyWeeks,
@@ -208,7 +211,7 @@ export default function BookingConfirm() {
         if (error) throw error;
         return { id: null };
       }
-      const { data: bookingId, error } = await supabase.rpc("create_booking_v2", {
+      const { data: bookingId, error } = await supabase.rpc("create_booking_v3", {
         ...common,
         p_scheduled_date: dateStr!,
       });
@@ -494,6 +497,13 @@ export default function BookingConfirm() {
           <strong className="text-foreground">Regole di annullamento.</strong> {CANCELLATION_NOTICE}
         </div>
 
+        {professional.has_vat_number && (
+          <label className="flex items-start gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3 text-xs leading-snug">
+            <Checkbox checked={earlyExecution} onCheckedChange={(c) => setEarlyExecution(c === true)} className="mt-0.5" />
+            <span>{EARLY_EXECUTION_TEXT} <span className="text-destructive">*</span></span>
+          </label>
+        )}
+
         {/* Payment Info */}
         <div className="trust-indicator">
           <CreditCard className="h-5 w-5 text-success flex-shrink-0" />
@@ -525,7 +535,7 @@ export default function BookingConfirm() {
         <Button
           className="btn-trust-primary"
           onClick={() => createBookingMutation.mutate()}
-          disabled={!address.trim() || createBookingMutation.isPending || !hasEnoughCredits}
+          disabled={!address.trim() || createBookingMutation.isPending || !hasEnoughCredits || (!!professional.has_vat_number && !earlyExecution)}
         >
           {createBookingMutation.isPending ? (
             <>
