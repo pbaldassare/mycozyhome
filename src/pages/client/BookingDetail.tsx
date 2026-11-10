@@ -1,6 +1,7 @@
 import { isBookingOver } from "@/lib/booking-time";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format, parseISO, isPast } from "date-fns";
 import { it } from "date-fns/locale";
 import { 
@@ -64,6 +65,17 @@ export default function BookingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [lateAck, setLateAck] = useState(false);
+  // Quanto torna al cliente se annulla adesso: lo calcola il DB con la stessa regola del rimborso.
+  const { data: quote } = useQuery({
+    queryKey: ["cancellation-quote", id, showCancelDialog],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("cancellation_quote", { p_booking_id: id! });
+      if (error) throw error;
+      return data as unknown as { late: boolean; paid: number; refund: number; retained: number };
+    },
+    enabled: !!id && showCancelDialog,
+  });
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showDisputeDialog, setShowDisputeDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -151,8 +163,8 @@ export default function BookingDetail() {
       toast.success("Prenotazione annullata");
       setShowCancelDialog(false);
       navigate("/client/bookings");
-    } catch {
-      toast.error("Errore durante l'annullamento");
+    } catch (e) {
+      toast.error(toUserMessage(e, "Errore durante l'annullamento"));
     }
   };
 
@@ -594,9 +606,23 @@ export default function BookingDetail() {
           <DialogHeader>
             <DialogTitle>Annulla prenotazione</DialogTitle>
             <DialogDescription>
-              Sei sicuro di voler annullare questa prenotazione? I crediti verranno rimborsati sul tuo wallet.
+              {quote?.late
+                ? "Mancano meno di 3 ore all'inizio: ti rimborsiamo solo il 50%."
+                : "Sei sicuro di voler annullare questa prenotazione? Ti rimborsiamo l'intero importo sul wallet."}
             </DialogDescription>
           </DialogHeader>
+          {quote?.late && (
+            <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p>
+                Rimborso: <strong>€{Number(quote.refund).toFixed(2)}</strong> · Trattenuti:{" "}
+                <strong className="text-destructive">€{Number(quote.retained).toFixed(2)}</strong>
+              </p>
+              <label className="flex items-start gap-2">
+                <Checkbox checked={lateAck} onCheckedChange={(c) => setLateAck(c === true)} className="mt-0.5" />
+                <span>Ho capito che annullando ora mi verranno trattenuti €{Number(quote.retained).toFixed(2)}.</span>
+              </label>
+            </div>
+          )}
           <Textarea
             placeholder="Motivo dell'annullamento (opzionale)"
             value={cancelReason}
@@ -610,7 +636,7 @@ export default function BookingDetail() {
             <Button 
               variant="destructive" 
               onClick={handleCancel}
-              disabled={cancelBooking.isPending}
+              disabled={cancelBooking.isPending || !quote || (quote.late && !lateAck)}
             >
               {cancelBooking.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />

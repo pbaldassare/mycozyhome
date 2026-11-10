@@ -2079,6 +2079,10 @@ export type Database = {
         }
         Returns: string
       }
+      cancellation_quote: {
+        Args: { p_booking_id: string }
+        Returns: Json
+      }
       register_vat_number: {
         Args: { p_vat: string }
         Returns: undefined
