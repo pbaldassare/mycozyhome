@@ -1,3 +1,4 @@
+import { OCCASIONAL_DECLARATION } from "@/lib/legal";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -182,17 +183,16 @@ export default function FiscalData() {
             <CardContent className="p-4 space-y-3 text-sm">
               {professional?.occasional_declared_at ? (
                 <p>
-                  ✅ Hai dichiarato di lavorare in modo <strong>occasionale e non continuativo</strong> il{" "}
-                  {new Date(professional.occasional_declared_at).toLocaleDateString("it-IT")}.
+                  ✅ Dichiarazione firmata il{" "}
+                  {new Date(professional.occasional_declared_at).toLocaleString("it-IT")}: <em>"{OCCASIONAL_DECLARATION}"</em>
                 </p>
               ) : (
                 <>
                   <p>
-                    <strong>Non hai la Partita IVA?</strong> Dichiara di svolgere l'attività in modo occasionale e non
-                    continuativo (prestazione occasionale, fino a 5.000 € l'anno).
+                    <strong>Non hai la Partita IVA?</strong> {OCCASIONAL_DECLARATION}
                   </p>
                   <Button variant="outline" className="w-full" onClick={declareOccasional} disabled={saving}>
-                    Dichiaro prestazione occasionale
+                    Confermo la dichiarazione
                   </Button>
                 </>
               )}

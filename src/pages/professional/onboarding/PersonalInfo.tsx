@@ -1,3 +1,4 @@
+import { OCCASIONAL_DECLARATION } from "@/lib/legal";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -281,8 +282,7 @@ export default function PersonalInfo() {
               }}
             />
             <span>
-              <strong>Non ho la Partita IVA.</strong> Dichiaro di svolgere l'attività in modo occasionale e non
-              continuativo (prestazione occasionale, fino a 5.000 € l'anno).
+              <strong>Non ho la Partita IVA.</strong> {OCCASIONAL_DECLARATION}
             </span>
           </label>
         </section>
