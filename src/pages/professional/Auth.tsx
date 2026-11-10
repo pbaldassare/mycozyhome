@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { TermsConsent } from "@/components/TermsConsent";
+import { TERMS_VERSION } from "@/lib/legal";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { authErrorMessage } from "@/lib/errors";
@@ -25,6 +27,7 @@ export default function ProfessionalAuth() {
     lastName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [consent, setConsent] = useState({ adult: false, terms: false });
 
   useEffect(() => {
     if ((location.state as { signup?: boolean } | null)?.signup) {
@@ -124,6 +127,10 @@ export default function ProfessionalAuth() {
         }
       } else {
         const validated = signupSchema.parse(formData);
+        if (!consent.adult || !consent.terms) {
+          setErrors({ consent: "Per registrarti devi confermare entrambe le dichiarazioni." });
+          return;
+        }
 
         const { data: signUpData, error } = await supabase.auth.signUp({
           email: validated.email,
@@ -135,6 +142,8 @@ export default function ProfessionalAuth() {
               last_name: validated.lastName,
               role: "professional",
               app: "mycozyhome",
+              terms_version: TERMS_VERSION,
+              adult_and_truthful: true,
             },
           },
         });
@@ -304,6 +313,10 @@ export default function ProfessionalAuth() {
                   <p className="text-xs text-destructive">{errors.confirmPassword}</p>
                 )}
               </div>
+            )}
+
+            {!isLogin && (
+              <TermsConsent value={consent} onChange={(v) => { setConsent(v); setErrors({ ...errors, consent: "" }); }} error={errors.consent} />
             )}
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>

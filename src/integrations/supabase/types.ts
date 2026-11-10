@@ -2036,6 +2036,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: undefined
       }
+      stamp_terms_ip: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       register_vat_number: {
         Args: { p_vat: string }
         Returns: undefined

@@ -137,6 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           setTimeout(() => {
             fetchUserData(session.user.id, session.user.email);
+            // Timbra IP e browser sull'accettazione dei Termini (no-op se già fatto).
+            if (event === "SIGNED_IN") void supabase.rpc("stamp_terms_ip");
           }, 0);
         } else {
           setProfile(null);
