@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlertCircle, Loader2, Tag, Repeat
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { CANCELLATION_NOTICE } from "@/lib/legal";
 import { PUBLIC_PROFESSIONAL_COLUMNS } from "@/lib/professional-columns";
 import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { useClientAddress } from "@/hooks/useClientAddress";
@@ -295,6 +296,9 @@ export default function BookingConfirm() {
                 {professional.first_name} {professional.last_name}
               </h3>
               <p className="text-sm text-muted-foreground">{professional.city}</p>
+              <p className="text-xs font-medium text-primary mt-0.5">
+                {professional.has_vat_number ? "Professionista con Partita IVA" : "Privato · prestazione occasionale"}
+              </p>
             </div>
           </div>
 
@@ -484,6 +488,10 @@ export default function BookingConfirm() {
               )}
             </div>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-border/50 bg-muted/40 p-3 text-xs text-muted-foreground">
+          <strong className="text-foreground">Regole di annullamento.</strong> {CANCELLATION_NOTICE}
         </div>
 
         {/* Payment Info */}
