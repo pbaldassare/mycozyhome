@@ -66,15 +66,19 @@ export default function BookingDetail() {
   const navigate = useNavigate();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [lateAck, setLateAck] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [withdrawName, setWithdrawName] = useState("");
+  const [withdrawChannel, setWithdrawChannel] = useState<"email" | "app">("email");
+  const [withdrawing, setWithdrawing] = useState(false);
   // Quanto torna al cliente se annulla adesso: lo calcola il DB con la stessa regola del rimborso.
   const { data: quote } = useQuery({
-    queryKey: ["cancellation-quote", id, showCancelDialog],
+    queryKey: ["cancellation-quote", id, showCancelDialog || withdrawOpen],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("cancellation_quote", { p_booking_id: id! });
       if (error) throw error;
       return data as unknown as { late: boolean; paid: number; refund: number; retained: number };
     },
-    enabled: !!id && showCancelDialog,
+    enabled: !!id && (showCancelDialog || withdrawOpen),
   });
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [showDisputeDialog, setShowDisputeDialog] = useState(false);
@@ -143,7 +147,7 @@ export default function BookingDetail() {
         .select(`
           *,
           professional:professionals(
-            id, user_id, first_name, last_name, avatar_url
+            id, user_id, first_name, last_name, avatar_url, has_vat_number
           )
         `)
         .eq("id", id)
@@ -154,6 +158,18 @@ export default function BookingDetail() {
     },
     enabled: !!id,
   });
+
+  const handleWithdraw = async () => {
+    if (!id) return;
+    setWithdrawing(true);
+    const { error } = await supabase.rpc("withdraw_booking", { p_booking_id: id, p_name: withdrawName, p_channel: withdrawChannel });
+    setWithdrawing(false);
+    if (error) return toast.error(toUserMessage(error, "Recesso non riuscito. Riprova."));
+    toast.success(`Recesso registrato il ${new Date().toLocaleString("it-IT")}.`);
+    setWithdrawOpen(false);
+    queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+    navigate("/client/bookings");
+  };
 
   const handleCancel = async () => {
     if (!id) return;
@@ -204,6 +220,9 @@ export default function BookingDetail() {
     booking.status !== "cancelled";
   const showReviewButton = booking.status === "completed" && canReviewBooking;
   const canCancel = booking.status === "pending" || booking.status === "confirmed";
+  // Con P.IVA: recesso entro 14 giorni dalla prenotazione (vale anche come annullamento).
+  const canWithdraw = canCancel && !!booking.professional?.has_vat_number
+    && Date.now() < new Date(booking.created_at).getTime() + 14 * 86_400_000;
   const canDispute = user && canDisputeBooking(booking);
   const paymentLabel = PAYMENT_STATUS_LABELS[booking.payment_status ?? "none"] ?? booking.payment_status;
 
@@ -574,7 +593,22 @@ export default function BookingDetail() {
             </Button>
           )}
 
-          {canCancel && (
+          {canWithdraw && (
+            <div className="space-y-1">
+              <Button
+                variant="outline"
+                className="w-full text-destructive border-destructive hover:bg-destructive/10"
+                size="lg"
+                onClick={() => setWithdrawOpen(true)}
+              >
+                <X className="h-5 w-5 mr-2" />
+                Recedi dal contratto qui
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">Funzione messa a disposizione per conto del professionista</p>
+            </div>
+          )}
+
+          {canCancel && !canWithdraw && (
             <Button 
               variant="outline" 
               className="w-full text-destructive border-destructive hover:bg-destructive/10" 
@@ -642,6 +676,61 @@ export default function BookingDetail() {
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
               Conferma annullamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={withdrawOpen} onOpenChange={setWithdrawOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Recesso dal contratto</DialogTitle>
+            <DialogDescription>
+              Dichiaro di recedere dal contratto relativo alla prenotazione del{" "}
+              {format(new Date(booking.scheduled_date), "d MMMM yyyy", { locale: it })} alle {booking.scheduled_time_start.slice(0, 5)} con{" "}
+              {booking.professional?.first_name} {booking.professional?.last_name}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <label className="block">
+              <span className="font-medium">Nome e cognome</span>
+              <Input value={withdrawName} onChange={(e) => setWithdrawName(e.target.value)} className="mt-1" />
+            </label>
+            <div>
+              <span className="font-medium">Dove vuoi la conferma</span>
+              <div className="mt-1 flex gap-2">
+                {(["email", "app"] as const).map((c) => (
+                  <Button key={c} type="button" size="sm" variant={withdrawChannel === c ? "default" : "outline"} onClick={() => setWithdrawChannel(c)}>
+                    {c === "email" ? "Email" : "Notifica in app"}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {quote?.late && (
+            <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p>
+                Rimborso: <strong>€{Number(quote.refund).toFixed(2)}</strong> · Trattenuti:{" "}
+                <strong className="text-destructive">€{Number(quote.retained).toFixed(2)}</strong>
+              </p>
+              <label className="flex items-start gap-2">
+                <Checkbox checked={lateAck} onCheckedChange={(c) => setLateAck(c === true)} className="mt-0.5" />
+                <span>Ho capito che annullando ora mi verranno trattenuti €{Number(quote.retained).toFixed(2)}.</span>
+              </label>
+            </div>
+          )}
+          {quote && !quote.late && (
+            <p className="text-sm text-muted-foreground">Ti rimborsiamo l'intero importo (€{Number(quote.refund).toFixed(2)}).</p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWithdrawOpen(false)}>Indietro</Button>
+            <Button
+              variant="destructive"
+              onClick={handleWithdraw}
+              disabled={withdrawing || withdrawName.trim().length < 3 || !quote || (quote.late && !lateAck)}
+            >
+              {withdrawing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              Conferma recesso
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2083,6 +2083,10 @@ export type Database = {
         Args: { p_booking_id: string }
         Returns: Json
       }
+      withdraw_booking: {
+        Args: { p_booking_id: string; p_name: string; p_channel: string }
+        Returns: undefined
+      }
       register_vat_number: {
         Args: { p_vat: string }
         Returns: undefined
