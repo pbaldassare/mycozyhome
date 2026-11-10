@@ -34,6 +34,7 @@ const FC_MESSAGES: Record<string, string> = {
   FC_DISPUTE_NOT_ALLOWED: "Non puoi aprire una contestazione su questa prenotazione.",
   FC_TRACKING_NOT_ALLOWED: "Operazione non consentita su questa prenotazione.",
   FC_PAYOUT_IBAN: "L'IBAN non è valido.",
+  FC_SERVICE_NOT_STARTED: "Puoi segnare il servizio come completato solo dopo l'orario di inizio.",
   FC_PAYOUT_AMOUNT: "Puoi prelevare almeno 10 €.",
   FC_PAYOUT_BALANCE: "Il saldo disponibile non è sufficiente.",
   FC_LEAVE_ACTIVE_BOOKINGS: "Hai prenotazioni, pagamenti o prelievi ancora in corso: chiudili prima di uscire.",

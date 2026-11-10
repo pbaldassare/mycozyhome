@@ -45,13 +45,13 @@ import {
   useProfessionalBookings,
   useUpdateBookingStatus,
 } from "@/hooks/useProfessionalData";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toUserMessage } from "@/lib/errors";
 import { supabase } from "@/integrations/supabase/client";
 import { ClientReviewForm } from "@/components/professional/ClientReviewForm";
 import { useCreateClientReview, useCanReviewClient } from "@/hooks/useClientReviews";
 import { useProfessionalFavorites } from "@/hooks/useProfessionalFavorites";
 import { useBookingTrackingByBookingIds, type BookingTracking } from "@/hooks/useBookingTracking";
-import { useGeofenceTracking, GEOFENCE_RADIUS_M } from "@/hooks/useGeofenceTracking";
 import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
 import { EnRouteButton, BookingPhotos } from "@/components/professional/BookingExtras";
@@ -113,136 +113,82 @@ function useAllProfessionalBookings(professionalId: string | undefined) {
     enabled: !!professionalId,
   });
 }
+const CHECKIN_REASONS: Record<string, string> = {
+  too_early: "È troppo presto: il check-in si apre 30 minuti prima dell'orario.",
+  too_late: "Sono passati più di 10 minuti dall'orario concordato.",
+  too_far: "Sei troppo lontano dall'indirizzo del servizio.",
+};
 
-/** Fuori dal componente pagina: se fosse definito nel render verrebbe rimontato a ogni render, riaprendo il GPS. */
-function TrackingActions({
-  booking,
-  trackingRecord,
-  professionalId,
-}: {
-  booking: ProfessionalBooking;
-  trackingRecord: TrackingRow | undefined;
-  professionalId: string | undefined;
-}) {
-  const isTodayBooking = isToday(parseISO(booking.scheduled_date));
-  const isActiveTracking = booking.status === "confirmed" && isTodayBooking;
+/** Un solo check-in (posizione e orario in quel momento) e poi "Servizio completato". Nessun tracciamento continuo. */
+function TrackingActions({ booking, trackingRecord }: { booking: ProfessionalBooking; trackingRecord: TrackingRow | undefined }) {
+  const queryClient = useQueryClient();
+  const [busy, setBusy] = useState(false);
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["booking-tracking-batch"] });
+    queryClient.invalidateQueries({ queryKey: ["professional-all-bookings"] });
+  };
 
-  const geofence = useGeofenceTracking(
-    booking.id,
-    professionalId,
-    booking.latitude,
-    booking.longitude,
-    isActiveTracking
-  );
+  if (trackingRecord?.status === "completed") {
+    return (
+      <div className="mt-3 flex items-center gap-2 rounded-lg bg-muted/50 p-3 text-sm">
+        <CheckCircle className="h-4 w-4 text-success" /> <span className="font-medium">Servizio completato</span>
+      </div>
+    );
+  }
+  if (booking.status !== "confirmed" || !isToday(parseISO(booking.scheduled_date))) return null;
 
-  if (booking.status !== "confirmed" || !isTodayBooking) {
-    // Show completed tracking info
-    if (trackingRecord?.status === "completed") {
-      return (
-        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <CheckCircle className="h-4 w-4 text-success" />
-            <span className="font-medium text-foreground">Presenza completata</span>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Ore effettive: {Number(trackingRecord.actual_hours).toFixed(1)}h / {booking.total_hours}h previste
-          </p>
-        </div>
-      );
+  const checkIn = async () => {
+    setBusy(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }));
+      const { data, error } = await supabase.rpc("check_in", { p_booking_id: booking.id, p_lat: pos.coords.latitude, p_lng: pos.coords.longitude });
+      if (error) throw error;
+      const r = data as unknown as { valid: boolean; reason?: string; distance_m?: number };
+      if (r.valid) toast.success("Check-in registrato ✓");
+      else toast.error(`Check-in non valido. ${CHECKIN_REASONS[r.reason ?? ""] ?? ""}${r.distance_m != null ? ` (distanza ${r.distance_m} m)` : ""}`);
+      refresh();
+    } catch (e) {
+      const code = (e as GeolocationPositionError | null)?.code;
+      toast.error(code === 1 ? "Consenti l'accesso alla posizione per fare il check-in." : toUserMessage(e, "Check-in non riuscito. Riprova."));
+    } finally {
+      setBusy(false);
     }
-    return null;
-  }
+  };
 
-  // GPS error
-  if (geofence.error) {
-    return (
-      <div className="mt-3 p-3 bg-destructive/5 rounded-lg border border-destructive/20">
-        <div className="flex items-center gap-2 text-sm text-destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <span>GPS: {geofence.error}</span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          Abilita la geolocalizzazione per il tracking automatico.
+  const complete = async () => {
+    setBusy(true);
+    const { error } = await supabase.rpc("complete_service", { p_booking_id: booking.id });
+    setBusy(false);
+    if (error) return toast.error(toUserMessage(error, "Operazione non riuscita. Riprova."));
+    toast.success("Servizio completato. Abbiamo avvisato il cliente.");
+    refresh();
+  };
+
+  const checkedIn = !!trackingRecord?.check_in_at;
+  return (
+    <div className="mt-3 space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+      {checkedIn ? (
+        <p className="flex items-center gap-1 text-sm font-medium text-success">
+          <CheckCircle className="h-4 w-4" /> Check-in alle {format(new Date(trackingRecord!.check_in_at!), "HH:mm")}
         </p>
-      </div>
-    );
-  }
-
-  // Waiting for GPS / not yet in zone
-  if (!geofence.autoCheckedIn) {
-    return (
-      <div className="mt-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <Radio className="h-4 w-4 animate-pulse text-primary" />
-          <span>Tracking automatico attivo</span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Il check-in verrà registrato automaticamente quando entrerai nella zona del cliente (entro {GEOFENCE_RADIUS_M}m).
-          {geofence.distanceM != null && (
-            <span className="block mt-1 font-medium">
-              Distanza attuale: {geofence.distanceM}m
-            </span>
-          )}
-        </p>
-      </div>
-    );
-  }
-
-  // Checked in, tracking active
-  if (geofence.autoCheckedIn && !geofence.autoCheckedOut) {
-    return (
-      <div className="mt-3 p-3 bg-success/5 rounded-lg border border-success/20">
-        <div className="flex items-center justify-between text-sm mb-2">
-          <span className="flex items-center gap-1 text-success font-medium">
-            <CheckCircle className="h-4 w-4" />
-            Check-in automatico ✓
-          </span>
-          <Badge
-            variant="secondary"
-            className={geofence.isInZone ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}
-          >
-            {geofence.isInZone ? (
-              <><Radio className="h-3 w-3 mr-1 animate-pulse" /> In zona</>
-            ) : (
-              <><AlertTriangle className="h-3 w-3 mr-1" /> Fuori zona ({geofence.distanceM}m)</>
-            )}
-          </Badge>
-        </div>
-        {geofence.leftZoneCount > 0 && (
-          <p className="text-xs text-warning mb-2">
-            ⚠️ Uscite dalla zona: {geofence.leftZoneCount} | Tempo fuori: {geofence.totalOutOfRangeMinutes.toFixed(0)} min
+      ) : (
+        <>
+          <p className="text-xs text-muted-foreground">
+            Quando arrivi, fai il check-in: registriamo la tua posizione solo in quel momento.
           </p>
-        )}
-        <p className="text-xs text-muted-foreground mb-2">
-          Il sistema monitora la tua posizione ogni aggiornamento GPS.
-        </p>
-        <Button
-          size="sm"
-          variant="outline"
-          className="w-full"
-          onClick={geofence.manualCheckOut}
-        >
-          <CheckCircle className="h-4 w-4 mr-1" />
-          Check-out manuale - Ho finito
-        </Button>
-      </div>
-    );
-  }
-
-  // Completed
-  if (geofence.autoCheckedOut) {
-    return (
-      <div className="mt-3 p-3 bg-muted/50 rounded-lg">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-          <CheckCircle className="h-4 w-4 text-success" />
-          <span className="font-medium text-foreground">Presenza completata (auto)</span>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+          <Button size="sm" className="w-full" onClick={checkIn} disabled={busy}>
+            {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <MapPin className="mr-1 h-4 w-4" />} Fai check-in
+          </Button>
+        </>
+      )}
+      <Button size="sm" variant="outline" className="w-full" onClick={complete} disabled={busy}>
+        <CheckCircle className="mr-1 h-4 w-4" /> Servizio completato
+      </Button>
+    </div>
+  );
 }
+
 
 export default function ProfessionalBookings() {
   const navigate = useNavigate();
@@ -460,7 +406,7 @@ export default function ProfessionalBookings() {
           {/* Contact actions for confirmed bookings */}
 
           {/* Tracking actions for confirmed bookings today */}
-          <TrackingActions booking={booking} trackingRecord={trackingMap[booking.id]} professionalId={professional?.id} />
+          <TrackingActions booking={booking} trackingRecord={trackingMap[booking.id]} />
 
           {booking.status === "confirmed" && isToday(parseISO(booking.scheduled_date)) && (
             <EnRouteButton

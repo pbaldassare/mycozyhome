@@ -2028,6 +2028,14 @@ export type Database = {
           years_experience: number | null
         }[]
       }
+      check_in: {
+        Args: { p_booking_id: string; p_lat: number; p_lng: number }
+        Returns: Json
+      }
+      complete_service: {
+        Args: { p_booking_id: string }
+        Returns: undefined
+      }
       register_vat_number: {
         Args: { p_vat: string }
         Returns: undefined
