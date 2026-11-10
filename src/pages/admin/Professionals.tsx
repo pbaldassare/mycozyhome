@@ -15,6 +15,7 @@ import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
 import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { insuranceExpiry, insuranceBadge } from "@/lib/insurance";
 import { toUserMessage } from "@/lib/errors";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -26,6 +27,7 @@ interface ProfessionalWithDocs extends Professional {
     url: string;
     status: string;
     uploadedAt: string;
+    expiresOn?: string | null;
   }[];
   firstName: string;
   lastName: string;
@@ -103,12 +105,13 @@ export default function Professionals() {
               url: doc.file_url,
               status: doc.status,
               uploadedAt: doc.uploaded_at,
+              expiresOn: doc.expires_on,
             })),
           };
         })
       );
 
-      return professionalsWithDocs;
+      return professionalsWithDocs.map((p) => ({ ...p, insuranceExpiresOn: insuranceExpiry(p.documents) }));
     },
   });
 
@@ -120,7 +123,7 @@ export default function Professionals() {
       notes,
     }: {
       id: string;
-      status: "approved" | "rejected";
+      status: "approved" | "rejected" | "suspended";
       notes?: string;
     }) => {
       const { error } = await supabase
@@ -128,7 +131,7 @@ export default function Professionals() {
         .update({
           status,
           admin_notes: notes || null,
-          approved_at: status === "approved" ? new Date().toISOString() : null,
+          ...(status !== "suspended" && { approved_at: status === "approved" ? new Date().toISOString() : null }),
         })
         .eq("id", id);
 
@@ -193,6 +196,16 @@ export default function Professionals() {
         description: "Impossibile rifiutare il professionista.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleSetOnline = async (id: string, online: boolean) => {
+    try {
+      await updateStatusMutation.mutateAsync({ id, status: online ? "approved" : "suspended", notes: online ? undefined : "Messo offline dall'admin" });
+      toast({ title: online ? "Profilo di nuovo online" : "Profilo messo offline" });
+      setSelectedProfessional(null);
+    } catch (error) {
+      toast({ title: "Errore", description: toUserMessage(error, "Operazione non riuscita."), variant: "destructive" });
     }
   };
 
@@ -271,6 +284,14 @@ export default function Professionals() {
       </div>
 
       {/* Tabs */}
+      {(() => {
+        const expired = professionals.filter((p) => p.status === "approved" && insuranceBadge(p.insuranceExpiresOn)?.expired);
+        return expired.length > 0 && (
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            ⚠️ {expired.length} profili online con polizza scaduta: {expired.map((p) => p.name).join(", ")}. Aprili e valuta "Metti offline".
+          </div>
+        );
+      })()}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid bg-muted/50 p-1 rounded-xl">
           <TabsTrigger
@@ -363,6 +384,7 @@ export default function Professionals() {
               professional={selectedProfessional}
               onApprove={handleApprove}
               onReject={handleReject}
+              onSetOnline={handleSetOnline}
               onClose={() => setSelectedProfessional(null)}
               onBlock={() => handleBlock(selectedProfessional.id)}
             />

@@ -890,6 +890,7 @@ export type Database = {
           admin_notes: string | null
           document_name: string
           document_type: string
+          expires_on: string | null
           file_size: number | null
           file_url: string
           id: string
@@ -903,6 +904,7 @@ export type Database = {
           admin_notes?: string | null
           document_name: string
           document_type: string
+          expires_on?: string | null
           file_size?: number | null
           file_url: string
           id?: string
@@ -916,6 +918,7 @@ export type Database = {
           admin_notes?: string | null
           document_name?: string
           document_type?: string
+          expires_on?: string | null
           file_size?: number | null
           file_url?: string
           id?: string

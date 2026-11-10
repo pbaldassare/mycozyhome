@@ -23,6 +23,7 @@ interface Document {
   file_url: string;
   status: string;
   uploaded_at: string;
+  expires_on?: string | null;
 }
 
 const requiredDocuments = [
@@ -61,6 +62,8 @@ const statusConfig = {
 export default function DocumentsUpload() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [insuranceExpiry, setInsuranceExpiry] = useState("");
+  const today = new Date().toISOString().slice(0, 10);
   const [uploading, setUploading] = useState<string | null>(null);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -107,6 +110,10 @@ export default function DocumentsUpload() {
 
   const handleFileSelect = async (docType: string, file: File) => {
     if (!professionalId || !userId) return;
+    if (docType === "insurance" && !(insuranceExpiry > today)) {
+      toast.error("Inserisci la data di scadenza della polizza (deve essere futura).");
+      return;
+    }
 
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -142,6 +149,7 @@ export default function DocumentsUpload() {
           file_url: filePath,
           file_size: file.size,
           status: "pending",
+          expires_on: docType === "insurance" ? insuranceExpiry : null,
         });
 
       if (dbError) throw dbError;
@@ -288,6 +296,11 @@ export default function DocumentsUpload() {
                         <div className="flex items-center gap-2 min-w-0">
                           <StatusIcon className={cn("w-4 h-4 flex-shrink-0", status?.color)} />
                           <span className="text-sm truncate">{doc.document_name}</span>
+                          {doc.expires_on && (
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              scade il {new Date(doc.expires_on).toLocaleDateString("it-IT")}
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <span className={cn("text-xs", status?.color)}>
@@ -308,6 +321,18 @@ export default function DocumentsUpload() {
                 </div>
               )}
 
+              {docConfig.type === "insurance" && (
+                <label className="mb-3 block text-sm">
+                  <span className="font-medium">Data di scadenza della polizza *</span>
+                  <input
+                    type="date"
+                    min={today}
+                    value={insuranceExpiry}
+                    onChange={(e) => setInsuranceExpiry(e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-border bg-background px-3 py-2"
+                  />
+                </label>
+              )}
               <input
                 type="file"
                 ref={(el) => (fileInputRefs.current[docConfig.type] = el)}

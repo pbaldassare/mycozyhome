@@ -1,6 +1,7 @@
 import { Check, X, Eye, FileText, MapPin, Star, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { insuranceBadge } from "@/lib/insurance";
 import { cn } from "@/lib/utils";
 
 import { SERVICE_LABELS as serviceLabels } from "@/lib/services";
@@ -18,6 +19,7 @@ export interface Professional {
   submittedAt: string;
   isBlocked?: boolean;
   blockedReason?: string | null;
+  insuranceExpiresOn?: string | null;
 }
 
 interface ProfessionalCardProps {
@@ -77,6 +79,12 @@ export function ProfessionalCard({
               <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-medium", status.className)}>
                 {status.label}
               </span>
+              {insuranceBadge(professional.insuranceExpiresOn) && (
+                <span className={cn("inline-flex items-center px-3 py-1 rounded-full text-xs font-medium",
+                  insuranceBadge(professional.insuranceExpiresOn)!.expired ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning")}>
+                  {insuranceBadge(professional.insuranceExpiresOn)!.label}
+                </span>
+              )}
               {professional.isBlocked && (
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blush/20 text-blush-dark border border-blush/50">
                   Bloccato

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -49,6 +50,7 @@ interface Document {
   status: "pending" | "approved" | "rejected";
   uploadedAt: string;
   fileSize?: number;
+  expiresOn?: string | null;
 }
 
 export interface ProfessionalData {
@@ -78,6 +80,7 @@ interface ProfessionalReviewPanelProps {
   professional: ProfessionalData;
   onApprove: (id: string, notes: string) => void;
   onReject: (id: string, notes: string) => void;
+  onSetOnline?: (id: string, online: boolean) => void;
   onClose: () => void;
   onBlock?: () => void;
 }
@@ -102,6 +105,7 @@ export function ProfessionalReviewPanel({
   professional,
   onApprove,
   onReject,
+  onSetOnline,
   onClose,
   onBlock,
 }: ProfessionalReviewPanelProps) {
@@ -325,6 +329,11 @@ export function ProfessionalReviewPanel({
                       {format(new Date(doc.uploadedAt), "d MMM yyyy", {
                         locale: it,
                       })}
+                      {doc.expiresOn && (
+                        <span className={cn("ml-1", new Date(doc.expiresOn + "T23:59:59") < new Date() && "font-semibold text-destructive")}>
+                          • scade il {format(new Date(doc.expiresOn), "d MMM yyyy", { locale: it })}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -409,6 +418,16 @@ export function ProfessionalReviewPanel({
             Approva
           </Button>
         </div>
+      )}
+
+      {onSetOnline && (professional.status === "approved" || professional.status === "suspended") && (
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => onSetOnline(professional.id, professional.status === "suspended")}
+        >
+          {professional.status === "approved" ? "Metti offline (profilo invisibile ai clienti)" : "Rimetti online"}
+        </Button>
       )}
 
       {professional.status === "approved" && onBlock && (
