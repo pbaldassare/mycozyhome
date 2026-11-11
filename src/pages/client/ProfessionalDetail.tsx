@@ -366,6 +366,12 @@ export default function ProfessionalDetail() {
               {review.comment && (
                 <p className="text-sm text-muted-foreground">{review.comment}</p>
               )}
+              {review.professional_reply && (
+                <p className="mt-2 rounded-lg border-l-2 border-primary bg-primary/5 px-3 py-2 text-sm">
+                  <span className="block text-xs font-semibold text-primary">Risposta del professionista</span>
+                  {review.professional_reply}
+                </p>
+              )}
             </div>
           ))}
           

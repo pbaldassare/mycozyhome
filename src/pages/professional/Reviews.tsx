@@ -1,3 +1,10 @@
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { toUserMessage } from "@/lib/errors";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
@@ -175,6 +182,7 @@ export default function ProfessionalReviews() {
                             {review.comment}
                           </p>
                         )}
+                        <ReviewReply reviewId={review.id} reply={review.professional_reply} />
                       </div>
                     </div>
                   </CardContent>
@@ -183,6 +191,49 @@ export default function ProfessionalReviews() {
             )}
           </div>
         </section>
+      </div>
+    </div>
+  );
+}
+
+/** Risposta pubblica del professionista a una recensione (TP 12.2). */
+function ReviewReply({ reviewId, reply }: { reviewId: string; reply: string | null }) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(reply ?? "");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.rpc("reply_to_review", { p_review_id: reviewId, p_reply: text });
+    setSaving(false);
+    if (error) return toast.error(toUserMessage(error, "Risposta non salvata. Riprova."));
+    toast.success("Risposta pubblicata");
+    setEditing(false);
+    queryClient.invalidateQueries({ queryKey: ["professional-own-reviews"] });
+  };
+
+  if (!editing) {
+    return (
+      <div className="mt-2">
+        {reply && (
+          <p className="rounded-lg border-l-2 border-primary bg-primary/5 px-3 py-2 text-sm">
+            <span className="block text-xs font-semibold text-primary">La tua risposta</span>
+            {reply}
+          </p>
+        )}
+        <button onClick={() => setEditing(true)} className="mt-1 text-xs font-semibold text-primary">
+          {reply ? "Modifica risposta" : "Rispondi"}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-2 space-y-2">
+      <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} placeholder="Scrivi una risposta pubblica" />
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setEditing(false)}>Annulla</Button>
+        <Button size="sm" onClick={save} disabled={saving || text.trim().length < 2}>Pubblica</Button>
       </div>
     </div>
   );

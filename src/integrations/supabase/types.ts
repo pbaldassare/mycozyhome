@@ -1240,6 +1240,8 @@ export type Database = {
           created_at: string
           id: string
           is_visible: boolean | null
+          professional_reply: string | null
+          professional_reply_at: string | null
           professional_id: string
           rating: number
           updated_at: string
@@ -1256,6 +1258,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_visible?: boolean | null
+          professional_reply?: string | null
+          professional_reply_at?: string | null
           professional_id: string
           rating: number
           updated_at?: string
@@ -1272,6 +1276,8 @@ export type Database = {
           created_at?: string
           id?: string
           is_visible?: boolean | null
+          professional_reply?: string | null
+          professional_reply_at?: string | null
           professional_id?: string
           rating?: number
           updated_at?: string
@@ -2085,6 +2091,10 @@ export type Database = {
       }
       withdraw_booking: {
         Args: { p_booking_id: string; p_name: string; p_channel: string }
+        Returns: undefined
+      }
+      reply_to_review: {
+        Args: { p_review_id: string; p_reply: string }
         Returns: undefined
       }
       register_vat_number: {

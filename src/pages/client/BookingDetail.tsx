@@ -218,7 +218,9 @@ export default function BookingDetail() {
   const isUpcoming = !isBookingOver(booking) && 
     booking.status !== "completed" && 
     booking.status !== "cancelled";
-  const showReviewButton = booking.status === "completed" && canReviewBooking;
+  // TP 12.2: si recensisce entro 3 giorni dal servizio (il DB lo verifica comunque).
+  const reviewExpired = !!booking.completed_at && Date.now() > new Date(booking.completed_at).getTime() + 3 * 86_400_000;
+  const showReviewButton = booking.status === "completed" && canReviewBooking && !reviewExpired;
   const canCancel = booking.status === "pending" || booking.status === "confirmed";
   // Con P.IVA: recesso entro 14 giorni dalla prenotazione (vale anche come annullamento).
   const canWithdraw = canCancel && !!booking.professional?.has_vat_number
@@ -572,6 +574,12 @@ export default function BookingDetail() {
               <Star className="h-5 w-5 mr-2" />
               Lascia una recensione
             </Button>
+          )}
+
+          {booking.status === "completed" && canReviewBooking && reviewExpired && (
+            <div className="text-center text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+              Il tempo per recensire (3 giorni dal servizio) è scaduto.
+            </div>
           )}
 
           {booking.status === "completed" && !canReviewBooking && (
