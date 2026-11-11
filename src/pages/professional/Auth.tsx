@@ -27,7 +27,7 @@ export default function ProfessionalAuth() {
     lastName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [consent, setConsent] = useState({ adult: false, terms: false });
+  const [consent, setConsent] = useState({ adult: false, terms: false, clauses: false });
 
   useEffect(() => {
     if ((location.state as { signup?: boolean } | null)?.signup) {
@@ -127,8 +127,8 @@ export default function ProfessionalAuth() {
         }
       } else {
         const validated = signupSchema.parse(formData);
-        if (!consent.adult || !consent.terms) {
-          setErrors({ consent: "Per registrarti devi confermare entrambe le dichiarazioni." });
+        if (!consent.adult || !consent.terms || !consent.clauses) {
+          setErrors({ consent: "Per registrarti devi confermare tutte le dichiarazioni." });
           return;
         }
 
@@ -144,6 +144,7 @@ export default function ProfessionalAuth() {
               app: "mycozyhome",
               terms_version: TERMS_VERSION,
               adult_and_truthful: true,
+              specific_approval: true,
             },
           },
         });
@@ -316,7 +317,7 @@ export default function ProfessionalAuth() {
             )}
 
             {!isLogin && (
-              <TermsConsent value={consent} onChange={(v) => { setConsent(v); setErrors({ ...errors, consent: "" }); }} error={errors.consent} />
+              <TermsConsent role="professional" value={consent} onChange={(v) => { setConsent(v); setErrors({ ...errors, consent: "" }); }} error={errors.consent} />
             )}
 
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
