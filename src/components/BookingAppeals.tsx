@@ -18,7 +18,7 @@ const TEXT = {
   complaint: {
     button: "Presenta reclamo contro la decisione",
     title: "Reclamo interno",
-    help: "Il reclamo viene esaminato da un operatore diverso da chi ha deciso. Riceverai una risposta motivata entro 60 giorni.",
+    help: "Il reclamo viene esaminato da un operatore diverso da chi ha deciso. Si presenta entro 1 mese dalla decisione; riceverai una risposta motivata entro 60 giorni.",
   },
 };
 
