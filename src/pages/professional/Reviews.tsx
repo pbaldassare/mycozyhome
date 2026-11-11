@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ReportContentButton } from "@/components/ReportContentButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -183,6 +184,11 @@ export default function ProfessionalReviews() {
                           </p>
                         )}
                         <ReviewReply reviewId={review.id} reply={review.professional_reply} />
+                        <ReportContentButton
+                          targetType="review"
+                          targetId={review.id}
+                          location={`Recensione del ${format(new Date(review.created_at), "dd/MM/yyyy")} sul mio profilo`}
+                        />
                       </div>
                     </div>
                   </CardContent>

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCreateConversation } from "@/hooks/useConversations";
 import { useReviewPhotos } from "@/hooks/useBookingPhotos";
+import { ReportContentButton } from "@/components/ReportContentButton";
 
 
 import { SERVICE_LABELS as serviceTypeLabels } from "@/lib/services";
@@ -180,9 +181,16 @@ export default function ProfessionalDetail() {
           </div>
           
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-foreground">
-              {professional.first_name} {professional.last_name}
-            </h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-xl font-bold text-foreground">
+                {professional.first_name} {professional.last_name}
+              </h1>
+              <ReportContentButton
+                targetType="professional"
+                targetId={professional.id}
+                location={`Profilo di ${professional.first_name} ${professional.last_name}`}
+              />
+            </div>
             
             <div className="flex items-center gap-3 mt-1">
               {(professional.average_rating ?? 0) > 0 && (
@@ -362,6 +370,13 @@ export default function ProfessionalDetail() {
                 <span className="text-xs text-muted-foreground">
                   {new Date(review.created_at).toLocaleDateString("it-IT")}
                 </span>
+                <div className="ml-auto">
+                  <ReportContentButton
+                    targetType="review"
+                    targetId={review.id}
+                    location={`Recensione del ${new Date(review.created_at).toLocaleDateString("it-IT")} su ${professional.first_name} ${professional.last_name}`}
+                  />
+                </div>
               </div>
               {review.comment && (
                 <p className="text-sm text-muted-foreground">{review.comment}</p>

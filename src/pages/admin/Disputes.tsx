@@ -419,6 +419,7 @@ export default function Disputes() {
         </DialogContent>
       </Dialog>
 
+      <ContentReportsQueue />
       <AppealsQueue />
     </div>
   );
@@ -468,6 +469,65 @@ function AppealsQueue() {
               />
               <Button size="sm" onClick={() => answer(a.id)} disabled={(answers[a.id] || "").trim().length < 10}>
                 Invia risposta
+              </Button>
+            </>
+          )}
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// Segnalazioni di contenuti illeciti su profili e recensioni (Policy §2-3): urgenti in cima.
+function ContentReportsQueue() {
+  const [reports, setReports] = useState<Tables<"content_reports">[]>([]);
+  const [decisions, setDecisions] = useState<Record<string, string>>({});
+
+  const load = () =>
+    supabase
+      .from("content_reports")
+      .select("*")
+      .order("status", { ascending: false })
+      .order("urgent", { ascending: false })
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setReports(data || []));
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function decide(id: string) {
+    const { error } = await supabase.rpc("decide_content_report", { p_report_id: id, p_decision: decisions[id] || "" });
+    toast(error ? { title: toUserMessage(error), variant: "destructive" } : { title: "Decisione registrata" });
+    if (!error) load();
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-semibold">Segnalazioni di contenuti</h2>
+      {reports.length === 0 && <p className="text-sm text-muted-foreground">Nessuna segnalazione.</p>}
+      {reports.map((r) => (
+        <div key={r.id} className="rounded-2xl border border-border/30 bg-card p-4 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {r.urgent && r.status === "open" && <Badge variant="destructive">Urgente: sicurezza o minori</Badge>}
+            <Badge variant="secondary">{r.target_type === "review" ? "Recensione" : "Profilo"}</Badge>
+            <span className="text-xs text-muted-foreground ml-auto">{new Date(r.created_at).toLocaleString("it-IT")}</span>
+          </div>
+          <p className="text-sm font-medium">{r.location}</p>
+          <p className="text-sm whitespace-pre-wrap">{r.reason}</p>
+          <p className="text-xs text-muted-foreground">
+            Da: {[r.reporter_name, r.reporter_email].filter(Boolean).join(" · ") || "anonimo (urgente)"}
+          </p>
+          {r.status === "closed" ? (
+            <p className="text-sm rounded-lg bg-muted/50 p-3 whitespace-pre-wrap">{r.decision}</p>
+          ) : (
+            <>
+              <Textarea
+                placeholder="Decisione motivata (es. contenuto rimosso, profilo sospeso, nessuna violazione)"
+                value={decisions[r.id] || ""}
+                onChange={(e) => setDecisions({ ...decisions, [r.id]: e.target.value })}
+              />
+              <Button size="sm" onClick={() => decide(r.id)} disabled={(decisions[r.id] || "").trim().length < 10}>
+                Registra decisione
               </Button>
             </>
           )}

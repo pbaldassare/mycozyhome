@@ -44,6 +44,8 @@ const FC_MESSAGES: Record<string, string> = {
   FC_BANNED: "Registrazione non consentita. Per chiarimenti scrivi all'assistenza o a ri-sco@pec.it.",
   FC_COMPLAINT_WINDOW: "Il reclamo si può presentare entro 1 mese dalla decisione.",
   FC_SAME_OPERATOR: "Il reclamo deve essere esaminato da un operatore diverso da chi ha preso la decisione.",
+  FC_INVALID_INPUT: "Dati non validi: controlla i campi e riprova.",
+  FC_RATE_LIMIT: "Hai inviato troppe segnalazioni oggi. Riprova domani o scrivi a ri-sco@pec.it.",
   FC_PAYOUT_AMOUNT: "Puoi prelevare almeno 10 €.",
   FC_PAYOUT_BALANCE: "Il saldo disponibile non è sufficiente.",
   FC_LEAVE_ACTIVE_BOOKINGS: "Hai prenotazioni, pagamenti o prelievi ancora in corso: chiudili prima di uscire.",

@@ -762,6 +762,28 @@ export type Database = {
         Update: never
         Relationships: []
       }
+      content_reports: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision: string | null
+          good_faith: boolean
+          id: string
+          location: string
+          reason: string
+          reporter_email: string | null
+          reporter_id: string | null
+          reporter_name: string | null
+          status: string
+          target_id: string
+          target_type: string
+          urgent: boolean
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       client_pro_relations: {
         Row: {
           buyout_amount: number | null
@@ -2200,6 +2222,20 @@ export type Database = {
         Args: { p_action: string; p_reason: string; p_role: string; p_user_id: string }
         Returns: undefined
       }
+      report_content: {
+        Args: {
+          p_email: string
+          p_good_faith: boolean
+          p_location: string
+          p_name: string
+          p_reason: string
+          p_target_id: string
+          p_target_type: string
+          p_urgent: boolean
+        }
+        Returns: string
+      }
+      decide_content_report: { Args: { p_decision: string; p_report_id: string }; Returns: undefined }
       request_buyout: { Args: { p_client_id: string }; Returns: undefined }
       mark_buyout_paid: { Args: { p_client_id: string; p_professional_id: string }; Returns: undefined }
       reply_to_review: {
