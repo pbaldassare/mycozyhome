@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CalendarCheck, Clock, CreditCard, Heart, Search, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LegalContacts } from "@/components/LegalContacts";
 
 const TRUST = [
   { icon: ShieldCheck, label: "Professionisti verificati" },
@@ -123,6 +124,8 @@ export default function Welcome() {
           Hai già un account?{" "}
           <button onClick={() => navigate("/login")} className="font-semibold text-primary">Accedi</button>
         </p>
+
+        <div className="mt-8"><LegalContacts /></div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useInstallPWA } from "@/hooks/useInstallPWA";
 import { getTheme, setTheme, type ThemeChoice } from "@/lib/theme";
 import { AccountDataSection } from "@/components/AccountDataSection";
+import { LegalContacts } from "@/components/LegalContacts";
 
 const THEMES: { id: ThemeChoice; label: string; icon: typeof Sun }[] = [
   { id: "light", label: "Chiaro", icon: Sun },
@@ -96,6 +97,8 @@ export function SettingsScreen({ backPath, showAccountData = false }: { backPath
         )}
 
         {showAccountData && <AccountDataSection />}
+
+        <LegalContacts supportPath={backPath.startsWith("/professional") ? "/professional/support" : "/client/support"} />
       </main>
     </div>
   );

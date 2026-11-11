@@ -14,3 +14,6 @@ export const EARLY_EXECUTION_TEXT =
   "Chiedo che il Servizio, compresa la fase di preparazione che inizia 3 ore prima dell'orario concordato, sia eseguito durante il periodo di recesso. Prendo atto che, se annullo o recedo dopo l'inizio della fase di preparazione, pagherò il 50% del prezzo come corrispettivo della preparazione già svolta, e che perderò il diritto di recesso una volta eseguito completamente il Servizio.";
 /** Versione del testo qui sopra: cambiarla a ogni modifica del testo. */
 export const EARLY_EXECUTION_VERSION = "2026-11-05";
+
+/** Contatti indicati nei Termini: PEC, anche punto di contatto unico DSA (specifiche §11). */
+export const LEGAL_PEC = "ri-sco@pec.it";
