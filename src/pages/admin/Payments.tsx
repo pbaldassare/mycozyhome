@@ -194,6 +194,85 @@ export default function Payments() {
           )}
         </div>
       </section>
+
+      <BuyoutRequests />
     </div>
+  );
+}
+
+// Quote di riscatto (PT, TP 9.10): richieste dai professionisti, pagamento segnato a mano finché non c'è Stripe.
+function BuyoutRequests() {
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["admin-buyouts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_pro_relations")
+        .select("*")
+        .not("buyout_requested_at", "is", null)
+        .order("buyout_requested_at", { ascending: false });
+      if (error) throw error;
+      const proIds = data.map((r) => r.professional_id);
+      const clientIds = data.map((r) => r.client_id);
+      const [{ data: pros }, { data: clients }] = await Promise.all([
+        supabase.from("professionals").select("id, first_name, last_name").in("id", proIds),
+        supabase.from("client_profiles").select("user_id, first_name, last_name").in("user_id", clientIds),
+      ]);
+      const name = (u?: { first_name: string | null; last_name: string | null }) => [u?.first_name, u?.last_name].filter(Boolean).join(" ") || "—";
+      return data.map((r) => ({
+        ...r,
+        pro: name(pros?.find((p) => p.id === r.professional_id)),
+        client: name(clients?.find((c) => c.user_id === r.client_id)),
+      }));
+    },
+  });
+
+  async function markPaid(clientId: string, professionalId: string) {
+    const { error } = await supabase.rpc("mark_buyout_paid", { p_client_id: clientId, p_professional_id: professionalId });
+    if (error) return toast.error(toUserMessage(error));
+    toast.success("Quota segnata come pagata");
+    queryClient.invalidateQueries({ queryKey: ["admin-buyouts"] });
+  }
+
+  return (
+    <section className="space-y-4">
+      <h2 className="text-xl font-semibold">Quote di riscatto</h2>
+      <div className="bg-card rounded-2xl border border-border/30 overflow-x-auto">
+        {!data?.length ? (
+          <p className="p-6 text-sm text-muted-foreground">Nessuna richiesta.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Professionista</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Primo servizio</TableHead>
+                <TableHead>Richiesta</TableHead>
+                <TableHead className="text-right">Quota</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((r) => (
+                <TableRow key={r.client_id + r.professional_id}>
+                  <TableCell>{r.pro}</TableCell>
+                  <TableCell>{r.client}</TableCell>
+                  <TableCell>{format(parseISO(r.first_service_at), "d MMM yyyy", { locale: it })}</TableCell>
+                  <TableCell>{format(parseISO(r.buyout_requested_at!), "d MMM yyyy", { locale: it })}</TableCell>
+                  <TableCell className="text-right">
+                    {r.buyout_paid_at ? (
+                      <Badge variant="secondary">Pagata</Badge>
+                    ) : (
+                      <Button size="sm" onClick={() => markPaid(r.client_id, r.professional_id)}>
+                        Segna pagata ({euro(Number(r.buyout_amount))})
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+    </section>
   );
 }

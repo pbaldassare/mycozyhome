@@ -724,6 +724,19 @@ export type Database = {
         }
         Relationships: []
       }
+      client_pro_relations: {
+        Row: {
+          buyout_amount: number | null
+          buyout_paid_at: string | null
+          buyout_requested_at: string | null
+          client_id: string
+          first_service_at: string
+          professional_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -2140,6 +2153,8 @@ export type Database = {
         Args: never
         Returns: { professional_id: string; completed: number }[]
       }
+      request_buyout: { Args: { p_client_id: string }; Returns: undefined }
+      mark_buyout_paid: { Args: { p_client_id: string; p_professional_id: string }; Returns: undefined }
       reply_to_review: {
         Args: { p_review_id: string; p_reply: string }
         Returns: undefined

@@ -120,6 +120,36 @@ const CHECKIN_REASONS: Record<string, string> = {
 };
 
 /** Un solo check-in (posizione e orario in quel momento) e poi "Servizio completato". Nessun tracciamento continuo. */
+// TP 9.10 / PT: per 12 mesi dal primo servizio, continuare fuori piattaforma richiede la quota di riscatto.
+function BuyoutButton({ clientId }: { clientId: string }) {
+  const queryClient = useQueryClient();
+  const { data: relations } = useQuery({
+    queryKey: ["client-pro-relations"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("client_pro_relations").select("client_id, buyout_requested_at, buyout_paid_at");
+      if (error) throw error;
+      return data;
+    },
+  });
+  const rel = relations?.find((r) => r.client_id === clientId);
+  if (!rel) return null;
+  if (rel.buyout_paid_at) return <p className="mt-2 text-xs text-muted-foreground">Quota di riscatto pagata: puoi lavorare con questo cliente anche fuori dall'app.</p>;
+  if (rel.buyout_requested_at) return <p className="mt-2 text-xs text-muted-foreground">Quota di riscatto richiesta (€ 2.000): ti contatteremo per il pagamento.</p>;
+
+  async function request() {
+    if (!confirm("Vuoi continuare a lavorare con questo cliente fuori da MyCozyHome? Entro 12 mesi dal primo servizio è dovuta la quota di riscatto di € 2.000.")) return;
+    const { error } = await supabase.rpc("request_buyout", { p_client_id: clientId });
+    if (error) return toast.error(toUserMessage(error));
+    toast.success("Richiesta inviata");
+    queryClient.invalidateQueries({ queryKey: ["client-pro-relations"] });
+  }
+  return (
+    <Button size="sm" variant="ghost" className="w-full mt-2 text-xs text-muted-foreground" onClick={request}>
+      Voglio continuare fuori piattaforma con questo cliente
+    </Button>
+  );
+}
+
 function TrackingActions({ booking, trackingRecord }: { booking: ProfessionalBooking; trackingRecord: TrackingRow | undefined }) {
   const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
@@ -446,6 +476,7 @@ export default function ProfessionalBookings() {
                 <Star className="h-4 w-4 mr-1" />
                 Valuta il cliente
               </Button>
+              <BuyoutButton clientId={booking.client_id} />
             </div>
           )}
 
