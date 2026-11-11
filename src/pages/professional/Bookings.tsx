@@ -55,6 +55,7 @@ import { useBookingTrackingByBookingIds, type BookingTracking } from "@/hooks/us
 import { useProfessionalRevenue } from "@/hooks/useProfessionalRevenue";
 import { RevenueLimitBanner } from "@/components/professional/RevenueLimitBanner";
 import { EnRouteButton, BookingPhotos } from "@/components/professional/BookingExtras";
+import { BookingAppeals } from "@/components/BookingAppeals";
 import { DisputeForm } from "@/components/dispute/DisputeForm";
 import { canDisputeBooking } from "@/lib/payment-flow";
 import { useAuth } from "@/hooks/useAuth";
@@ -477,6 +478,12 @@ export default function ProfessionalBookings() {
                 Valuta il cliente
               </Button>
               <BuyoutButton clientId={booking.client_id} />
+            </div>
+          )}
+
+          {(booking.status === "completed" || booking.client_absent_at) && (
+            <div className="mt-2">
+              <BookingAppeals bookingId={booking.id} automaticOutcome={!!booking.no_show_outcome || !!booking.client_absent_at} />
             </div>
           )}
 

@@ -26,6 +26,9 @@ import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { toast } from "@/hooks/use-toast";
 import { DisputeDetail } from "@/components/admin/DisputeDetail";
+import { Textarea } from "@/components/ui/textarea";
+import { toUserMessage } from "@/lib/errors";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface Dispute {
   id: string;
@@ -415,6 +418,61 @@ export default function Disputes() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AppealsQueue />
     </div>
+  );
+}
+
+// Verifiche di una persona e reclami interni (specifiche §5, §10-11): risposta motivata, entro 60 giorni.
+function AppealsQueue() {
+  const [appeals, setAppeals] = useState<Tables<"appeals">[]>([]);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const load = () =>
+    supabase.from("appeals").select("*").order("created_at", { ascending: false }).then(({ data }) => setAppeals(data || []));
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function answer(id: string) {
+    const { error } = await supabase.rpc("answer_appeal", { p_appeal_id: id, p_answer: answers[id] || "" });
+    toast(error ? { title: toUserMessage(error), variant: "destructive" } : { title: "Risposta inviata" });
+    if (!error) load();
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-xl font-semibold">Verifiche e reclami</h2>
+      {appeals.length === 0 && <p className="text-sm text-muted-foreground">Nessuna richiesta.</p>}
+      {appeals.map((a) => (
+        <div key={a.id} className="rounded-2xl border border-border/30 bg-card p-4 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <Badge variant="secondary">{a.kind === "complaint" ? "Reclamo" : "Verifica di una persona"}</Badge>
+            <span className="text-xs text-muted-foreground">
+              {a.status === "answered" ? "Risposta inviata" : `Rispondere entro il ${new Date(a.reply_due_at).toLocaleDateString("it-IT")}`}
+            </span>
+          </div>
+          {a.kind === "human_review" && (
+            <p className="text-xs text-muted-foreground">Controlla solo che la regola sia stata applicata correttamente ai dati, senza riesaminare il merito.</p>
+          )}
+          <p className="text-sm whitespace-pre-wrap">{a.message}</p>
+          {a.status === "answered" ? (
+            <p className="text-sm rounded-lg bg-muted/50 p-3 whitespace-pre-wrap">{a.answer}</p>
+          ) : (
+            <>
+              <Textarea
+                placeholder="Risposta motivata"
+                value={answers[a.id] || ""}
+                onChange={(e) => setAnswers({ ...answers, [a.id]: e.target.value })}
+              />
+              <Button size="sm" onClick={() => answer(a.id)} disabled={(answers[a.id] || "").trim().length < 10}>
+                Invia risposta
+              </Button>
+            </>
+          )}
+        </div>
+      ))}
+    </section>
   );
 }

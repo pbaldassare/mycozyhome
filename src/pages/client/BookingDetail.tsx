@@ -1,3 +1,4 @@
+import { BookingAppeals } from "@/components/BookingAppeals";
 import { isBookingOver } from "@/lib/booking-time";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -622,9 +623,11 @@ export default function BookingDetail() {
             <div className="rounded-lg bg-muted/50 p-3 text-center text-sm text-muted-foreground">
               {booking.no_show_outcome === "refunded_no_checkin"
                 ? "Segnalazione accolta: nessun check-in registrato, ti abbiamo rimborsato l'intero importo."
-                : "Segnalazione registrata: il professionista aveva fatto un check-in valido, quindi il pagamento gli è stato versato. Se non sei d'accordo puoi chiedere la verifica di una persona all'assistenza."}
+                : "Segnalazione registrata: il professionista aveva fatto un check-in valido, quindi il pagamento gli è stato versato. Se non sei d'accordo puoi chiedere la verifica di una persona."}
             </div>
           )}
+
+          <BookingAppeals bookingId={booking.id} automaticOutcome={!!booking.no_show_outcome || !!booking.client_absent_at} />
 
           {canDispute && (
             <Button

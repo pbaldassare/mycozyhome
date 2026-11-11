@@ -724,6 +724,26 @@ export type Database = {
         }
         Relationships: []
       }
+      appeals: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          answered_by: string | null
+          booking_id: string | null
+          created_at: string
+          dispute_id: string | null
+          id: string
+          kind: string
+          message: string
+          original_decider: string | null
+          reply_due_at: string
+          status: string
+          user_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       client_pro_relations: {
         Row: {
           buyout_amount: number | null
@@ -2153,6 +2173,11 @@ export type Database = {
         Args: never
         Returns: { professional_id: string; completed: number }[]
       }
+      create_appeal: {
+        Args: { p_booking_id: string | null; p_dispute_id: string | null; p_kind: string; p_message: string }
+        Returns: string
+      }
+      answer_appeal: { Args: { p_answer: string; p_appeal_id: string }; Returns: undefined }
       request_buyout: { Args: { p_client_id: string }; Returns: undefined }
       mark_buyout_paid: { Args: { p_client_id: string; p_professional_id: string }; Returns: undefined }
       reply_to_review: {
