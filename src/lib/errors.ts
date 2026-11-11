@@ -39,6 +39,8 @@ const FC_MESSAGES: Record<string, string> = {
   FC_REVIEW_EXPIRED: "Puoi lasciare una recensione entro 3 giorni dal servizio.",
   FC_NO_SHOW_WINDOW: "La segnalazione si può fare solo entro 3 ore dal servizio completato.",
   FC_CHECKIN_REQUIRED: "Serve un check-in valido per segnalare il cliente assente.",
+  FC_REPORT_REASON_REQUIRED: "Descrivi il motivo della segnalazione (almeno 10 caratteri).",
+  FC_REPORT_WINDOW: "Il termine è scaduto: 48 ore per l'esecuzione non conforme, 7 giorni per i danni.",
   FC_PAYOUT_AMOUNT: "Puoi prelevare almeno 10 €.",
   FC_PAYOUT_BALANCE: "Il saldo disponibile non è sufficiente.",
   FC_LEAVE_ACTIVE_BOOKINGS: "Hai prenotazioni, pagamenti o prelievi ancora in corso: chiudili prima di uscire.",
