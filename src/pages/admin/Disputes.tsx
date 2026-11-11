@@ -78,6 +78,7 @@ export default function Disputes() {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const [names, setNames] = useState<Record<string, string>>({});
 
   useEffect(() => {
     loadDisputes();
@@ -92,6 +93,18 @@ export default function Disputes() {
 
     if (!error && data) {
       setDisputes(data);
+
+      const ids = [...new Set(data.flatMap((d) => [d.reporter_id, d.reported_id]))];
+      const [{ data: pros }, { data: clients }] = await Promise.all([
+        supabase.from("professionals").select("user_id, first_name, last_name").in("user_id", ids),
+        supabase.from("client_profiles").select("user_id, first_name, last_name").in("user_id", ids),
+      ]);
+      const map: Record<string, string> = {};
+      [...(clients || []), ...(pros || [])].forEach((u) => {
+        const n = [u.first_name, u.last_name].filter(Boolean).join(" ");
+        if (n) map[u.user_id] = n;
+      });
+      setNames(map);
       
       // Load evidence for all disputes
       const evidencePromises = data.map(async (dispute) => {
@@ -371,12 +384,12 @@ export default function Disputes() {
                 status: selectedDispute.status,
                 reporter: {
                   id: selectedDispute.reporter_id,
-                  name: "Utente Segnalante",
+                  name: names[selectedDispute.reporter_id] || "Utente Segnalante",
                   type: selectedDispute.reporter_type as "professional" | "client",
                 },
                 reported: {
                   id: selectedDispute.reported_id,
-                  name: "Utente Segnalato",
+                  name: names[selectedDispute.reported_id] || "Utente Segnalato",
                   type: selectedDispute.reported_type as "professional" | "client",
                 },
                 evidence: (evidence[selectedDispute.id] || []).map((e) => ({
