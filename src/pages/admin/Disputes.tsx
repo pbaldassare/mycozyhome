@@ -139,6 +139,16 @@ export default function Disputes() {
     }
   }
 
+  // Specifiche §7: dalla segnalazione l'admin valuta la sospensione del professionista.
+  async function handleSuspendReported(dispute: Dispute) {
+    if (!confirm("Sospendere il professionista segnalato? Il profilo non sarà più visibile ai clienti.")) return;
+    const { error } = await supabase
+      .from("professionals")
+      .update({ status: "suspended", admin_notes: `Sospeso per segnalazione ${dispute.id.slice(0, 8)}` })
+      .eq("user_id", dispute.reported_id);
+    toast(error ? { title: "Sospensione non riuscita", variant: "destructive" } : { title: "Professionista sospeso" });
+  }
+
   async function handleReject(disputeId: string, notes: string) {
     const { error } = await supabase
       .from("disputes")
@@ -384,6 +394,11 @@ export default function Disputes() {
               onReject={(notes) => handleReject(selectedDispute.id, notes)}
               onEscalate={(notes) => handleEscalate(selectedDispute.id, notes)}
             />
+          )}
+          {selectedDispute?.reported_type === "professional" && (
+            <Button variant="outline" className="w-full border-destructive text-destructive" onClick={() => handleSuspendReported(selectedDispute)}>
+              Sospendi il professionista segnalato
+            </Button>
           )}
         </DialogContent>
       </Dialog>
