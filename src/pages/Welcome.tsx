@@ -28,7 +28,7 @@ export default function Welcome() {
   const start = () => navigate("/client/welcome");
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-background to-background">
+    <div className="min-h-screen bg-gradient-to-b from-secondary via-background to-background">
       <div className="mx-auto max-w-md px-5 pb-10 safe-area-pt">
         <header className="flex justify-end pt-4">
           <button onClick={() => navigate("/login")} className="font-semibold text-primary">Accedi</button>
@@ -38,13 +38,13 @@ export default function Welcome() {
         </div>
 
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-soft">
-          <span className="flex text-amber-400">{"★★★★★"}</span> 4,9/5 · migliaia di famiglie felici
+          <span className="flex text-blush">{"★★★★★"}</span> 4,9/5 · migliaia di famiglie felici
         </div>
 
-        <div className="relative mt-4 rounded-[2rem] bg-emerald-50 p-3 shadow-soft">
+        <div className="relative mt-4 rounded-[2rem] bg-secondary p-3 shadow-soft">
           <img src="/illustrations/welcome.jpg" alt="Professionista che si prende cura della casa" className="aspect-square w-full rounded-3xl object-cover" />
           <div className="absolute bottom-6 left-6 flex items-center gap-2 rounded-2xl bg-card px-3 py-2 shadow-md">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><Clock className="h-4 w-4" /></span>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blush-light text-blush-dark"><Clock className="h-4 w-4" /></span>
             <span className="text-xs leading-tight"><strong className="block">Prenoti in 2 minuti</strong><span className="text-muted-foreground">senza stress</span></span>
           </div>
         </div>
@@ -81,9 +81,9 @@ export default function Welcome() {
           <div className="mt-5 space-y-3">
             {STEPS.map((s, i) => (
               <div key={s.title} className="flex gap-4 rounded-3xl border border-border/60 bg-card p-4 shadow-soft">
-                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-primary">
+                <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary">
                   <s.icon className="h-5 w-5" />
-                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">{i + 1}</span>
+                  <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">{i + 1}</span>
                 </span>
                 <div>
                   <p className="font-bold">{s.title}</p>
