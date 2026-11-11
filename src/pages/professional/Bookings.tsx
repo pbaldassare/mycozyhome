@@ -165,6 +165,16 @@ function TrackingActions({ booking, trackingRecord }: { booking: ProfessionalBoo
     refresh();
   };
 
+  const reportAbsent = async () => {
+    if (!confirm("Confermi che il cliente è assente o non ti ha fatto entrare? Il cliente verrà avvisato e riceverà il 40%.")) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("report_client_absent", { p_booking_id: booking.id });
+    setBusy(false);
+    if (error) return toast.error(toUserMessage(error, "Segnalazione non riuscita. Riprova."));
+    toast.success("Segnalazione registrata: ricevi il 60% al netto dell'indennizzo.");
+    refresh();
+  };
+
   const checkedIn = !!trackingRecord?.check_in_at;
   return (
     <div className="mt-3 space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
@@ -185,6 +195,11 @@ function TrackingActions({ booking, trackingRecord }: { booking: ProfessionalBoo
       <Button size="sm" variant="outline" className="w-full" onClick={complete} disabled={busy}>
         <CheckCircle className="mr-1 h-4 w-4" /> Servizio completato
       </Button>
+      {checkedIn && trackingRecord?.check_in_in_range && (
+        <Button size="sm" variant="ghost" className="w-full text-destructive" onClick={reportAbsent} disabled={busy}>
+          Cliente assente / accesso negato
+        </Button>
+      )}
     </div>
   );
 }

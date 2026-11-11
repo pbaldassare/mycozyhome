@@ -180,6 +180,19 @@ export type Database = {
       }
       bookings: {
         Row: {
+          no_show_reported_at: string | null
+          no_show_outcome: string | null
+          client_absent_at: string | null
+          absence_indemnity: number | null
+          platform_commission: number | null
+          cancellation_refund: number | null
+          cancellation_professional_amount: number | null
+          cancellation_commission: number | null
+          withdrawal_at: string | null
+          withdrawal_name: string | null
+          withdrawal_channel: string | null
+          early_execution_at: string | null
+          early_execution_version: string | null
           en_route_at: string | null
           package_id: string | null
           pro_latitude: number | null
@@ -217,6 +230,19 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          no_show_reported_at?: string | null
+          no_show_outcome?: string | null
+          client_absent_at?: string | null
+          absence_indemnity?: number | null
+          platform_commission?: number | null
+          cancellation_refund?: number | null
+          cancellation_professional_amount?: number | null
+          cancellation_commission?: number | null
+          withdrawal_at?: string | null
+          withdrawal_name?: string | null
+          withdrawal_channel?: string | null
+          early_execution_at?: string | null
+          early_execution_version?: string | null
           en_route_at?: string | null
           package_id?: string | null
           pro_latitude?: number | null
@@ -254,6 +280,19 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          no_show_reported_at?: string | null
+          no_show_outcome?: string | null
+          client_absent_at?: string | null
+          absence_indemnity?: number | null
+          platform_commission?: number | null
+          cancellation_refund?: number | null
+          cancellation_professional_amount?: number | null
+          cancellation_commission?: number | null
+          withdrawal_at?: string | null
+          withdrawal_name?: string | null
+          withdrawal_channel?: string | null
+          early_execution_at?: string | null
+          early_execution_version?: string | null
           en_route_at?: string | null
           package_id?: string | null
           pro_latitude?: number | null
@@ -2095,6 +2134,14 @@ export type Database = {
       }
       reply_to_review: {
         Args: { p_review_id: string; p_reply: string }
+        Returns: undefined
+      }
+      report_professional_no_show: {
+        Args: { p_booking_id: string }
+        Returns: string
+      }
+      report_client_absent: {
+        Args: { p_booking_id: string }
         Returns: undefined
       }
       register_vat_number: {

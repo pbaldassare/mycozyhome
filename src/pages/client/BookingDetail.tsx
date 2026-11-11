@@ -171,6 +171,18 @@ export default function BookingDetail() {
     navigate("/client/bookings");
   };
 
+  const [reportingNoShow, setReportingNoShow] = useState(false);
+  const reportNoShow = async () => {
+    if (!id || !confirm("Confermi che il professionista non si è presentato?")) return;
+    setReportingNoShow(true);
+    const { data, error } = await supabase.rpc("report_professional_no_show", { p_booking_id: id });
+    setReportingNoShow(false);
+    if (error) return toast.error(toUserMessage(error, "Segnalazione non riuscita. Riprova."));
+    toast.success(data === "refunded_no_checkin" ? "Ti abbiamo rimborsato l'intero importo." : "Segnalazione registrata.");
+    queryClient.invalidateQueries({ queryKey: ["booking-detail", id] });
+    queryClient.invalidateQueries({ queryKey: ["client-wallet"] });
+  };
+
   const handleCancel = async () => {
     if (!id) return;
     
@@ -226,6 +238,10 @@ export default function BookingDetail() {
   const canWithdraw = canCancel && !!booking.professional?.has_vat_number
     && Date.now() < new Date(booking.created_at).getTime() + 14 * 86_400_000;
   const canDispute = user && canDisputeBooking(booking);
+  // TU 7.4: entro 3 ore da "Servizio completato" il cliente può segnalare la mancata presentazione.
+  const canReportNoShow = booking.status === "completed" && booking.payment_status === "pending_release"
+    && !booking.no_show_reported_at && !!booking.completed_at
+    && Date.now() < new Date(booking.completed_at).getTime() + 3 * 3_600_000;
   const paymentLabel = PAYMENT_STATUS_LABELS[booking.payment_status ?? "none"] ?? booking.payment_status;
 
   const handleReviewSubmit = async (review: ReviewInput) => {
@@ -586,6 +602,27 @@ export default function BookingDetail() {
             <div className="text-center text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
               <CheckCircle className="h-5 w-5 mx-auto mb-1 text-success" />
               Hai già lasciato una recensione
+            </div>
+          )}
+
+          {canReportNoShow && (
+            <Button
+              variant="outline"
+              className="w-full border-destructive text-destructive hover:bg-destructive/10"
+              size="lg"
+              onClick={reportNoShow}
+              disabled={reportingNoShow}
+            >
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Il professionista non si è presentato
+            </Button>
+          )}
+
+          {booking.no_show_outcome && (
+            <div className="rounded-lg bg-muted/50 p-3 text-center text-sm text-muted-foreground">
+              {booking.no_show_outcome === "refunded_no_checkin"
+                ? "Segnalazione accolta: nessun check-in registrato, ti abbiamo rimborsato l'intero importo."
+                : "Segnalazione registrata: il professionista aveva fatto un check-in valido, quindi il pagamento gli è stato versato. Se non sei d'accordo puoi chiedere la verifica di una persona all'assistenza."}
             </div>
           )}
 

@@ -37,6 +37,8 @@ const FC_MESSAGES: Record<string, string> = {
   FC_SERVICE_NOT_STARTED: "Puoi segnare il servizio come completato solo dopo l'orario di inizio.",
   FC_EARLY_EXECUTION_REQUIRED: "Per prenotare questo professionista devi spuntare la richiesta di esecuzione anticipata.",
   FC_REVIEW_EXPIRED: "Puoi lasciare una recensione entro 3 giorni dal servizio.",
+  FC_NO_SHOW_WINDOW: "La segnalazione si può fare solo entro 3 ore dal servizio completato.",
+  FC_CHECKIN_REQUIRED: "Serve un check-in valido per segnalare il cliente assente.",
   FC_PAYOUT_AMOUNT: "Puoi prelevare almeno 10 €.",
   FC_PAYOUT_BALANCE: "Il saldo disponibile non è sufficiente.",
   FC_LEAVE_ACTIVE_BOOKINGS: "Hai prenotazioni, pagamenti o prelievi ancora in corso: chiudili prima di uscire.",
