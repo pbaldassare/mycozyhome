@@ -48,6 +48,8 @@ export default defineConfig(() => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // I PDF legali si aprono come pagine: non vanno sostituiti dall'app.
+        navigateFallbackDenylist: [/^\/legal\//],
         // Nessuna cache delle risposte Supabase: sono dati personali e autenticati.
       },
     }),

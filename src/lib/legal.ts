@@ -5,6 +5,15 @@ export const OCCASIONAL_DECLARATION =
 /** Versione dei Termini accettata alla registrazione: va cambiata a ogni nuova versione. */
 export const TERMS_VERSION = "2026-11-05";
 
+/**
+ * Archivio delle versioni (specifiche §12): ogni nuova versione si aggiunge in cima, con il suo file
+ * in public/legal/, e si aggiorna TERMS_VERSION. Le versioni vecchie restano consultabili.
+ */
+export const TERMS_ARCHIVE = [
+  { version: "2026-11-05", label: "Versione 2.1, in vigore dal 05/11/2026", url: "/legal/condizioni-e-policy-2026-11-05.pdf" },
+];
+export const TERMS_URL = TERMS_ARCHIVE[0].url;
+
 /** Avviso per tutte le prenotazioni, senza casella (specifiche §6). */
 export const CANCELLATION_NOTICE =
   "Annullamento gratuito fino a 3 ore prima. Nelle ultime 3 ore paghi il 50%. Se all'orario concordato non sei presente o non consenti l'accesso, paghi il 60%.";
