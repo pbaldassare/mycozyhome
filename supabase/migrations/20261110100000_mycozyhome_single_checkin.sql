@@ -2,7 +2,7 @@
 -- un solo check-in (posizione e orario in quel momento) e poi "Servizio completato".
 -- Ogni tentativo di check-in resta in tracking_pings come log tecnico.
 
--- Raggio e finestra in un solo punto. ponytail: raggio 150 m in attesa della decisione legale (le specifiche dicono 5 m, irrealistico col GPS).
+-- Raggio e finestra in un solo punto. Raggio 150 m e apertura 30 min prima confermati dal titolare il 11/11/2026 (le specifiche dicono 5 m, irrealistico col GPS).
 CREATE OR REPLACE FUNCTION mycozyhome.checkin_rules(OUT radius_m numeric, OUT early interval, OUT late interval)
     LANGUAGE sql IMMUTABLE AS $$ SELECT 150::numeric, interval '30 minutes', interval '10 minutes' $$;
 
