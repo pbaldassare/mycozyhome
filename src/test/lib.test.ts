@@ -96,6 +96,11 @@ describe("rankingScore", () => {
   it("più servizi completati sale", () => {
     expect(rankingScore({ ...base, completed: 40 })).toBeGreaterThan(rankingScore(base));
   });
+  it("disponibile nella data scelta sta sopra anche se più lontano", () => {
+    expect(rankingScore({ ...base, distanceKm: 29, availableOnDate: true })).toBeGreaterThan(
+      rankingScore({ rating: 5, completed: 50, profileFields: [1], distanceKm: 0, availableOnDate: false }),
+    );
+  });
   it("profilo incompleto scende", () => {
     expect(rankingScore({ ...base, profileFields: [null, null, 1, "c"] })).toBeLessThan(rankingScore(base));
   });

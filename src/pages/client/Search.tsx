@@ -54,6 +54,7 @@ export default function ClientSearch() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFiltersState>(defaultFilters);
+  const [date, setDate] = useState("");
   
   const geo = useGeolocation();
   const { address: savedAddress } = useClientAddress();
@@ -69,6 +70,7 @@ export default function ClientSearch() {
       userLatitude: userLat || undefined,
       userLongitude: userLon || undefined,
       filters,
+      date: date || undefined,
     }
   );
 
@@ -109,6 +111,17 @@ export default function ClientSearch() {
             )}
           </Button>
         </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground shrink-0">Quando?</span>
+          <Input
+            type="date"
+            className="h-10 rounded-xl bg-card border-border/30"
+            min={new Date().toLocaleDateString("sv-SE")}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </label>
 
         {/* Active Filters Summary */}
         {activeFiltersCount > 0 && (
@@ -214,21 +227,25 @@ export default function ClientSearch() {
             {professionals && professionals.length > 0 ? (
               <div className="space-y-3">
                 {professionals.map((pro) => (
-                  <ProfessionalCard
-                    key={pro.id}
-                    id={pro.id}
-                    name={pro.name}
-                    rating={pro.rating}
-                    reviewCount={pro.reviewCount}
-                    yearsExperience={pro.yearsExperience}
-                    distance={pro.distance}
-                    services={pro.services}
-                    hourlyRate={pro.hourlyRate}
-                    isVerified={pro.isVerified}
-                    avatarUrl={pro.avatarUrl || undefined}
-                    showFavorite
-                    onClick={() => navigate(`/client/professional/${pro.id}`)}
-                  />
+                  <div key={pro.id}>
+                    {pro.availableOnDate === false && (
+                      <p className="text-xs text-muted-foreground mb-1">Di solito non lavora in questo giorno</p>
+                    )}
+                    <ProfessionalCard
+                      id={pro.id}
+                      name={pro.name}
+                      rating={pro.rating}
+                      reviewCount={pro.reviewCount}
+                      yearsExperience={pro.yearsExperience}
+                      distance={pro.distance}
+                      services={pro.services}
+                      hourlyRate={pro.hourlyRate}
+                      isVerified={pro.isVerified}
+                      avatarUrl={pro.avatarUrl || undefined}
+                      showFavorite
+                      onClick={() => navigate(`/client/professional/${pro.id}`)}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (

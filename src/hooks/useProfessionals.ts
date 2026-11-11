@@ -67,6 +67,8 @@ interface UseSearchProfessionalsOptions {
   userLatitude?: number;
   userLongitude?: number;
   filters?: SearchFilters;
+  /** Giorno scelto dal cliente (YYYY-MM-DD): chi lavora quel giorno della settimana sale in cima. */
+  date?: string;
 }
 
 export function useSearchProfessionals(
@@ -74,10 +76,10 @@ export function useSearchProfessionals(
   searchQuery: string,
   options?: UseSearchProfessionalsOptions
 ) {
-  const { userLatitude, userLongitude, filters } = options || {};
+  const { userLatitude, userLongitude, filters, date } = options || {};
 
   return useQuery({
-    queryKey: ["search-professionals", serviceType, searchQuery, userLatitude, userLongitude, filters],
+    queryKey: ["search-professionals", serviceType, searchQuery, userLatitude, userLongitude, filters, date],
     queryFn: async () => {
       const query = supabase
         .from("professionals")
@@ -87,13 +89,21 @@ export function useSearchProfessionals(
         `)
         .eq("status", "approved");
 
-      const [{ data, error }, { data: counts }] = await Promise.all([
+      const [{ data, error }, { data: counts }, { data: slots }] = await Promise.all([
         query,
         supabase.rpc("professional_completed_counts"),
+        date
+          ? supabase
+              .from("professional_availability")
+              .select("professional_id")
+              .eq("is_available", true)
+              .eq("day_of_week", new Date(`${date}T12:00:00`).getDay())
+          : Promise.resolve({ data: null }),
       ]);
 
       if (error) throw error;
       const completedBy = new Map((counts || []).map((c) => [c.professional_id, Number(c.completed)]));
+      const availableIds = slots ? new Set(slots.map((s) => s.professional_id)) : null;
 
       let results = data.map((pro) => {
         // Calculate distance if user location is available
@@ -127,7 +137,9 @@ export function useSearchProfessionals(
           city: pro.city,
           latitude: pro.latitude ? Number(pro.latitude) : undefined,
           longitude: pro.longitude ? Number(pro.longitude) : undefined,
+          availableOnDate: availableIds ? availableIds.has(pro.id) : undefined,
           score: rankingScore({
+            availableOnDate: availableIds ? availableIds.has(pro.id) : undefined,
             distanceKm,
             rating: pro.average_rating || 0,
             completed: completedBy.get(pro.id) || 0,
@@ -182,18 +194,26 @@ export function useSearchProfessionals(
 
 /**
  * Ordinamento dichiarato (TU 6.1, TP 12.1): distanza, valutazione media, servizi completati,
- * completezza del profilo. Nessuna posizione a pagamento: se arriveranno, etichettarle "sponsorizzato".
- * ponytail: la disponibilità non entra perché la ricerca non ha una data; aggiungerla quando il cliente sceglie il giorno.
+ * completezza del profilo; con una data scelta, prima chi è disponibile quel giorno.
+ * Nessuna posizione a pagamento: se arriveranno, etichettarle "sponsorizzato".
+ * ponytail: disponibilità = orari settimanali, non controlla le prenotazioni già prese quel giorno.
  */
 export const RANKING_CRITERIA =
-  "I risultati sono ordinati per distanza, valutazione media, numero di servizi completati e completezza del profilo. Nessun professionista paga per comparire più in alto.";
+  "I risultati sono ordinati per disponibilità nella data scelta, distanza, valutazione media, numero di servizi completati e completezza del profilo. Nessun professionista paga per comparire più in alto.";
 
-export function rankingScore(p: { distanceKm?: number; rating: number; completed: number; profileFields: unknown[] }) {
+export function rankingScore(p: {
+  availableOnDate?: boolean;
+  distanceKm?: number;
+  rating: number;
+  completed: number;
+  profileFields: unknown[];
+}) {
   const distance = p.distanceKm === undefined ? 0 : 1 - Math.min(p.distanceKm, 30) / 30;
   const rating = p.rating / 5;
   const completed = Math.min(p.completed, 50) / 50;
   const profile = p.profileFields.filter(Boolean).length / p.profileFields.length;
-  return distance * 0.35 + rating * 0.3 + completed * 0.2 + profile * 0.15;
+  // Disponibile nel giorno scelto vale più di tutto il resto (che somma al massimo 1).
+  return (p.availableOnDate ? 1 : 0) + distance * 0.35 + rating * 0.3 + completed * 0.2 + profile * 0.15;
 }
 
 // Haversine formula for distance calculation
