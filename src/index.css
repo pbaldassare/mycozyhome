@@ -6,22 +6,22 @@
 
 @layer base {
   :root {
-    --background: 216 33% 97%;
-    --foreground: 222 47% 11%;
+    --background: 38 50% 97%;
+    --foreground: 205 43% 21%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 205 43% 21%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 205 43% 21%;
 
-    /* === PASTEL PALETTE === */
+    /* === Palette del marchio: Cielo #8BB8D0, Notte #1F3A4D, Albicocca #EE9A5F, Lino #FBF8F3 === */
     
-    /* Blu pastello - Primary brand, header, CTA */
-    --primary: 216 68% 55%;
+    /* Blu della tinta Cielo, scurito per testo bianco leggibile (5:1) */
+    --primary: 203 41% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 214 80% 94%;
-    --primary-dark: 220 62% 45%;
+    --primary-light: 201 42% 92%;
+    --primary-dark: 205 43% 21%;
 
     /* Verde salvia - Success, progress, onboarding */
     --sage: 145 30% 60%;
@@ -33,19 +33,19 @@
     --straw-light: 48 75% 93%;
     --straw-dark: 48 60% 50%;
 
-    /* Rosa chiaro - Accents, badges */
-    --blush: 350 55% 80%;
-    --blush-light: 350 60% 94%;
-    --blush-dark: 350 45% 60%;
+    /* Albicocca - cuore del marchio, accenti */
+    --blush: 25 81% 65%;
+    --blush-light: 25 85% 93%;
+    --blush-dark: 25 60% 45%;
 
-    --secondary: 214 40% 96%;
-    --secondary-foreground: 216 50% 30%;
+    --secondary: 201 35% 94%;
+    --secondary-foreground: 205 43% 21%;
 
-    --muted: 210 20% 95%;
-    --muted-foreground: 210 15% 45%;
+    --muted: 38 25% 93%;
+    --muted-foreground: 205 15% 40%;
 
-    --accent: 350 55% 80%;
-    --accent-foreground: 350 45% 25%;
+    --accent: 25 81% 65%;
+    --accent-foreground: 205 43% 21%;
 
     --destructive: 0 60% 60%;
     --destructive-foreground: 0 0% 100%;
@@ -56,48 +56,48 @@
     --warning: 48 70% 55%;
     --warning-foreground: 48 80% 15%;
 
-    --info: 216 68% 55%;
+    --info: 203 41% 42%;
     --info-foreground: 0 0% 100%;
 
     /* Illustrazioni: carta e inchiostro restano chiari/scuri in entrambi i temi */
     /* Testo azzurro leggibile su fondo chiaro (contrasto circa 6:1) */
-    --primary-text: 216 65% 42%;
+    --primary-text: 203 41% 38%;
 
     --illustration-paper: 0 0% 100%;
-    --illustration-ink: 222 47% 11%;
+    --illustration-ink: 205 43% 21%;
 
-    --border: 214 30% 90%;
-    --input: 214 30% 88%;
-    --ring: 216 68% 55%;
+    --border: 38 20% 88%;
+    --input: 38 20% 85%;
+    --ring: 203 41% 42%;
 
     --radius: 1.25rem;
 
-    --sidebar-background: 210 30% 18%;
+    --sidebar-background: 205 43% 21%;
     --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 216 68% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 25% 25%;
+    --sidebar-primary: 201 42% 68%;
+    --sidebar-primary-foreground: 205 43% 21%;
+    --sidebar-accent: 205 35% 28%;
     --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 210 25% 25%;
-    --sidebar-ring: 216 68% 55%;
+    --sidebar-border: 205 35% 28%;
+    --sidebar-ring: 201 42% 68%;
     --sidebar-muted: 210 15% 55%;
   }
 
   .dark {
-    --background: 210 25% 8%;
-    --foreground: 210 20% 95%;
+    --background: 205 45% 9%;
+    --foreground: 38 50% 95%;
 
-    --card: 210 25% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 205 40% 13%;
+    --card-foreground: 38 50% 95%;
 
-    --popover: 210 25% 12%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 205 40% 13%;
+    --popover-foreground: 38 50% 95%;
 
     /* Pastel colors adjusted for dark mode */
-    --primary: 214 72% 62%;
-    --primary-foreground: 0 0% 100%;
-    --primary-light: 210 40% 22%;
-    --primary-dark: 214 80% 72%;
+    --primary: 201 42% 68%;
+    --primary-foreground: 205 43% 15%;
+    --primary-light: 205 35% 20%;
+    --primary-dark: 201 50% 80%;
 
     --sage: 145 30% 55%;
     --sage-light: 145 25% 20%;
@@ -107,18 +107,18 @@
     --straw-light: 48 40% 20%;
     --straw-dark: 48 70% 75%;
 
-    --blush: 350 50% 70%;
-    --blush-light: 350 35% 22%;
-    --blush-dark: 350 55% 80%;
+    --blush: 25 75% 62%;
+    --blush-light: 25 35% 20%;
+    --blush-dark: 25 80% 75%;
 
-    --secondary: 210 20% 18%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 205 30% 18%;
+    --secondary-foreground: 38 50% 95%;
 
-    --muted: 210 15% 18%;
-    --muted-foreground: 210 15% 60%;
+    --muted: 205 25% 17%;
+    --muted-foreground: 201 15% 65%;
 
-    --accent: 350 50% 70%;
-    --accent-foreground: 350 40% 10%;
+    --accent: 25 75% 62%;
+    --accent-foreground: 205 45% 9%;
 
     --destructive: 0 55% 50%;
     --destructive-foreground: 210 20% 95%;
@@ -129,17 +129,17 @@
     --warning: 48 60% 50%;
     --warning-foreground: 48 80% 10%;
 
-    --info: 210 55% 60%;
-    --info-foreground: 210 40% 10%;
+    --info: 201 42% 68%;
+    --info-foreground: 205 43% 15%;
 
-    --primary-text: 210 65% 75%;
+    --primary-text: 201 50% 75%;
 
     --illustration-paper: 210 25% 90%;
     --illustration-ink: 222 40% 10%;
 
-    --border: 210 20% 20%;
-    --input: 210 20% 20%;
-    --ring: 214 72% 62%;
+    --border: 205 25% 20%;
+    --input: 205 25% 22%;
+    --ring: 201 42% 68%;
 
     --sidebar-background: 210 25% 8%;
     --sidebar-foreground: 210 20% 95%;
@@ -174,7 +174,7 @@
   }
 
   .shadow-soft {
-    box-shadow: 0 1px 2px hsl(216 40% 20% / 0.04), 0 8px 24px -8px hsl(216 40% 20% / 0.10);
+    box-shadow: 0 1px 2px hsl(205 43% 21% / 0.04), 0 8px 24px -8px hsl(205 43% 21% / 0.10);
   }
 
   .glass-card {
