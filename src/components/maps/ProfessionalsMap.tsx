@@ -237,12 +237,10 @@ function ProfessionalsMapInner({
       {professionalsWithDistance.map((professional) => {
         if (!isValidCoordinate(professional.latitude, professional.longitude)) return null;
         
-        // Create icon options safely
-        const iconOptions = {
-          url: professional.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(professional.name)}&size=40&background=8B5CF6&color=fff`,
-          scaledSize: new gMaps.Size(40, 40),
-          anchor: new gMaps.Point(20, 20),
-        };
+        // Senza foto: segnaposto standard di Google (nessun nome inviato a servizi terzi).
+        const iconOptions = professional.avatarUrl
+          ? { url: professional.avatarUrl, scaledSize: new gMaps.Size(40, 40), anchor: new gMaps.Point(20, 20) }
+          : undefined;
         
         return (
           <MarkerF
