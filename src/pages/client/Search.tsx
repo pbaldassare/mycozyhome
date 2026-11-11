@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/client/ProfessionalCard";
 import { MapErrorBoundary } from "@/components/maps/MapErrorBoundary";
 import { SearchFilters, SearchFiltersState } from "@/components/client/SearchFilters";
 import { cn } from "@/lib/utils";
-import { useSearchProfessionals } from "@/hooks/useProfessionals";
+import { useSearchProfessionals, RANKING_CRITERIA } from "@/hooks/useProfessionals";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useClientAddress } from "@/hooks/useClientAddress";
 
@@ -207,9 +207,10 @@ export default function ClientSearch() {
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground">
               {professionals?.length || 0} professionisti trovati
             </p>
+            <p className="text-xs text-muted-foreground mb-4">{RANKING_CRITERIA}</p>
             {professionals && professionals.length > 0 ? (
               <div className="space-y-3">
                 {professionals.map((pro) => (

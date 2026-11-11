@@ -86,3 +86,17 @@ describe("filtro dei contatti in chat", () => {
     expect(result.isBlocked).toBe(false);
   });
 });
+
+import { rankingScore } from "@/hooks/useProfessionals";
+describe("rankingScore", () => {
+  const base = { rating: 4, completed: 5, profileFields: ["a", "b", 1, "c"] };
+  it("più vicino sale", () => {
+    expect(rankingScore({ ...base, distanceKm: 2 })).toBeGreaterThan(rankingScore({ ...base, distanceKm: 20 }));
+  });
+  it("più servizi completati sale", () => {
+    expect(rankingScore({ ...base, completed: 40 })).toBeGreaterThan(rankingScore(base));
+  });
+  it("profilo incompleto scende", () => {
+    expect(rankingScore({ ...base, profileFields: [null, null, 1, "c"] })).toBeLessThan(rankingScore(base));
+  });
+});

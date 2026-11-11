@@ -2136,6 +2136,10 @@ export type Database = {
         Args: { p_reason: string; p_user_a: string; p_user_b: string }
         Returns: Database["mycozyhome"]["Tables"]["messages"]["Row"][]
       }
+      professional_completed_counts: {
+        Args: never
+        Returns: { professional_id: string; completed: number }[]
+      }
       reply_to_review: {
         Args: { p_review_id: string; p_reply: string }
         Returns: undefined

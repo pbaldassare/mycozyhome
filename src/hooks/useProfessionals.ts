@@ -87,9 +87,13 @@ export function useSearchProfessionals(
         `)
         .eq("status", "approved");
 
-      const { data, error } = await query.order("average_rating", { ascending: false, nullsFirst: false });
+      const [{ data, error }, { data: counts }] = await Promise.all([
+        query,
+        supabase.rpc("professional_completed_counts"),
+      ]);
 
       if (error) throw error;
+      const completedBy = new Map((counts || []).map((c) => [c.professional_id, Number(c.completed)]));
 
       let results = data.map((pro) => {
         // Calculate distance if user location is available
@@ -123,6 +127,12 @@ export function useSearchProfessionals(
           city: pro.city,
           latitude: pro.latitude ? Number(pro.latitude) : undefined,
           longitude: pro.longitude ? Number(pro.longitude) : undefined,
+          score: rankingScore({
+            distanceKm,
+            rating: pro.average_rating || 0,
+            completed: completedBy.get(pro.id) || 0,
+            profileFields: [pro.avatar_url, pro.bio, pro.years_experience, pro.city],
+          }),
         };
       });
 
@@ -163,18 +173,27 @@ export function useSearchProfessionals(
         }
       }
 
-      // Sort by distance if available
-      if (userLatitude && userLongitude) {
-        results.sort((a, b) => {
-          if (a.distanceKm === undefined) return 1;
-          if (b.distanceKm === undefined) return -1;
-          return a.distanceKm - b.distanceKm;
-        });
-      }
+      results.sort((a, b) => b.score - a.score);
 
       return results;
     },
   });
+}
+
+/**
+ * Ordinamento dichiarato (TU 6.1, TP 12.1): distanza, valutazione media, servizi completati,
+ * completezza del profilo. Nessuna posizione a pagamento: se arriveranno, etichettarle "sponsorizzato".
+ * ponytail: la disponibilità non entra perché la ricerca non ha una data; aggiungerla quando il cliente sceglie il giorno.
+ */
+export const RANKING_CRITERIA =
+  "I risultati sono ordinati per distanza, valutazione media, numero di servizi completati e completezza del profilo. Nessun professionista paga per comparire più in alto.";
+
+export function rankingScore(p: { distanceKm?: number; rating: number; completed: number; profileFields: unknown[] }) {
+  const distance = p.distanceKm === undefined ? 0 : 1 - Math.min(p.distanceKm, 30) / 30;
+  const rating = p.rating / 5;
+  const completed = Math.min(p.completed, 50) / 50;
+  const profile = p.profileFields.filter(Boolean).length / p.profileFields.length;
+  return distance * 0.35 + rating * 0.3 + completed * 0.2 + profile * 0.15;
 }
 
 // Haversine formula for distance calculation
