@@ -37,11 +37,7 @@ export default function Welcome() {
           <AnimatedLogo showTagline={false} />
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-soft">
-          <span className="flex text-blush">{"★★★★★"}</span> 4,9/5 · migliaia di famiglie felici
-        </div>
-
-        <div className="relative mt-4 rounded-[2rem] bg-secondary p-3 shadow-soft">
+        <div className="relative rounded-[2rem] bg-secondary p-3 shadow-soft">
           <img src="/illustrations/welcome.jpg" alt="Professionista che si prende cura della casa" className="aspect-square w-full rounded-3xl object-cover" />
           <div className="absolute bottom-6 left-6 flex items-center gap-2 rounded-2xl bg-card px-3 py-2 shadow-md">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blush-light text-blush-dark"><Clock className="h-4 w-4" /></span>
