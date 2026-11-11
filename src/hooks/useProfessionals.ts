@@ -193,7 +193,7 @@ export function useSearchProfessionals(
 }
 
 /**
- * Ordinamento dichiarato (TU 6.1, TP 12.1): distanza, valutazione media, servizi completati,
+ * Ordinamento dichiarato (TU 6.1, TP 11.1): distanza, valutazione media, servizi completati,
  * completezza del profilo; con una data scelta, prima chi è disponibile quel giorno.
  * Nessuna posizione a pagamento: se arriveranno, etichettarle "sponsorizzato".
  * ponytail: disponibilità = orari settimanali, non controlla le prenotazioni già prese quel giorno.

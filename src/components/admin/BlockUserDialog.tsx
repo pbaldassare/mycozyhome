@@ -28,8 +28,8 @@ export type SanctionAction = "suspend" | "exclude_30" | "ban";
 
 const ACTIONS: { value: SanctionAction; label: string; help: string; proOnly?: boolean }[] = [
   { value: "suspend", label: "Sospendi", help: "Account bloccato finché non lo sblocchi." },
-  { value: "exclude_30", label: "Escludi tra 30 giorni", help: "Sospeso subito; dopo 30 giorni entra nella lista dei bannati (Regolamento P2B). Es. primo pagamento fuori piattaforma (TP 13.3).", proOnly: true },
-  { value: "ban", label: "Ban definitivo", help: "Esclusione immediata e lista dei bannati per 5 anni. Professionisti: solo casi gravi di TP 13.3 (es. pagamenti fuori piattaforma ripetuti). Clienti: es. pagamenti fuori piattaforma (TU 7.8)." },
+  { value: "exclude_30", label: "Escludi tra 30 giorni", help: "Sospeso subito; dopo 30 giorni entra nella lista dei bannati (Regolamento P2B). Es. primo pagamento fuori piattaforma (TP 12.3).", proOnly: true },
+  { value: "ban", label: "Ban definitivo", help: "Esclusione immediata e lista dei bannati per 5 anni. Professionisti: solo casi gravi di TP 12.3 (es. pagamenti fuori piattaforma ripetuti). Clienti: es. pagamenti fuori piattaforma (TU 7.8)." },
 ];
 
 export function BlockUserDialog({
