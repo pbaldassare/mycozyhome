@@ -36,7 +36,7 @@ const disputeSchema = z.object({
     "early_departure",
     "other",
   ]),
-  description: z.string().min(50, "Descrizione troppo breve (min 50 caratteri)").max(2000, "Descrizione troppo lunga"),
+  description: z.string().min(20, "Spiega il motivo (almeno 20 caratteri)").max(2000, "Descrizione troppo lunga"),
 });
 
 type DisputeFormData = z.infer<typeof disputeSchema>;
@@ -56,6 +56,8 @@ interface DisputeFormProps {
   reportedName: string;
   bookingId?: string;
   conversationId?: string;
+  /** Oltre le 48 ore si possono segnalare solo i danni (TU 13.4). */
+  onlyDamage?: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -79,6 +81,7 @@ export function DisputeForm({
   reportedName,
   bookingId,
   conversationId,
+  onlyDamage = false,
   onSuccess,
   onCancel,
 }: DisputeFormProps) {
@@ -88,7 +91,7 @@ export function DisputeForm({
   const form = useForm<DisputeFormData>({
     resolver: zodResolver(disputeSchema),
     defaultValues: {
-      reason: "other",
+      reason: onlyDamage ? "damage" : "other",
       description: "",
     },
   });
@@ -221,7 +224,7 @@ export function DisputeForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {Object.entries(reasonLabels).map(([value, label]) => (
+                    {Object.entries(reasonLabels).filter(([value]) => !onlyDamage || value === "damage").map(([value, label]) => (
                       <SelectItem key={value} value={value}>
                         {label}
                       </SelectItem>

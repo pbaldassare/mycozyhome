@@ -5,7 +5,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 import { toUserMessage, authErrorMessage, errorCode, GENERIC_ERROR_MESSAGE } from "@/lib/errors";
 import { storagePath } from "@/lib/storage";
 import { SERVICE_CATALOG, SERVICE_LABELS, serviceLabel } from "@/lib/services";
-import { canDisputeBooking, DISPUTE_WINDOW_DAYS } from "@/lib/payment-flow";
+import { canDisputeBooking, onlyDamageReportable, DAMAGE_WINDOW_DAYS } from "@/lib/payment-flow";
 import { filterMessageContent } from "@/lib/content-filter";
 
 describe("errori per l'utente", () => {
@@ -57,17 +57,20 @@ describe("catalogo servizi", () => {
 describe("finestra di contestazione", () => {
   const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
 
-  it("è di 5 giorni dal completamento", () => {
-    expect(DISPUTE_WINDOW_DAYS).toBe(5);
+  it("è di 7 giorni per i danni, 48 ore per il resto", () => {
+    expect(DAMAGE_WINDOW_DAYS).toBe(7);
     const base = { status: "completed", payment_status: "pending_release", scheduled_date: daysAgo(10) };
-    expect(canDisputeBooking({ ...base, completed_at: daysAgo(4) })).toBe(true);
-    expect(canDisputeBooking({ ...base, completed_at: daysAgo(6) })).toBe(false);
+    expect(canDisputeBooking({ ...base, completed_at: daysAgo(6) })).toBe(true);
+    expect(canDisputeBooking({ ...base, completed_at: daysAgo(8) })).toBe(false);
+    // Oltre 48 ore restano segnalabili solo i danni.
+    expect(onlyDamageReportable({ ...base, completed_at: daysAgo(1) })).toBe(false);
+    expect(onlyDamageReportable({ ...base, completed_at: daysAgo(3) })).toBe(true);
   });
 
-  it("non vale per pagamenti già rilasciati o rimborsati", () => {
+  it("vale anche a pagamento già versato (la segnalazione non lo blocca)", () => {
     expect(
       canDisputeBooking({ status: "completed", payment_status: "released", completed_at: daysAgo(1), scheduled_date: daysAgo(1) }),
-    ).toBe(false);
+    ).toBe(true);
   });
 });
 

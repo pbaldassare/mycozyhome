@@ -35,7 +35,7 @@ import { useCancelBooking } from "@/hooks/useBookings";
 import { useCreateReview, useCanReview } from "@/hooks/useReviews";
 import { ReviewForm } from "@/components/client/ReviewForm";
 import { DisputeForm } from "@/components/dispute/DisputeForm";
-import { canDisputeBooking, getDisputeDeadlineLabel, PAYMENT_STATUS_LABELS } from "@/lib/payment-flow";
+import { onlyDamageReportable, canDisputeBooking, getDisputeDeadlineLabel, PAYMENT_STATUS_LABELS } from "@/lib/payment-flow";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -482,7 +482,7 @@ export default function BookingDetail() {
               <p className="text-xs text-muted-foreground pt-2">
                 Pagamento: <span className="font-medium">{paymentLabel}</span>
                 {booking.payment_status === "pending_release" && (
-                  <> — erogazione dopo il {getDisputeDeadlineLabel(booking)} se non contestato</>
+                  <> — erogazione il {getDisputeDeadlineLabel(booking)}</>
                 )}
               </p>
             )}
@@ -634,7 +634,7 @@ export default function BookingDetail() {
               onClick={() => setShowDisputeDialog(true)}
             >
               <AlertTriangle className="h-5 w-5 mr-2" />
-              Apri contestazione
+              Segnala un problema
             </Button>
           )}
 
@@ -784,9 +784,10 @@ export default function BookingDetail() {
       <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Contestazione servizio</DialogTitle>
+            <DialogTitle>Segnala un problema</DialogTitle>
             <DialogDescription>
-              Hai 5 giorni dalla data del servizio per contestare. Il pagamento al professionista verrà sospeso fino alla risoluzione.
+              Esecuzione non conforme: entro 48 ore dal servizio. Danni: entro 7 giorni, con descrizione e foto.
+              La segnalazione arriva al nostro team, che valuta provvedimenti verso il professionista.
             </DialogDescription>
           </DialogHeader>
           {user && booking && (
@@ -797,6 +798,7 @@ export default function BookingDetail() {
               reportedType="professional"
               reportedName={professionalName}
               bookingId={booking.id}
+              onlyDamage={onlyDamageReportable(booking)}
               onSuccess={() => {
                 setShowDisputeDialog(false);
                 toast.success("Contestazione inviata. Il pagamento è stato sospeso.");
