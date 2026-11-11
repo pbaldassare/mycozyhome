@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from "lucide-react";
-import { BrandMark } from "@/components/BrandMark";
+import { Wordmark } from "@/components/BrandMark";
 import { toast } from "sonner";
 import { z } from "zod";
 import { loginSchema } from "@/lib/auth-schemas";
@@ -112,12 +112,7 @@ export default function Login() {
         <button onClick={() => navigate("/")} className="p-2 hover:bg-white/10 rounded-lg transition-colors" aria-label="Indietro">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <BrandMark className="w-5 h-5" heartColor="hsl(var(--blush-dark))" />
-          </div>
-          <span className="font-display font-semibold">MyCozyHome</span>
-        </div>
+        <Wordmark onDark />
       </header>
 
       {/* Content */}

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, CalendarCheck, Clock, CreditCard, Heart, Search, ShieldCheck, Sparkles, Star } from "lucide-react";
+import { AnimatedLogo } from "@/components/BrandMark";
+import { ArrowRight, CalendarCheck, Clock, CreditCard, Search, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LegalContacts } from "@/components/LegalContacts";
 
@@ -29,15 +30,12 @@ export default function Welcome() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-background to-background">
       <div className="mx-auto max-w-md px-5 pb-10 safe-area-pt">
-        <header className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-soft">
-              <Heart className="h-5 w-5 fill-white" />
-            </span>
-            <span className="text-lg font-bold">MyCozyHome</span>
-          </div>
+        <header className="flex justify-end pt-4">
           <button onClick={() => navigate("/login")} className="font-semibold text-primary">Accedi</button>
         </header>
+        <div className="pb-6 pt-2">
+          <AnimatedLogo showTagline={false} />
+        </div>
 
         <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card px-3 py-1.5 text-xs text-muted-foreground shadow-soft">
           <span className="flex text-amber-400">{"★★★★★"}</span> 4,9/5 · migliaia di famiglie felici

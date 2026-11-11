@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Wordmark } from "@/components/BrandMark";
 import { TermsConsent } from "@/components/TermsConsent";
 import { TERMS_VERSION } from "@/lib/legal";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -7,7 +8,7 @@ import { authErrorMessage } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Home, Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { loginSchema, signupSchema, SIGNUP_PASSWORD_HINT } from "@/lib/auth-schemas";
@@ -136,12 +137,7 @@ export default function ClientAuth() {
         <button onClick={() => navigate("/")} className="p-2 hover:bg-white/10 rounded-lg transition-colors" aria-label="Indietro">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <Home className="w-4 h-4" />
-          </div>
-          <span className="font-display font-semibold">MyCozyHome</span>
-        </div>
+        <Wordmark onDark />
       </header>
 
       {/* Content */}

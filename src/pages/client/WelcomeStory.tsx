@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { OnboardingCarousel } from "@/components/onboarding/OnboardingCarousel";
 import { OnboardingSlide } from "@/components/onboarding/OnboardingSlide";
 import { Shield, Sparkles } from "lucide-react";
-import { BrandMark } from "@/components/BrandMark";
+import { Wordmark } from "@/components/BrandMark";
 
 export default function ClientWelcomeStory() {
   const navigate = useNavigate();
@@ -14,12 +14,7 @@ export default function ClientWelcomeStory() {
   return (
     <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <BrandMark className="w-5 h-5" heartColor="hsl(var(--blush-dark))" />
-          </div>
-          <span className="font-display font-semibold">MyCozyHome</span>
-        </div>
+        <Wordmark onDark />
       </header>
 
       <div className="flex-1 min-h-0">

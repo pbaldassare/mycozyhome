@@ -309,3 +309,50 @@
     transform: translateX(-50%);
   }
 }
+
+/* Logo animato (dal file del marchio logo-animato-mycozyhome.html). Testo e tetto seguono il tema. */
+.mch-logo{
+  --s: clamp(30px, 9vw, 44px);
+  --navy: hsl(var(--foreground)); --blu:#4F86A6; --testo: hsl(var(--muted-foreground));
+  display:flex; flex-direction:column; align-items:center; gap:calc(var(--s)*.3);
+  font-family:'Nunito',system-ui,sans-serif; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; user-select:none;
+}
+.dark .mch-logo{ --blu:#8BB8D0 }
+.mch-row{display:flex; align-items:center; gap:calc(var(--s)*.3)}
+.mch-mark{width:calc(var(--s)*1.75); height:auto; flex:none; overflow:visible}
+.mch-roof{stroke:var(--navy); stroke-dasharray:124; stroke-dashoffset:124; animation:mch-draw .75s .1s cubic-bezier(.65,0,.35,1) forwards}
+.mch-body{transform-box:fill-box; transform-origin:50% 100%; opacity:0;
+  animation:mch-body .6s .3s cubic-bezier(.2,.9,.3,1.2) forwards}
+.mch-heart{transform-box:fill-box; transform-origin:50% 60%; transform:scale(0);
+  animation:mch-pop .5s .85s cubic-bezier(.3,1.6,.5,1) forwards, mch-beat .7s 4.3s ease-in-out}
+.mch-word{display:flex; align-items:flex-start; font-size:var(--s); line-height:1.35;
+  font-weight:800; color:var(--navy); white-space:nowrap}
+.mch-g{position:relative; display:inline-block; margin-right:.16em;
+  animation:mch-tight .9s 2.6s cubic-bezier(.65,0,.35,1) forwards}
+.mch-g:nth-child(3){margin-right:.02em}
+.mch-lo{display:inline-block; opacity:0; letter-spacing:-.02em;
+  animation:mch-lo .45s 2.75s ease-out forwards}
+.mch-g.my .mch-lo{color:var(--blu); font-weight:600}
+.mch-up{position:absolute; left:50%; top:0; opacity:0; transform:translate(-50%,.3em);
+  animation:mch-up-in .5s var(--d) cubic-bezier(.2,.9,.3,1.2) forwards, mch-up-out .4s 2.6s ease-in forwards}
+.mch-x{display:inline-block; overflow:hidden; max-width:0; opacity:0; letter-spacing:-.02em;
+  animation:mch-grow var(--t) var(--d) cubic-bezier(.65,0,.35,1) forwards}
+.mch-tag{margin:0; font-size:max(15px, calc(var(--s)*.4)); font-weight:500; color:var(--testo);
+  opacity:0; transform:translateY(.4em); animation:mch-fade .7s 4.3s ease-out forwards}
+@keyframes mch-draw{to{stroke-dashoffset:0}}
+@keyframes mch-body{from{opacity:0; transform:scale(.5)} to{opacity:1; transform:scale(1)}}
+@keyframes mch-pop{to{transform:scale(1)}}
+@keyframes mch-beat{0%,100%{transform:scale(1)} 30%{transform:scale(1.18)} 55%{transform:scale(.96)} 75%{transform:scale(1.08)}}
+@keyframes mch-up-in{to{opacity:1; transform:translate(-50%,0)}}
+@keyframes mch-up-out{from{opacity:1; transform:translate(-50%,0)} to{opacity:0; transform:translate(-50%,-.35em) scale(.7)}}
+@keyframes mch-lo{from{opacity:0; transform:translateY(.25em)} to{opacity:1; transform:none}}
+@keyframes mch-tight{to{margin-right:0}}
+@keyframes mch-grow{to{max-width:var(--w); opacity:1}}
+@keyframes mch-fade{to{opacity:1; transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .mch-logo *{animation:none !important}
+  .mch-roof{stroke-dashoffset:0} .mch-body{opacity:1} .mch-heart{transform:none}
+  .mch-g{margin-right:0} .mch-lo{opacity:1} .mch-up{display:none}
+  .mch-x{max-width:none; opacity:1} .mch-tag{opacity:1; transform:none}
+}

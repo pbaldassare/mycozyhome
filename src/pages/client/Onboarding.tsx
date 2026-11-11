@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
+import { Wordmark } from "@/components/BrandMark";
 import { OnboardingCarousel } from "@/components/onboarding/OnboardingCarousel";
 import { OnboardingSlide } from "@/components/onboarding/OnboardingSlide";
-import { Search, Shield, Sparkles, Home } from "lucide-react";
+import { Search, Shield, Sparkles } from "lucide-react";
 import { markClientStorySeen } from "@/lib/onboarding-keys";
 
 export default function ClientOnboarding() {
@@ -14,12 +15,7 @@ export default function ClientOnboarding() {
   return (
     <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-3 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <Home className="w-4 h-4" />
-          </div>
-          <span className="font-display font-semibold">MyCozyHome</span>
-        </div>
+        <Wordmark onDark />
       </header>
 
       <div className="flex-1 min-h-0">

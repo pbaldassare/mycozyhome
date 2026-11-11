@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BrandMark } from "@/components/BrandMark";
+import { Wordmark } from "@/components/BrandMark";
 import { authErrorMessage } from "@/lib/errors";
 import { SIGNUP_PASSWORD_HINT, signupPasswordSchema } from "@/lib/auth-schemas";
 
@@ -22,12 +22,7 @@ function RecoveryShell({ title, subtitle, children }: { title: string; subtitle:
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-            <BrandMark className="w-5 h-5" heartColor="hsl(var(--blush-dark))" />
-          </div>
-          <span className="font-display font-semibold">MyCozyHome</span>
-        </div>
+        <Wordmark onDark />
       </header>
       <main className="flex-1 flex justify-center px-4 py-10">
         <div className="w-full max-w-sm space-y-6">

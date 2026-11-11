@@ -37,7 +37,7 @@ export function JoinMyCozyHome() {
   return (
     <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm text-center space-y-6">
-        <BrandMark className="w-14 h-14 mx-auto text-primary" heartColor="hsl(var(--blush-dark))" />
+        <BrandMark className="w-14 h-14 mx-auto" />
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-foreground">Benvenuto su MyCozyHome</h1>
           <p className="text-muted-foreground">
