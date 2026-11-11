@@ -26,6 +26,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toUserMessage } from "@/lib/errors";
 
 interface DisputeEvidence {
   id: string;
@@ -183,11 +185,7 @@ export function DisputeDetail({ dispute, onResolve, onReject, onEscalate }: Disp
         </div>
       )}
 
-      {/* Chat history button */}
-      <Button variant="outline" className="w-full">
-        <MessageSquare className="w-4 h-4 mr-2" />
-        Visualizza cronologia chat
-      </Button>
+      <ChatHistory userA={dispute.reporter.id} userB={dispute.reported.id} />
 
       <Separator />
 
@@ -295,5 +293,50 @@ function EvidenceTile({ evidence }: { evidence: { id: string; file_url: string; 
         <Download className="w-6 h-6 text-white" />
       </div>
     </a>
+  );
+}
+
+// Ogni lettura passa da admin_read_chat, che registra operatore, chat, ora e motivo.
+function ChatHistory({ userA, userB }: { userA: string; userB: string }) {
+  const [reason, setReason] = useState("");
+  const [messages, setMessages] = useState<{ id: string; sender_type: string; content: string; created_at: string }[] | null>(null);
+  const [error, setError] = useState("");
+
+  async function read() {
+    setError("");
+    const { data, error } = await supabase.rpc("admin_read_chat", { p_user_a: userA, p_user_b: userB, p_reason: reason });
+    if (error) setError(toUserMessage(error));
+    else setMessages(data || []);
+  }
+
+  if (messages) {
+    return (
+      <div className="space-y-2 max-h-72 overflow-y-auto rounded-md border p-3">
+        {messages.length === 0 && <p className="text-sm text-muted-foreground">Nessun messaggio tra questi utenti.</p>}
+        {messages.map((m) => (
+          <div key={m.id} className="text-sm">
+            <span className="font-medium">{m.sender_type === "client" ? "Cliente" : "Professionista"}</span>{" "}
+            <span className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString("it-IT")}</span>
+            <p className="whitespace-pre-wrap">{m.content}</p>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <Textarea
+        placeholder="Motivo dell'accesso alla chat (resta nel registro)"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        rows={2}
+      />
+      {error && <p className="text-sm text-destructive">{error}</p>}
+      <Button variant="outline" className="w-full" onClick={read} disabled={reason.trim().length < 5}>
+        <MessageSquare className="w-4 h-4 mr-2" />
+        Visualizza cronologia chat
+      </Button>
+    </div>
   );
 }

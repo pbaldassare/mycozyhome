@@ -2132,6 +2132,10 @@ export type Database = {
         Args: { p_booking_id: string; p_name: string; p_channel: string }
         Returns: undefined
       }
+      admin_read_chat: {
+        Args: { p_reason: string; p_user_a: string; p_user_b: string }
+        Returns: Database["mycozyhome"]["Tables"]["messages"]["Row"][]
+      }
       reply_to_review: {
         Args: { p_review_id: string; p_reply: string }
         Returns: undefined
