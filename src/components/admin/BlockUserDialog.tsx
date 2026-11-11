@@ -19,9 +19,18 @@ interface BlockUserDialogProps {
   userName: string;
   isBlocked: boolean;
   blockedReason?: string | null;
-  onConfirm: (reason?: string) => Promise<void>;
+  onConfirm: (reason?: string, action?: SanctionAction) => Promise<void>;
   isLoading?: boolean;
+  userType: "client" | "professional";
 }
+
+export type SanctionAction = "suspend" | "exclude_30" | "ban";
+
+const ACTIONS: { value: SanctionAction; label: string; help: string; proOnly?: boolean }[] = [
+  { value: "suspend", label: "Sospendi", help: "Account bloccato finché non lo sblocchi." },
+  { value: "exclude_30", label: "Escludi tra 30 giorni", help: "Sospeso subito; dopo 30 giorni entra nella lista dei bannati (Regolamento P2B).", proOnly: true },
+  { value: "ban", label: "Ban definitivo", help: "Esclusione immediata (casi previsti, es. pagamenti fuori piattaforma) e iscrizione nella lista dei bannati per 5 anni." },
+];
 
 export function BlockUserDialog({
   open,
@@ -31,8 +40,10 @@ export function BlockUserDialog({
   blockedReason,
   onConfirm,
   isLoading,
+  userType,
 }: BlockUserDialogProps) {
   const [reason, setReason] = useState("");
+  const [action, setAction] = useState<SanctionAction>("suspend");
 
   const handleOpenChange = (next: boolean) => {
     if (!next) setReason("");
@@ -40,7 +51,7 @@ export function BlockUserDialog({
   };
 
   const handleConfirm = async () => {
-    await onConfirm(isBlocked ? undefined : reason);
+    await onConfirm(isBlocked ? undefined : reason, action);
     setReason("");
     onOpenChange(false);
   };
@@ -80,10 +91,21 @@ export function BlockUserDialog({
 
         {!isBlocked && (
           <div className="space-y-2">
-            <Label htmlFor="block-reason">Motivo (opzionale)</Label>
+            <div className="grid gap-2">
+              {ACTIONS.filter((a) => !a.proOnly || userType === "professional").map((a) => (
+                <label key={a.value} className="flex items-start gap-2 rounded-lg border p-2 text-sm cursor-pointer">
+                  <input type="radio" name="sanction" className="mt-1" checked={action === a.value} onChange={() => setAction(a.value)} />
+                  <span>
+                    <span className="font-medium">{a.label}</span>
+                    <span className="block text-xs text-muted-foreground">{a.help}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <Label htmlFor="block-reason">Motivazione (obbligatoria: fatti e regola applicata)</Label>
             <Textarea
               id="block-reason"
-              placeholder="Es. violazione delle regole della piattaforma..."
+              placeholder="Es. il 3/11 ha chiesto al cliente un pagamento in contanti fuori dall'app (Termini 9.8)"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
@@ -105,10 +127,10 @@ export function BlockUserDialog({
           <Button
             variant={isBlocked ? "default" : "destructive"}
             onClick={handleConfirm}
-            disabled={isLoading}
+            disabled={isLoading || (!isBlocked && reason.trim().length < 10)}
           >
             {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {isBlocked ? "Sblocca" : "Blocca utente"}
+            {isBlocked ? "Sblocca" : ACTIONS.find((a) => a.value === action)!.label}
           </Button>
         </DialogFooter>
       </DialogContent>

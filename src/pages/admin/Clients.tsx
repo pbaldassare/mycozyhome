@@ -21,7 +21,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
+import { BannedList } from "@/components/admin/BannedList";
+import { BlockUserDialog, type SanctionAction } from "@/components/admin/BlockUserDialog";
 import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 
 interface ClientRow {
@@ -101,12 +102,12 @@ export default function Clients() {
 
   const blockedCount = clients.filter((c) => c.isBlocked).length;
 
-  const handleBlockConfirm = async (reason?: string) => {
+  const handleBlockConfirm = async (reason?: string, action?: SanctionAction) => {
     if (!blockDialog) return;
     if (blockDialog.isBlocked) {
       await unblockUser.mutateAsync({ userType: "client", id: blockDialog.id });
     } else {
-      await blockUser.mutateAsync({ userType: "client", id: blockDialog.id, reason });
+      await blockUser.mutateAsync({ userType: "client", id: blockDialog.id, reason, action });
     }
     setBlockDialog(null);
   };
@@ -291,9 +292,12 @@ export default function Clients() {
           isBlocked={blockDialog.isBlocked}
           blockedReason={blockDialog.blockedReason}
           onConfirm={handleBlockConfirm}
+          userType="client"
           isLoading={blockUser.isPending || unblockUser.isPending}
         />
       )}
+
+      <BannedList />
     </div>
   );
 }

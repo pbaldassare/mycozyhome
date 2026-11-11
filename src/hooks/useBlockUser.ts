@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { toUserMessage } from "@/lib/errors";
 
 type UserType = "client" | "professional";
 
@@ -9,26 +9,24 @@ interface BlockParams {
   userType: UserType;
   id: string;
   reason?: string;
+  action?: "suspend" | "exclude_30" | "ban";
 }
 
 export function useBlockUser() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userType, id, reason }: BlockParams) => {
+    mutationFn: async ({ userType, id, reason, action = "suspend" }: BlockParams) => {
       const table = userType === "client" ? "client_profiles" : "professionals";
-      const { error } = await supabase
-        .from(table)
-        .update({
-          is_blocked: true,
-          blocked_at: new Date().toISOString(),
-          blocked_reason: reason?.trim() || null,
-          blocked_by: user?.id || null,
-        })
-        .eq("id", id);
-
+      const { data, error: findError } = await supabase.from(table).select("user_id").eq("id", id).single();
+      if (findError) throw findError;
+      const { error } = await supabase.rpc("admin_sanction", {
+        p_role: userType,
+        p_user_id: data.user_id,
+        p_action: action,
+        p_reason: reason ?? "",
+      });
       if (error) throw error;
     },
     onSuccess: (_, { userType }) => {
@@ -40,10 +38,10 @@ export function useBlockUser() {
         description: "L'utente non potrà più usare le funzioni della piattaforma, ma potrà ancora chattare con l'assistenza.",
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Errore",
-        description: "Impossibile bloccare l'utente.",
+        description: toUserMessage(error),
         variant: "destructive",
       });
     },
@@ -64,6 +62,7 @@ export function useUnblockUser() {
           blocked_at: null,
           blocked_reason: null,
           blocked_by: null,
+          ...(userType === "professional" ? { exclusion_due_at: null } : {}),
         })
         .eq("id", id);
 
@@ -75,7 +74,7 @@ export function useUnblockUser() {
       });
       toast({
         title: "Utente sbloccato",
-        description: "L'utente ha ripristinato l'accesso completo alla piattaforma.",
+        description: "Se era nella lista dei bannati, toglilo anche da lì.",
       });
     },
     onError: () => {

@@ -724,6 +724,24 @@ export type Database = {
         }
         Relationships: []
       }
+      banned_list: {
+        Row: {
+          banned_at: string
+          banned_by: string | null
+          email: string | null
+          expires_at: string
+          fiscal_code: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          reason: string
+          role: string
+          user_id: string | null
+        }
+        Insert: never
+        Update: { expires_at?: string }
+        Relationships: []
+      }
       appeals: {
         Row: {
           answer: string | null
@@ -2178,6 +2196,10 @@ export type Database = {
         Returns: string
       }
       answer_appeal: { Args: { p_answer: string; p_appeal_id: string }; Returns: undefined }
+      admin_sanction: {
+        Args: { p_action: string; p_reason: string; p_role: string; p_user_id: string }
+        Returns: undefined
+      }
       request_buyout: { Args: { p_client_id: string }; Returns: undefined }
       mark_buyout_paid: { Args: { p_client_id: string; p_professional_id: string }; Returns: undefined }
       reply_to_review: {

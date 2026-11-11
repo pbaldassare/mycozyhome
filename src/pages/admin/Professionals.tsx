@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { ProfessionalCard, Professional } from "@/components/admin/ProfessionalCard";
 import { ProfessionalReviewPanel, type ProfessionalData } from "@/components/admin/ProfessionalReviewPanel";
-import { BlockUserDialog } from "@/components/admin/BlockUserDialog";
+import { BlockUserDialog, type SanctionAction } from "@/components/admin/BlockUserDialog";
 import { useBlockUser, useUnblockUser } from "@/hooks/useBlockUser";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -242,12 +242,12 @@ export default function Professionals() {
     if (prof) setBlockTarget(prof);
   };
 
-  const handleBlockConfirm = async (reason?: string) => {
+  const handleBlockConfirm = async (reason?: string, action?: SanctionAction) => {
     if (!blockTarget) return;
     if (blockTarget.isBlocked) {
       await unblockUser.mutateAsync({ userType: "professional", id: blockTarget.id });
     } else {
-      await blockUser.mutateAsync({ userType: "professional", id: blockTarget.id, reason });
+      await blockUser.mutateAsync({ userType: "professional", id: blockTarget.id, reason, action });
     }
     setBlockTarget(null);
     setSelectedProfessional(null);
@@ -400,6 +400,7 @@ export default function Professionals() {
           isBlocked={!!blockTarget.isBlocked}
           blockedReason={blockTarget.blockedReason}
           onConfirm={handleBlockConfirm}
+          userType="professional"
           isLoading={blockUser.isPending || unblockUser.isPending}
         />
       )}

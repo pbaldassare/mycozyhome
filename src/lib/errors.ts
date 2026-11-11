@@ -41,6 +41,7 @@ const FC_MESSAGES: Record<string, string> = {
   FC_CHECKIN_REQUIRED: "Serve un check-in valido per segnalare il cliente assente.",
   FC_REPORT_REASON_REQUIRED: "Descrivi il motivo della segnalazione (almeno 10 caratteri).",
   FC_REPORT_WINDOW: "Il termine è scaduto: 48 ore per l'esecuzione non conforme, 7 giorni per i danni.",
+  FC_BANNED: "Registrazione non consentita. Per chiarimenti scrivi all'assistenza o a ri-sco@pec.it.",
   FC_COMPLAINT_WINDOW: "Il reclamo si può presentare entro 6 mesi dalla decisione.",
   FC_SAME_OPERATOR: "Il reclamo deve essere esaminato da un operatore diverso da chi ha preso la decisione.",
   FC_PAYOUT_AMOUNT: "Puoi prelevare almeno 10 €.",
@@ -85,6 +86,9 @@ export function authErrorMessage(error: unknown): string {
   const message = messageOf(error).toLowerCase();
   if (message.includes("invalid login credentials")) return "Email o password non corretti.";
   if (message.includes("email not confirmed")) return "Conferma prima la tua email: ti abbiamo inviato un link.";
+  // Il trigger della lista dei bannati arriva così da Supabase Auth.
+  if (message.includes("database error saving new user"))
+    return "Registrazione non consentita con questi dati. Per chiarimenti scrivi a ri-sco@pec.it.";
   if (message.includes("already registered")) return "Questa email è già registrata: accedi con la tua password.";
   if (message.includes("password should be")) return "La password non rispetta i requisiti minimi.";
   if (message.includes("rate limit") || message.includes("too many")) return "Troppi tentativi. Riprova tra qualche minuto.";
