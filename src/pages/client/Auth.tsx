@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { WEB_ORIGIN } from "@/lib/web-origin";
 import { Wordmark } from "@/components/BrandMark";
 import { TermsConsent } from "@/components/TermsConsent";
 import { TERMS_VERSION } from "@/lib/legal";
@@ -90,7 +91,7 @@ export default function ClientAuth() {
           email: validated.email,
           password: validated.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/client`,
+            emailRedirectTo: `${WEB_ORIGIN}/client`,
             data: {
               first_name: validated.firstName,
               last_name: validated.lastName,

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { WEB_ORIGIN } from "@/lib/web-origin";
 import { TermsConsent } from "@/components/TermsConsent";
 import { TERMS_VERSION } from "@/lib/legal";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -136,7 +137,7 @@ export default function ProfessionalAuth() {
           email: validated.email,
           password: validated.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/professional/dashboard`,
+            emailRedirectTo: `${WEB_ORIGIN}/professional/dashboard`,
             data: {
               first_name: validated.firstName,
               last_name: validated.lastName,

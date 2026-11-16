@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WEB_ORIGIN } from "@/lib/web-origin";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -47,7 +48,7 @@ export function ForgotPassword() {
     e.preventDefault();
     setSending(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${WEB_ORIGIN}/reset-password`,
     });
     setSending(false);
     // Stesso messaggio in ogni caso: non riveliamo se l'email è registrata.

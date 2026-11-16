@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WEB_ORIGIN } from "@/lib/web-origin";
 import { Search, Sparkles, Zap, ArrowRight, Wand2, Gift, Share2, CalendarClock, RotateCcw, Navigation, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, parseISO } from "date-fns";
@@ -66,7 +67,7 @@ export default function ClientHome() {
   };
 
   const invite = async () => {
-    const url = window.location.origin;
+    const url = WEB_ORIGIN;
     const text = "Uso MyCozyHome per pulizie, stiro e pet sitting: prova anche tu!";
     try {
       if (navigator.share) await navigator.share({ title: "MyCozyHome", text, url });

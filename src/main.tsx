@@ -3,13 +3,16 @@ import App from "./App.tsx";
 import "./index.css";
 import { initTheme } from "./lib/theme";
 import { registerSW } from "virtual:pwa-register";
+import { Capacitor } from "@capacitor/core";
 
 initTheme();
 
 // iPhone riprende l'app installata senza ricaricarla, quindi non vede mai la
 // versione nuova: si controlla al ritorno nell'app e ogni 10 minuti.
 // Con autoUpdate, quando arriva una versione nuova la pagina si ricarica da sola.
-registerSW({
+// Nell'app Android i file sono già nel pacchetto: il service worker servirebbe
+// solo a riproporre la versione precedente dopo un aggiornamento dallo Store.
+if (!Capacitor.isNativePlatform()) registerSW({
   immediate: true,
   onRegisteredSW(_url, reg) {
     if (!reg) return;
