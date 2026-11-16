@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { toUserMessage } from "@/lib/errors";
+import { WEB_ORIGIN } from "@/lib/web-origin";
+import { TERMS_URL } from "@/lib/legal";
 
 /** Tabelle esportate: tutto ciò che l'utente può leggere di sé su MyCozyHome. */
 const EXPORT_TABLES = [
@@ -121,7 +123,9 @@ export function AccountDataSection() {
           </AlertDialogContent>
         </AlertDialog>
         <p className="text-xs text-muted-foreground px-1">
-          Termini di servizio e informativa privacy saranno pubblicati prima dell'apertura al pubblico.
+          <a href={`${WEB_ORIGIN}/legal/privacy`} target="_blank" rel="noopener noreferrer" className="underline">Informativa privacy</a>
+          {" · "}
+          <a href={`${WEB_ORIGIN}${TERMS_URL}`} target="_blank" rel="noopener noreferrer" className="underline">Termini e condizioni</a>
         </p>
       </div>
     </section>
