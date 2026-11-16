@@ -1,4 +1,4 @@
-package com.mycozyhome.app;
+package it.mycozyhome.app;
 
 import com.getcapacitor.BridgeActivity;
 
