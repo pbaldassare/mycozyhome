@@ -13,9 +13,12 @@
     "test:watch": "vitest",
     "gen:types": "supabase gen types typescript --project-id yjzeujiozbgrlqwwycik --schema mycozyhome | sed 's/Extract<keyof Database, \"public\">/Extract<keyof Database, \"mycozyhome\">/' > src/integrations/supabase/types.ts",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "test:db": "supabase db query --linked --project-ref yjzeujiozbgrlqwwycik -f supabase/tests/mycozyhome_security.sql"
+    "test:db": "supabase db query --linked --project-ref yjzeujiozbgrlqwwycik -f supabase/tests/mycozyhome_security.sql",
+    "android:sync": "vite build && cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -55,6 +58,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/jest-dom": "^6.6.0",
