@@ -237,6 +237,14 @@
     padding-top: max(0.5rem, env(safe-area-inset-top));
   }
 
+  /* Nell'app iOS e nella PWA a schermo intero la pagina passa sotto la barra di stato:
+     le intestazioni in cima si allungano fin sotto l'orologio con un bordo trasparente
+     che mostra il loro sfondo. Su Android e da browser l'inset vale 0 e non cambia nulla. */
+  header:not(.safe-area-pt):not(.app-header):not(.safe-area-pt *),
+  .sticky.top-0:not(header):not(.safe-area-pt):not(.safe-area-pt *) {
+    border-top: env(safe-area-inset-top, 0px) solid transparent;
+  }
+
   /* App header style */
   .app-header {
     @apply sticky top-0 bg-card/95 backdrop-blur-md border-b border-border/30 z-40 safe-area-pt;

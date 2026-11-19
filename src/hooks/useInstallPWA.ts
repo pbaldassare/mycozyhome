@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -13,7 +14,9 @@ export function useInstallPWA() {
 
   useEffect(() => {
     // Check if already installed (standalone mode)
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+    // Nelle app Android e iOS l'app è già installata: niente inviti ad aggiungerla alla Home.
+    const isStandalone = Capacitor.isNativePlatform() ||
+      window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
     
     setIsInstalled(isStandalone);
